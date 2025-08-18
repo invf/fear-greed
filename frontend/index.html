@@ -393,7 +393,7 @@
     function pseudoRandomFrom(str){ let h=0; for(let i=0;i<str.length;i++){ h=(h*31+str.charCodeAt(i))>>>0; } return (h%1000)/1000; }
     function mockFNG(symbol, tf){ const base=30+70*pseudoRandomFrom(symbol+tf); const v=Math.max(0, Math.min(100, base)); return { coin:symbol, tf, value:Number(v.toFixed(1)), label:labelFromValue(v), components:{}, updatedAt:new Date().toISOString(), __mock:true }; }
     async function fetchFNG(symbol, tf){
-      const url = `${API_BASE}/api/fng?symbol=${encodeURIComponent(symbol)}&tf=${encodeURIComponent(tf)}`;
+      const url = `${API_BASE}/fng?symbol=${encodeURIComponent(symbol)}&tf=${encodeURIComponent(tf)}`;
       try{
         const ctrl=new AbortController(); const t=setTimeout(()=>ctrl.abort(), 8000);
         const r=await fetch(url,{headers:{'Accept':'application/json'}, signal:ctrl.signal});
