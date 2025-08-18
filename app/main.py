@@ -12,11 +12,14 @@ from fastapi.responses import HTMLResponse
 
 app = FastAPI()
 
-@app.get("/", response_class=HTMLResponse)
-def ui():
-    # Файл index.html має лежати поруч із main.py
-    with open("../frontend/index.html", "r", encoding="utf-8") as f:
-        return f.read()
+# @app.get("/", response_class=HTMLResponse)
+# def ui():
+#     # Файл index.html має лежати поруч із main.py
+#     with open("../frontend/index.html", "r", encoding="utf-8") as f:
+#         return f.read()
+@app.get("/health")
+def health():
+    return {"ok": True}
 
 
 # ---- CONSTS
