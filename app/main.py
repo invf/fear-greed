@@ -31,9 +31,15 @@ VALID_TF = {"15m", "1h", "4h", "1d"}
 
 # ---- APP
 app = FastAPI(title="Custom Fear & Greed Index")
+
+origins = [
+    "https://fear-greed-one.vercel.app/",
+    "fear-greed-ajk85au1v-invfs-projects.vercel.app",
+]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],   # у продакшні краще вказати свій домен
+
+    allow_origins=origins,   # у продакшні краще вказати свій домен
     allow_methods=["*"],
     allow_headers=["*"],
 )
