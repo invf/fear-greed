@@ -4,13 +4,14 @@ import numpy as np
 import pandas as pd
 import httpx
 from ta.momentum import RSIIndicator
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from datetime import datetime, timezone
 from fastapi.responses import HTMLResponse
 
-app = FastAPI()
+# ---- APP
+app = FastAPI(title="Custom Fear & Greed Index")
 
 # @app.get("/", response_class=HTMLResponse)
 # def ui():
@@ -21,6 +22,104 @@ app = FastAPI()
 def health():
     return {"ok": True}
 
+@app.get("/api/fng")
+def fng(
+    symbol: str = Query("SOLUSDT", description="Binance symbol, e.g. SOLUSDT"),
+    tf: str = Query("1d", description="15m | 1h | 4h | 1d"),
+):
+    if tf not in VALID_TF:
+        return JSONResponse({"error": f"Invalid tf={tf}. Allowed: {sorted(VALID_TF)}"}, status_code=400)
+
+    try:
+        value, label, comps = compute_fng(symbol=symbol, tf=tf)
+        return {
+            "coin": symbol,
+            "tf": tf,
+            "value": round(value, 1),
+            "label": label,
+            "components": {
+                "rsi": round(comps["scores"]["rsi"], 2),
+                "mom": round(comps["scores"]["mom"], 2),
+                "vol": round(comps["scores"]["vol"], 2),
+                "volm": round(comps["scores"]["volm"], 2),
+                "funding": round(comps["scores"]["funding"], 2),
+                "oi": round(comps["scores"]["oi"], 2),
+            },
+            "updatedAt": ts_iso_now()
+        }
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+
+# -------------------------
+# НОВИЙ КОД ДЛЯ 4 СПІДОМЕТРІВ
+# -------------------------
+def make_gauge(cx, cy, r, value, label, tf):
+    # Класична шкала: 0 (зліва), 50 (вгорі), 100 (справа)
+    angle = 180 - (value / 100) * 180
+    radians = math.radians(angle)
+    x = cx + r * math.cos(radians)
+    y = cy - r * math.sin(radians)   # мінус щоб Y йшов вгору
+
+    return f"""
+    <g>
+      <!-- дуга -->
+      <path d="M{cx - r} {cy} A{r} {r} 0 0 1 {cx + r} {cy}" 
+            fill="none" stroke="lightgray" stroke-width="12"/>
+      <path d="M{cx - r} {cy} A{r} {r} 0 0 1 {cx + r} {cy}" 
+            fill="none" stroke="url(#grad)" stroke-width="12"/>
+
+      <!-- стрілка -->
+      <line x1="{cx}" y1="{cy}" x2="{x}" y2="{y}" stroke="black" stroke-width="5"/>
+      <circle cx="{cx}" cy="{cy}" r="6" fill="black"/>
+
+      <!-- значення у центрі -->
+      <text x="{cx}" y="{cy - 60}" font-size="38" text-anchor="middle" fill="black">{value:.1f}</text>
+      <!-- лейбл зверху -->
+      <text x="{cx}" y="{cy - 140}" font-size="22" text-anchor="middle" fill="black">{label}</text>
+      <!-- таймфрейм знизу -->
+      <text x="{cx}" y="{cy + 40}" font-size="22" fill="gray" text-anchor="middle">{tf}</text>
+    </g>
+    """
+
+
+
+
+@app.get("/api/fng/quad")
+async def fng_quad(symbol: str = "BTCUSDT"):
+    tfs = ["15m", "1h", "4h", "1d"]
+    values = {}
+
+    async with httpx.AsyncClient(timeout=8.0) as client:
+        for tf in tfs:
+            url = f"http://127.0.0.1:8000/api/fng?symbol={symbol}&tf={tf}"
+            r = await client.get(url)
+            if r.status_code == 200:
+                data = r.json()
+                print("DEBUG", tf, data)  # 👈 Додали лог
+                values[tf] = {
+                    "value": data.get("value", 50.0),
+                    "label": data.get("label", "Neutral"),
+                }
+            else:
+                values[tf] = {"value": 50.0, "label": "Neutral"}
+
+    svg = f"""
+    <svg width="800" height="800" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="grad">
+          <stop offset="0%" stop-color="red"/>
+          <stop offset="50%" stop-color="yellow"/>
+          <stop offset="100%" stop-color="green"/>
+        </linearGradient>
+      </defs>
+      {make_gauge(250, 250, 120, values["15m"]["value"], values["15m"]["label"], "15m")}
+      {make_gauge(550, 250, 120, values["1h"]["value"], values["1h"]["label"], "1h")}
+      {make_gauge(250, 600, 120, values["4h"]["value"], values["4h"]["label"], "4h")}
+      {make_gauge(550, 600, 120, values["1d"]["value"], values["1d"]["label"], "1d")}
+    </svg>
+    """
+    return Response(content=svg, media_type="image/svg+xml")
 
 # ---- CONSTS
 BINANCE_SPOT = "https://api.binance.com"
@@ -29,8 +128,7 @@ BINANCE_FAPI = "https://fapi.binance.com"  # USDT-M Futures
 # Дозволені ТФ для споту/ф'ючерсів
 VALID_TF = {"15m", "1h", "4h", "1d"}
 
-# ---- APP
-app = FastAPI(title="Custom Fear & Greed Index")
+
 
 
 app.add_middleware(

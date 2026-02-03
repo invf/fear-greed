@@ -1,0 +1,225 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <!-- title is not a normal element, but we can still set it by applyI18n (textContent) -->
+  <title data-i18n="extName">Crypto Panel</title>
+  <link rel="stylesheet" href="sidepanel.css" />
+</head>
+<body>
+
+  <!-- Header: tabs + refresh -->
+  <div class="header">
+    <div class="tabbar" role="tablist" aria-label="Pages">
+
+      <button class="tabIcon is-active"
+              id="tabOverview"
+              type="button"
+              role="tab"
+              aria-selected="true"
+              data-i18n-title="tabOverviewTitle"
+              data-i18n-aria="tabOverviewTitle">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 4h7v7H4V4zm9 0h7v7h-7V4zM4 13h7v7H4v-7zm9 0h7v7h-7v-7z"/>
+        </svg>
+      </button>
+
+      <button class="tabIcon"
+              id="tabDetails"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              data-i18n-title="tabDetailsTitle"
+              data-i18n-aria="tabDetailsTitle">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M5 6h14v2H5V6zm0 5h14v2H5v-2zm0 5h14v2H5v-2z"/>
+        </svg>
+      </button>
+
+      <button class="tabIcon"
+              id="tabSettings"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              data-i18n-title="tabSettingsTitle"
+              data-i18n-aria="tabSettingsTitle">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54A.5.5 0 0 0 13.9 1h-3.8a.5.5 0 0 0-.49.42l-.36 2.54c-.59.24-1.12.56-1.62.94l-2.39-.96a.5.5 0 0 0-.6.22L2.72 7.48a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94L2.84 14.52a.5.5 0 0 0-.12.64l1.92 3.32c.13.22.39.3.6.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.25.42.49.42h3.8c.24 0 .44-.18.49-.42l.36-2.54c.59-.24 1.12-.56 1.62-.94l2.39.96c.22.09.47 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5z"/>
+        </svg>
+      </button>
+
+      <button class="tabIcon"
+              id="tabHelp"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              data-i18n-title="tabHelpTitle"
+              data-i18n-aria="tabHelpTitle">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 17a1.2 1.2 0 1 1 0-2.4A1.2 1.2 0 0 1 12 19zm1.4-6.7c-.9.6-1 .9-1 1.7v.3h-1.8v-.5c0-1.2.4-2 1.6-2.8.9-.6 1.3-1 1.3-1.7 0-.8-.7-1.4-1.6-1.4-1 0-1.7.6-1.8 1.6H8.4c.1-2 1.8-3.3 3.8-3.3 2 0 3.6 1.2 3.6 3.1 0 1.6-.8 2.4-2.4 3.3z"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Refresh -->
+    <button id="refresh"
+            class="iconBtn"
+            data-i18n-title="refresh"
+            data-i18n-aria="refresh"
+            aria-label="Refresh">
+      <svg class="ico-refresh" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M21 12a9 9 0 0 0-15.4-6.4"/>
+        <polyline points="5.6,5.6 5.6,2.8 2.8,2.8"/>
+        <path d="M3 12a9 9 0 0 0 15.4 6.4"/>
+        <polyline points="18.4,18.4 18.4,21.2 21.2,21.2"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Pair badge -->
+  <div class="pairCenter">
+    <div class="pairBadge"
+         id="pairBadge"
+         data-i18n-title="detectedPair"
+         data-i18n-aria="detectedPair">
+      <span class="venue" id="venue">—</span>
+      <span class="sep">:</span>
+      <span class="symbol" id="symbol">—</span>
+    </div>
+  </div>
+
+  <!-- OVERVIEW -->
+  <div class="view is-active" id="viewOverview" role="tabpanel">
+    <div class="riskCard compact" id="riskCard">
+      <div class="riskTop">
+        <div class="riskLeft">
+          <div class="riskTitle" data-i18n="riskTitle">RISK</div>
+          <div class="riskLevel" id="riskLevel">—</div>
+        </div>
+        <div class="riskScore">
+          <div class="riskScoreNum" id="riskScore">—</div>
+          <div class="riskScoreSub">/100</div>
+        </div>
+      </div>
+
+      <div class="riskBarWrap">
+        <div class="riskBar">
+          <div class="riskFill" id="riskFill" style="width:0%"></div>
+        </div>
+      </div>
+
+      <div class="riskChips" id="riskChips"></div>
+    </div>
+
+    <div class="grid">
+      <div class="card compactCard">
+        <div class="bar neutral" id="bar_15m">
+          <span class="barLeft">15m</span>
+          <span class="pill" id="pill_15m">—</span>
+        </div>
+        <div class="bigVal" id="val_15m">—</div>
+        <canvas id="g_15m" width="320" height="170"></canvas>
+      </div>
+
+      <div class="card compactCard">
+        <div class="bar neutral" id="bar_1h">
+          <span class="barLeft">1h</span>
+          <span class="pill" id="pill_1h">—</span>
+        </div>
+        <div class="bigVal" id="val_1h">—</div>
+        <canvas id="g_1h" width="320" height="170"></canvas>
+      </div>
+
+      <div class="card compactCard">
+        <div class="bar neutral" id="bar_4h">
+          <span class="barLeft">4h</span>
+          <span class="pill" id="pill_4h">—</span>
+        </div>
+        <div class="bigVal" id="val_4h">—</div>
+        <canvas id="g_4h" width="320" height="170"></canvas>
+      </div>
+
+      <div class="card compactCard">
+        <div class="bar neutral" id="bar_1d">
+          <span class="barLeft">1d</span>
+          <span class="pill" id="pill_1d">—</span>
+        </div>
+        <div class="bigVal" id="val_1d">—</div>
+        <canvas id="g_1d" width="320" height="170"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- DETAILS -->
+  <div class="view" id="viewDetails" role="tabpanel">
+    <div class="detailsCard">
+      <div class="detailsTitle" data-i18n="tabDetailsTitle">Details</div>
+      <div id="detailsBars"></div>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="view" id="viewSettings" role="tabpanel">
+    <div class="detailsCard">
+      <div class="detailsTitle" data-i18n="settingsTitle">Settings</div>
+
+      <div class="formRow">
+        <label class="lbl" data-i18n="apiBaseLabel">API base</label>
+        <input class="inp"
+               id="s_apiBase"
+               type="text"
+               data-i18n-placeholder="apiBasePlaceholder"
+               placeholder="https://fear-greed-24pr.onrender.com" />
+        <div class="hint" data-i18n="apiBaseHint">Readonly for now.</div>
+      </div>
+
+      <div class="formRow">
+        <label class="lbl" data-i18n="autoRefresh">Auto refresh</label>
+        <div class="toggleRow">
+          <input type="checkbox" id="s_auto"/>
+          <span class="hint" data-i18n="autoRefreshHint">Auto refresh on pair change / every N seconds.</span>
+        </div>
+      </div>
+
+      <div class="formRow">
+        <label class="lbl" data-i18n="refreshInterval">Refresh interval (sec)</label>
+        <input class="inp" id="s_interval" type="number" min="5" max="300" step="5" value="30" />
+        <div class="hint" data-i18n="refreshIntervalHint">Updates every N seconds (5–300).</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HELP VIEW (DO NOT TOUCH) -->
+  <div class="view" id="viewHelp" role="tabpanel">
+    <div class="detailsCard">
+      <div class="detailsTitle" data-i18n="tabHelpTitle">Help</div>
+
+      <div class="helpText">
+        <div class="helpP" data-i18n="help_detectedPair"></div>
+        <div class="helpP" data-i18n="help_fng_range"></div>
+        <div class="helpP" data-i18n="help_zones"></div>
+
+        <div class="helpP"><b data-i18n="help_timeframes_title"></b></div>
+        <div class="helpP" data-i18n="help_tf_15m"></div>
+        <div class="helpP" data-i18n="help_tf_1h"></div>
+        <div class="helpP" data-i18n="help_tf_4h"></div>
+        <div class="helpP" data-i18n="help_tf_1d"></div>
+
+        <div class="helpP" data-i18n="help_risk_title"></div>
+        <div class="helpP" data-i18n="help_risk_levels"></div>
+
+        <div class="helpP"><b data-i18n="help_details_title"></b></div>
+        <div class="helpP" data-i18n="help_market_tilt"></div>
+        <div class="helpP" data-i18n="help_tf_spread"></div>
+        <div class="helpP" data-i18n="help_extremes"></div>
+
+        <div class="helpP" data-i18n="help_tip"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="err" id="err"></div>
+
+  <script src="sidepanel.js"></script>
+</body>
+</html>

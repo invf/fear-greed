@@ -1,0 +1,77 @@
+{
+  "extName": { "message": "Crypto Sentiment OS" },
+  "extDesc": { "message": "Радар Fear & Greed з мульти-таймфреймовим аналізом ризику." },
+
+  "tabOverviewTitle": { "message": "Огляд" },
+  "tabDetailsTitle": { "message": "Деталі" },
+  "tabSettingsTitle": { "message": "Налаштування" },
+  "tabHelpTitle": { "message": "Довідка" },
+
+  "riskTitle": { "message": "РИЗИК" },
+  "detectedPair": { "message": "Визначена пара" },
+  "refresh": { "message": "Оновити" },
+
+  "settingsTitle": { "message": "Налаштування" },
+  "apiBaseLabel": { "message": "API сервер" },
+  "apiBasePlaceholder": { "message": "https://fear-greed-24pr.onrender.com" },
+  "apiBaseHint": { "message": "Поки що лише для читання." },
+
+  "autoRefresh": { "message": "Автооновлення" },
+  "autoRefreshHint": { "message": "Оновлювати при зміні пари / кожні N секунд." },
+
+  "refreshInterval": { "message": "Інтервал оновлення (сек)" },
+  "refreshIntervalHint": { "message": "Оновлення кожні N секунд (5–300)." },
+
+  "waiting": { "message": "Очікування ринкових даних..." },
+
+  "fearLabelShort": { "message": "Страх" },
+  "greedLabelShort": { "message": "Жадібність" },
+
+  "labelExtremeFear": { "message": "ЕКСТРЕМАЛЬНИЙ СТРАХ" },
+  "labelFear": { "message": "СТРАХ" },
+  "labelNeutral": { "message": "НЕЙТРАЛЬНО" },
+  "labelGreed": { "message": "ЖАДІБНІСТЬ" },
+  "labelExtremeGreed": { "message": "ЕКСТРЕМАЛЬНА ЖАДІБНІСТЬ" },
+
+  "zoneExtremeFear": { "message": "Екстремальний страх" },
+  "zoneFear": { "message": "Страх" },
+  "zoneNeutral": { "message": "Нейтрально" },
+  "zoneGreed": { "message": "Жадібність" },
+  "zoneExtremeGreed": { "message": "Екстремальна жадібність" },
+
+  "detailsMarketStructureTitle": { "message": "Структура ринку" },
+  "marketTilt": { "message": "Ухил ринку" },
+  "tfSpread": { "message": "Розбіжність ТФ" },
+  "dispersion": { "message": "розкид" },
+  "extremes": { "message": "Крайнощі (E)" },
+  "distanceFrom50": { "message": "відхилення від 50" },
+  "timeframesTitle": { "message": "Таймфрейми" },
+
+  "errNoActiveTab": { "message": "Немає активної вкладки." },
+  "errNoSymbol": { "message": "Не вдалося визначити торгову пару з URL." },
+
+  "chipE": { "message": "E" },
+  "chipSpread": { "message": "Spread" },
+  "chip15_1": { "message": "15m↔1h" },
+  "chip15_4": { "message": "15m↔4h" },
+
+  "help_detectedPair": { "message": "Detected pair показує біржу та торгову пару, визначену з активної вкладки (наприклад, BINANCE:BTCUSDT)." },
+  "help_fng_range": { "message": "Fear & Greed — це індекс настрою ринку від 0 до 100 для кожного таймфрейму." },
+  "help_zones": { "message": "Зони: 0–25 Екстремальний страх · 25–45 Страх · 45–55 Нейтрально · 55–76 Жадібність · 76–100 Екстремальна жадібність" },
+
+  "help_timeframes_title": { "message": "Таймфрейми:" },
+  "help_tf_15m": { "message": "• 15m — дуже короткостроковий настрій (шумний, швидкий)" },
+  "help_tf_1h": { "message": "• 1h — короткостроковий настрій" },
+  "help_tf_4h": { "message": "• 4h — середньостроковий трейдерський настрій" },
+  "help_tf_1d": { "message": "• 1d — денний ринковий режим / контекст" },
+
+  "help_risk_title": { "message": "Risk (0–100) — це індекс нестабільності, а НЕ сигнал купівлі чи продажу. Він показує, наскільки небезпечний поточний стан (крайнощі, розбіжність ТФ, короткі імпульси)." },
+  "help_risk_levels": { "message": "Рівні: LOW спокій · MEDIUM нестабільність · HIGH турбулентність · EXTREME екстремальні умови" },
+
+  "help_details_title": { "message": "Details → Структура ринку:" },
+  "help_market_tilt": { "message": "• Market Tilt — середній настрій по 15m/1h/4h/1d (загальний ухил ринку)." },
+  "help_tf_spread": { "message": "• TF Spread — наскільки таймфрейми розходяться між собою. Більше = конфлікт / фаза переходу." },
+  "help_extremes": { "message": "• Extremes (E) — відхилення від нейтральної зони 50. Більше = сильні емоції (страх або жадібність)." },
+
+  "help_tip": { "message": "Порада: якщо пара не визначилась, відкрий сторінку торгів або графіка з парою в URL і натисни Refresh." }
+}

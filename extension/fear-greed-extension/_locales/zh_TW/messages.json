@@ -1,0 +1,77 @@
+{
+  "extName": { "message": "Crypto Sentiment OS" },
+  "extDesc": { "message": "具有多時間週期風險分析的 Fear & Greed 雷達。" },
+
+  "tabOverviewTitle": { "message": "總覽" },
+  "tabDetailsTitle": { "message": "詳細資料" },
+  "tabSettingsTitle": { "message": "設定" },
+  "tabHelpTitle": { "message": "說明" },
+
+  "riskTitle": { "message": "風險" },
+  "detectedPair": { "message": "已偵測交易對" },
+  "refresh": { "message": "重新整理" },
+
+  "settingsTitle": { "message": "設定" },
+  "apiBaseLabel": { "message": "API 伺服器" },
+  "apiBasePlaceholder": { "message": "https://fear-greed-24pr.onrender.com" },
+  "apiBaseHint": { "message": "目前為唯讀。" },
+
+  "autoRefresh": { "message": "自動更新" },
+  "autoRefreshHint": { "message": "交易對變更或每 N 秒自動更新。" },
+
+  "refreshInterval": { "message": "更新間隔（秒）" },
+  "refreshIntervalHint": { "message": "每 N 秒更新一次（5–300）。" },
+
+  "waiting": { "message": "正在等待市場資料…" },
+
+  "fearLabelShort": { "message": "恐懼" },
+  "greedLabelShort": { "message": "貪婪" },
+
+  "labelExtremeFear": { "message": "極度恐懼" },
+  "labelFear": { "message": "恐懼" },
+  "labelNeutral": { "message": "中性" },
+  "labelGreed": { "message": "貪婪" },
+  "labelExtremeGreed": { "message": "極度貪婪" },
+
+  "zoneExtremeFear": { "message": "極度恐懼" },
+  "zoneFear": { "message": "恐懼" },
+  "zoneNeutral": { "message": "中性" },
+  "zoneGreed": { "message": "貪婪" },
+  "zoneExtremeGreed": { "message": "極度貪婪" },
+
+  "detailsMarketStructureTitle": { "message": "市場結構" },
+  "marketTilt": { "message": "市場傾向" },
+  "tfSpread": { "message": "時間週期分歧" },
+  "dispersion": { "message": "分散度" },
+  "extremes": { "message": "極端值 (E)" },
+  "distanceFrom50": { "message": "偏離 50 的距離" },
+  "timeframesTitle": { "message": "時間週期" },
+
+  "errNoActiveTab": { "message": "沒有可用的分頁。" },
+  "errNoSymbol": { "message": "無法從此頁面識別交易對。" },
+
+  "chipE": { "message": "E" },
+  "chipSpread": { "message": "Spread" },
+  "chip15_1": { "message": "15m↔1h" },
+  "chip15_4": { "message": "15m↔4h" },
+
+  "help_detectedPair": { "message": "Detected pair 會顯示從目前頁面識別出的交易所與交易對（例如 BINANCE:BTCUSDT）。" },
+  "help_fng_range": { "message": "Fear & Greed 是每個時間週期的市場情緒指數，範圍 0 到 100。" },
+  "help_zones": { "message": "區間：0–25 極度恐懼 · 25–45 恐懼 · 45–55 中性 · 55–76 貪婪 · 76–100 極度貪婪" },
+
+  "help_timeframes_title": { "message": "時間週期：" },
+  "help_tf_15m": { "message": "• 15分鐘 — 極短期情緒（快速、雜訊高）" },
+  "help_tf_1h": { "message": "• 1小時 — 短期情緒" },
+  "help_tf_4h": { "message": "• 4小時 — 中期交易者情緒" },
+  "help_tf_1d": { "message": "• 1天 — 日線市場結構 / 背景" },
+
+  "help_risk_title": { "message": "Risk (0–100) 是市場不穩定指數，不是買賣訊號。" },
+  "help_risk_levels": { "message": "等級：LOW 平穩 · MEDIUM 不穩定 · HIGH 波動 · EXTREME 極端狀態" },
+
+  "help_details_title": { "message": "Details → 市場結構：" },
+  "help_market_tilt": { "message": "• Market Tilt — 所有週期的平均情緒。" },
+  "help_tf_spread": { "message": "• TF Spread — 各週期分歧程度。" },
+  "help_extremes": { "message": "• Extremes (E) — 偏離中性值 50 的程度。" },
+
+  "help_tip": { "message": "提示：如果未識別交易對，請打開包含交易對的交易或圖表頁面，然後點擊重新整理。" }
+}

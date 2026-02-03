@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Crypto Sentiment OS — App</title>
+  <link rel="stylesheet" href="assets/styles.css"/>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <a class="brandLink" href="index.html">
+        <div class="logo">CS</div>
+        <div>
+          <div class="brandTitle">Crypto Sentiment OS</div>
+          <div class="brandSub">Web App</div>
+        </div>
+      </a>
+    </div>
+
+    <nav class="nav">
+      <a href="index.html">Home</a>
+      <a href="plans.html">Plans</a>
+    </nav>
+
+    <div class="navActions">
+      <button class="btn" id="themeBtn" type="button">🌓 Theme</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Top controls (symbol + refresh) -->
+    <section class="appTop">
+      <div class="appTopLeft">
+        <div class="muted">Symbol</div>
+        <input id="sym" class="inp" value="SOLUSDT" />
+      </div>
+
+      <div class="appTopRight">
+        <button id="refreshBtn" class="btn primary" type="button">Refresh</button>
+      </div>
+    </section>
+
+    <!-- Tabs -->
+    <section class="tabs">
+      <button class="tab is-active" data-tab="overview" type="button">Overview</button>
+      <button class="tab" data-tab="details" type="button">Details</button>
+      <button class="tab" data-tab="settings" type="button">Settings</button>
+      <button class="tab" data-tab="help" type="button">Help</button>
+    </section>
+
+    <!-- Views -->
+    <section class="view is-active" id="view-overview">
+      <!-- Risk card -->
+      <div class="card pad">
+        <div class="row">
+          <div>
+            <div class="cardTitle">RISK</div>
+            <div class="riskValue" id="riskLevel">—</div>
+          </div>
+          <div class="riskScore">
+            <div class="riskScoreNum" id="riskScore">—</div>
+            <div class="muted">/100</div>
+          </div>
+        </div>
+        <div class="riskBar">
+          <div class="riskFill" id="riskFill" style="width:0%"></div>
+        </div>
+        <div class="chips" id="riskChips"></div>
+      </div>
+
+      <div class="grid2" id="grid"></div>
+    </section>
+
+    <section class="view" id="view-details">
+      <div class="card pad">
+        <div class="cardTitle">Details</div>
+        <div id="detailsBars"></div>
+      </div>
+    </section>
+
+    <section class="view" id="view-settings">
+      <div class="card pad">
+        <div class="cardTitle">Settings</div>
+
+        <div class="formRow">
+          <label class="lbl">API base</label>
+          <input class="inp" id="apiBase" type="text" readonly/>
+          <div class="muted small">Readonly for now.</div>
+        </div>
+
+        <div class="formRow">
+          <label class="lbl">Auto refresh</label>
+          <label class="switch">
+            <input type="checkbox" id="autoRefresh"/>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="formRow">
+          <label class="lbl">Refresh interval (sec)</label>
+          <input class="inp" id="intervalSec" type="number" min="5" max="300" step="5" value="30"/>
+        </div>
+      </div>
+    </section>
+
+    <section class="view" id="view-help">
+      <div class="card pad">
+        <div class="cardTitle">Help</div>
+        <div class="muted" id="helpContent">
+          This page will reuse the same help texts as in extension locales later.
+        </div>
+      </div>
+    </section>
+
+    <div class="err" id="err"></div>
+
+    <footer class="footer muted">
+      <div>API: <code id="apiStatus">—</code></div>
+      <div class="footerLinks">
+        <a href="index.html">Home</a>
+        <a href="plans.html">Plans</a>
+      </div>
+    </footer>
+  </main>
+
+  <script src="assets/app.js"></script>
+</body>
+</html>

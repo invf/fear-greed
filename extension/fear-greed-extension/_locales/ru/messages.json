@@ -1,0 +1,77 @@
+{
+  "extName": { "message": "Crypto Sentiment OS" },
+  "extDesc": { "message": "Радар Fear & Greed с мульти-таймфреймовым анализом риска." },
+
+  "tabOverviewTitle": { "message": "Обзор" },
+  "tabDetailsTitle": { "message": "Детали" },
+  "tabSettingsTitle": { "message": "Настройки" },
+  "tabHelpTitle": { "message": "Справка" },
+
+  "riskTitle": { "message": "РИСК" },
+  "detectedPair": { "message": "Обнаруженная пара" },
+  "refresh": { "message": "Обновить" },
+
+  "settingsTitle": { "message": "Настройки" },
+  "apiBaseLabel": { "message": "API сервер" },
+  "apiBasePlaceholder": { "message": "https://fear-greed-24pr.onrender.com" },
+  "apiBaseHint": { "message": "Пока только для чтения." },
+
+  "autoRefresh": { "message": "Автообновление" },
+  "autoRefreshHint": { "message": "Обновлять при смене пары / каждые N секунд." },
+
+  "refreshInterval": { "message": "Интервал обновления (сек)" },
+  "refreshIntervalHint": { "message": "Обновление каждые N секунд (5–300)." },
+
+  "waiting": { "message": "Ожидание рыночных данных..." },
+
+  "fearLabelShort": { "message": "Страх" },
+  "greedLabelShort": { "message": "Жадность" },
+
+  "labelExtremeFear": { "message": "ЭКСТРЕМАЛЬНЫЙ СТРАХ" },
+  "labelFear": { "message": "СТРАХ" },
+  "labelNeutral": { "message": "НЕЙТРАЛЬНО" },
+  "labelGreed": { "message": "ЖАДНОСТЬ" },
+  "labelExtremeGreed": { "message": "ЭКСТРЕМАЛЬНАЯ ЖАДНОСТЬ" },
+
+  "zoneExtremeFear": { "message": "Экстремальный страх" },
+  "zoneFear": { "message": "Страх" },
+  "zoneNeutral": { "message": "Нейтрально" },
+  "zoneGreed": { "message": "Жадность" },
+  "zoneExtremeGreed": { "message": "Экстремальная жадность" },
+
+  "detailsMarketStructureTitle": { "message": "Структура рынка" },
+  "marketTilt": { "message": "Наклон рынка" },
+  "tfSpread": { "message": "Разброс ТФ" },
+  "dispersion": { "message": "разброс" },
+  "extremes": { "message": "Экстремумы (E)" },
+  "distanceFrom50": { "message": "отклонение от 50" },
+  "timeframesTitle": { "message": "Таймфреймы" },
+
+  "errNoActiveTab": { "message": "Нет активной вкладки." },
+  "errNoSymbol": { "message": "Не удалось определить торговую пару из URL." },
+
+  "chipE": { "message": "E" },
+  "chipSpread": { "message": "Разброс" },
+  "chip15_1": { "message": "15m↔1h" },
+  "chip15_4": { "message": "15m↔4h" },
+
+  "help_detectedPair": { "message": "Detected pair показывает биржу и торговую пару, определённую из активной вкладки (например, BINANCE:BTCUSDT)." },
+  "help_fng_range": { "message": "Fear & Greed — это индекс настроения рынка от 0 до 100 для каждого таймфрейма." },
+  "help_zones": { "message": "Зоны: 0–25 Экстремальный страх · 25–45 Страх · 45–55 Нейтрально · 55–76 Жадность · 76–100 Экстремальная жадность" },
+
+  "help_timeframes_title": { "message": "Таймфреймы:" },
+  "help_tf_15m": { "message": "• 15m — очень краткосрочное настроение (шумное, быстрое)" },
+  "help_tf_1h": { "message": "• 1h — краткосрочное настроение" },
+  "help_tf_4h": { "message": "• 4h — среднесрочный трейдерский настрой" },
+  "help_tf_1d": { "message": "• 1d — дневной рыночный режим / контекст" },
+
+  "help_risk_title": { "message": "Risk (0–100) — это индекс нестабильности, а НЕ сигнал покупки или продажи. Он показывает, насколько опасно текущее состояние (крайности, расхождение ТФ, импульсы)." },
+  "help_risk_levels": { "message": "Уровни: LOW спокойно · MEDIUM нестабильно · HIGH турбулентно · EXTREME экстремальные условия" },
+
+  "help_details_title": { "message": "Details → Структура рынка:" },
+  "help_market_tilt": { "message": "• Market Tilt — средний настрой по 15m/1h/4h/1d (общий уклон рынка)." },
+  "help_tf_spread": { "message": "• TF Spread — насколько таймфреймы расходятся. Больше = конфликт / фаза перехода." },
+  "help_extremes": { "message": "• Extremes (E) — отклонение от нейтральной зоны 50. Больше = сильные эмоции (страх или жадность)." },
+
+  "help_tip": { "message": "Совет: если пара не определяется, открой страницу торговли или графика с парой в URL и нажми Refresh." }
+}

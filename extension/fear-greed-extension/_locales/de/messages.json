@@ -1,0 +1,77 @@
+{
+  "extName": { "message": "Crypto Sentiment OS" },
+  "extDesc": { "message": "Fear-&-Greed-Radar mit Risikoanalyse über mehrere Zeitrahmen." },
+
+  "tabOverviewTitle": { "message": "Übersicht" },
+  "tabDetailsTitle": { "message": "Details" },
+  "tabSettingsTitle": { "message": "Einstellungen" },
+  "tabHelpTitle": { "message": "Hilfe" },
+
+  "riskTitle": { "message": "RISIKO" },
+  "detectedPair": { "message": "Erkanntes Paar" },
+  "refresh": { "message": "Aktualisieren" },
+
+  "settingsTitle": { "message": "Einstellungen" },
+  "apiBaseLabel": { "message": "API-Basis" },
+  "apiBasePlaceholder": { "message": "https://fear-greed-24pr.onrender.com" },
+  "apiBaseHint": { "message": "Derzeit schreibgeschützt." },
+
+  "autoRefresh": { "message": "Auto-Aktualisierung" },
+  "autoRefreshHint": { "message": "Aktualisiert bei Pair-Wechsel / alle N Sekunden." },
+
+  "refreshInterval": { "message": "Aktualisierungsintervall (Sek.)" },
+  "refreshIntervalHint": { "message": "Updates alle N Sekunden (5–300)." },
+
+  "waiting": { "message": "Warte auf Marktdaten..." },
+
+  "fearLabelShort": { "message": "Angst" },
+  "greedLabelShort": { "message": "Gier" },
+
+  "labelExtremeFear": { "message": "EXTREME ANGST" },
+  "labelFear": { "message": "ANGST" },
+  "labelNeutral": { "message": "NEUTRAL" },
+  "labelGreed": { "message": "GIER" },
+  "labelExtremeGreed": { "message": "EXTREME GIER" },
+
+  "zoneExtremeFear": { "message": "Extreme Angst" },
+  "zoneFear": { "message": "Angst" },
+  "zoneNeutral": { "message": "Neutral" },
+  "zoneGreed": { "message": "Gier" },
+  "zoneExtremeGreed": { "message": "Extreme Gier" },
+
+  "detailsMarketStructureTitle": { "message": "Marktstruktur" },
+  "marketTilt": { "message": "Markt-Neigung" },
+  "tfSpread": { "message": "TF-Streuung" },
+  "dispersion": { "message": "Streuung" },
+  "extremes": { "message": "Extreme (E)" },
+  "distanceFrom50": { "message": "Abstand zu 50" },
+  "timeframesTitle": { "message": "Zeitrahmen" },
+
+  "errNoActiveTab": { "message": "Keine aktive Tab-URL." },
+  "errNoSymbol": { "message": "Symbol kann aus der URL dieser Seite nicht erkannt werden." },
+
+  "chipE": { "message": "E" },
+  "chipSpread": { "message": "Streuung" },
+  "chip15_1": { "message": "15m↔1h" },
+  "chip15_4": { "message": "15m↔4h" },
+
+  "help_detectedPair": { "message": "Detected pair zeigt die Börse und das Handelspaar aus dem aktiven Tab (z.B. BINANCE:BTCUSDT)." },
+  "help_fng_range": { "message": "Fear & Greed ist ein Stimmungsindex von 0 bis 100 für jeden Zeitrahmen." },
+  "help_zones": { "message": "Zonen: 0–25 Extreme Fear · 25–45 Fear · 45–55 Neutral · 55–76 Greed · 76–100 Extreme Greed" },
+
+  "help_timeframes_title": { "message": "Zeitrahmen:" },
+  "help_tf_15m": { "message": "• 15m — sehr kurzfristige Stimmung (schnell, volatil)" },
+  "help_tf_1h": { "message": "• 1h — kurzfristige Stimmung" },
+  "help_tf_4h": { "message": "• 4h — mittelfristige Trader-Stimmung" },
+  "help_tf_1d": { "message": "• 1d — Tagesregime / Markt­kontext" },
+
+  "help_risk_title": { "message": "Risk (0–100) ist ein Instabilitätsindex — KEIN Kauf- oder Verkaufssignal. Er zeigt, wie gefährlich der aktuelle Zustand ist." },
+  "help_risk_levels": { "message": "Stufen: LOW ruhig · MEDIUM instabil · HIGH turbulent · EXTREME extrem / chaotisch" },
+
+  "help_details_title": { "message": "Details → Marktstruktur:" },
+  "help_market_tilt": { "message": "• Market Tilt — durchschnittliche Stimmung über alle Zeitrahmen." },
+  "help_tf_spread": { "message": "• TF Spread — wie stark sich Zeitrahmen unterscheiden." },
+  "help_extremes": { "message": "• Extremes (E) — Abstand von der neutralen Zone 50." },
+
+  "help_tip": { "message": "Tipp: Wenn das Symbol nicht erkannt wird, öffne eine Chart- oder Handelsseite mit dem Symbol in der URL und klicke auf Refresh." }
+}

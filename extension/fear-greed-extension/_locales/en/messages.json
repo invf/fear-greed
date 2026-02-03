@@ -1,0 +1,89 @@
+{
+  "extName": { "message": "Crypto Sentiment OS" },
+  "extDesc": { "message": "Fear & Greed radar with multi-timeframe risk analysis." },
+
+  "tabOverviewTitle": { "message": "Overview" },
+  "tabDetailsTitle": { "message": "Details" },
+  "tabSettingsTitle": { "message": "Settings" },
+  "tabHelpTitle": { "message": "Help" },
+
+  "riskTitle": { "message": "RISK" },
+  "detectedPair": { "message": "Detected pair" },
+  "refresh": { "message": "Refresh" },
+
+  "extremes": { "message": "Extremes (E)" },
+  "extremesDesc": { "message": "Distance from neutral zone (50). Shows how emotional the market is." },
+
+  "tfSpread": { "message": "TF Spread" },
+  "tfSpreadDesc": { "message": "Difference between Fear & Greed zones across timeframes." },
+
+  "impulse": { "message": "Impulse" },
+  "impulseDesc": { "message": "How sharply short timeframe deviates from higher ones." },
+
+  "riskLow": { "message": "LOW" },
+  "riskMedium": { "message": "MEDIUM" },
+  "riskHigh": { "message": "HIGH" },
+  "riskExtreme": { "message": "EXTREME" },
+
+  "settingsTitle": { "message": "Settings" },
+  "autoRefresh": { "message": "Auto refresh" },
+  "refreshInterval": { "message": "Refresh interval (sec)" },
+
+  "apiBaseLabel": { "message": "API base" },
+  "apiBasePlaceholder": { "message": "https://fear-greed-24pr.onrender.com" },
+  "apiBaseHint": { "message": "Readonly for now." },
+
+  "autoRefreshHint": { "message": "Auto refresh on pair change / every N seconds." },
+  "refreshIntervalHint": { "message": "Updates every N seconds (5–300)." },
+
+  "waiting": { "message": "Waiting for market data..." },
+
+  "errNoActiveTab": { "message": "No active tab URL." },
+  "errNoSymbol": { "message": "Cannot detect symbol from URL on this page." },
+
+  "fearLabelShort": { "message": "Fear" },
+  "greedLabelShort": { "message": "Greed" },
+
+  "labelExtremeFear": { "message": "EXTREME FEAR" },
+  "labelFear": { "message": "FEAR" },
+  "labelNeutral": { "message": "NEUTRAL" },
+  "labelGreed": { "message": "GREED" },
+  "labelExtremeGreed": { "message": "EXTREME GREED" },
+
+  "zoneExtremeFear": { "message": "Extreme Fear" },
+  "zoneFear": { "message": "Fear" },
+  "zoneNeutral": { "message": "Neutral" },
+  "zoneGreed": { "message": "Greed" },
+  "zoneExtremeGreed": { "message": "Extreme Greed" },
+
+  "detailsMarketStructureTitle": { "message": "Market structure" },
+  "marketTilt": { "message": "Market tilt" },
+  "dispersion": { "message": "dispersion" },
+  "distanceFrom50": { "message": "distance from 50" },
+  "timeframesTitle": { "message": "Timeframes" },
+
+  "chipE": { "message": "E" },
+  "chipSpread": { "message": "Spread" },
+  "chip15_1": { "message": "15m↔1h" },
+  "chip15_4": { "message": "15m↔4h" },
+
+  "help_detectedPair": { "message": "Detected pair shows the exchange and the trading pair detected from the active tab (e.g. BINANCE:BTCUSDT)." },
+  "help_fng_range": { "message": "Fear & Greed is a sentiment index from 0 to 100 for each timeframe." },
+  "help_zones": { "message": "Zones: 0–25 Extreme Fear · 25–45 Fear · 45–55 Neutral · 55–76 Greed · 76–100 Extreme Greed" },
+
+  "help_timeframes_title": { "message": "Timeframes:" },
+  "help_tf_15m": { "message": "• 15m — very short-term sentiment (fast, noisy)" },
+  "help_tf_1h": { "message": "• 1h — short-term sentiment" },
+  "help_tf_4h": { "message": "• 4h — mid-term trader sentiment" },
+  "help_tf_1d": { "message": "• 1d — daily regime / market context" },
+
+  "help_risk_title": { "message": "Risk (0–100) is an instability index — NOT a buy or sell signal. It shows how dangerous the current state is." },
+  "help_risk_levels": { "message": "Levels: LOW calm · MEDIUM unstable · HIGH turbulent · EXTREME extreme / chaotic" },
+
+  "help_details_title": { "message": "Details → Market structure:" },
+  "help_market_tilt": { "message": "• Market Tilt — average sentiment across all timeframes." },
+  "help_tf_spread": { "message": "• TF Spread — how strongly timeframes disagree." },
+  "help_extremes": { "message": "• Extremes (E) — distance from the neutral zone 50." },
+
+  "help_tip": { "message": "Tip: if the symbol is not detected, open a chart or trading page with the symbol in the URL and click Refresh." }
+}

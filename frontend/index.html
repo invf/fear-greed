@@ -1,575 +1,108 @@
 <!doctype html>
-<html lang="uk">
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Fear & Greed Index — Gauges + Optional MetaMask</title>
-  <meta name="description" content="4 спідометри (15m, 1h, 4h, 1d) для обраного символу Binance. Безпечна робота без MetaMask; опційно — оплата через гаманець." />
-  <style>
-    :root{
-      --bg:#0b0c10; --card:#121318; --text:#e8eaf0; --muted:#9aa3b2; --ring:#1f2937;
-      --accent:#22d3ee; --good:#34d399; --bad:#ef4444; --warn:#f59e0b;
-    }
-    body.light{ --bg:#f6f7fb; --card:#ffffff; --text:#0d1321; --muted:#5b6576; --ring:#e5e7eb; --accent:#0ea5e9; }
-
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&display=swap');
-    body{margin:0; background:var(--bg); color:var(--text); font-family: 'Poppins', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Inter, Arial;}
-    .wrap{max-width:1100px; margin:0 auto; padding:24px}
-    header{display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; flex-wrap:wrap}
-    .title{font-weight:800; letter-spacing:.2px; font-size:clamp(20px, 2.4vw, 28px)}
-    .controls{display:flex; gap:10px; flex-wrap:wrap}
-    select, input, button{ background:var(--card); color:var(--text); border:1px solid var(--ring); border-radius:12px; padding:10px 12px; font-weight:600 }
-    button{ cursor:pointer }
-    /* --- Click animations for buttons --- */
-    button, .toggle, .dd-btn{
-      transition: transform .15s ease, box-shadow .15s ease, background-color .2s ease, border-color .2s ease;
-      will-change: transform;
-    }
-    button:active, .toggle:active, .dd-btn:active{ transform: scale(0.94); box-shadow: 0 0 0 6px rgba(255,255,255,.04) inset; }
-    .press-pulse{ animation: pressPulse .35s ease; }
-    @keyframes pressPulse{
-      0%{ transform: scale(1); }
-      55%{ transform: scale(1.08); }
-      100%{ transform: scale(1); }
-    }
-    @media (prefers-reduced-motion: reduce){
-      button, .toggle, .dd-btn{ transition: none; }
-      .press-pulse{ animation: none; }
-    }
-    button[disabled]{ opacity:.55; cursor:not-allowed }
-    .toggle{display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:12px; border:1px solid var(--ring); background:var(--card); color:var(--text); cursor:pointer; font-weight:700}
-
-    .grid{ display:grid; grid-template-columns: repeat(2, minmax(260px, 1fr)); gap:18px }
-    @media (max-width: 700px){ .grid{ grid-template-columns: 1fr } }
-
-    .card{ background:var(--card); border:1px solid rgba(255,255,255,.06); border-radius:20px; padding:0; box-shadow:0 10px 30px rgba(0,0,0,.25); overflow:hidden }
-    .card h3{ margin:0 0 2px 0; font-size:16px }
-    .muted{ color:var(--muted); font-size:12px }
-    .row{ display:flex; align-items:center; justify-content:space-between; gap:12px }
-
-    .gauge{ width:100%; aspect-ratio: 2 / 1; display:block }
-    .legend{ display:flex; justify-content:space-between; font-size:12px; color:var(--muted); margin-top:6px }
-
-    .big{ font-size:64px; font-weight:800; letter-spacing:0.5px }
-    .badge{ padding:8px 16px; border-radius:16px; font-weight:700; font-size:24px; }
-    .b-fear{ background:#1f2937; color:#fde68a }
-    .b-greed{ background:#063; color:#a7f3d0 }
-    .b-neutral{ background:#1f2937; color:#d1d5db }
-
-    .pill{display:inline-flex; align-items:center; gap:8px; padding:8px 10px; border-radius:999px; border:1px dashed var(--ring); font-size:12px}
-
-    footer{ margin-top:18px; color:var(--muted); font-size:12px }
-    a{ color:var(--accent); text-decoration:none }
-    a:hover{text-decoration:underline}
-
-    .small{font-size:12px}
-
-    /* (safety) сховаємо value-arc, якщо десь залишився */
-    path[id^="val-arc-"]{ display:none }
-
-    /* Світла тема: стрілка та текст чорні */
-    body.light polygon,
-    body.light circle { fill:#000 !important; stroke:#000 !important; }
-    body.light text { fill:#000 !important; }
-
-    /* alerts */
-    #alert{display:none; position:fixed; inset:auto 0 16px 0; margin:auto; width:min(840px,calc(100% - 32px)); background:#111827; color:#e5e7eb; border:1px solid #374151; padding:10px 14px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.35); z-index:50}
-    body.light #alert{ background:#ffffff; color:#0d1321; border-color:#e5e7eb }
-    #alert b{font-weight:800}
-
-    /* === Classic header ("табло") colors === */
-    .card .statusbar{height:40px; display:flex; align-items:center; justify-content:space-between; padding:0 14px}
-    .card .statusbar h3{ margin:0; font-size:14px; font-weight:800 }
-    .card.fear .statusbar{ background:#ef4444; color:#fee2e2 }
-    .card.neutral .statusbar{ background:#facc15; color:#854d0e }
-    .card.greed .statusbar{ background:#22c55e; color:#166534 }
-    .card-body{ padding:14px 18px 0 18px }
-    .tablo{ display:inline-block; padding:6px 10px; border-radius:10px; font-weight:800; border:1px solid rgba(0,0,0,.08) }
-    .tablo.fear{ background:#991b1b; color:#fde68a }
-    .tablo.neutral{ background:#92400e; color:#fff7ed }
-    .tablo.greed{ background:#065f46; color:#a7f3d0 }
-
-    /* Custom dropdown */
-    .dd{ position:relative; min-width:220px }
-    .dd-btn{ background:var(--card); color:var(--text); border:1px solid var(--ring); border-radius:12px; padding:10px 12px; font-weight:700; width:100%; text-align:left; cursor:pointer }
-    .dd.open .dd-btn{ border-bottom-left-radius:0; border-bottom-right-radius:0 }
-    .dd-panel{ position:absolute; top:100%; left:0; right:0; background:var(--card); border:1px solid var(--ring); border-top:0; border-bottom-left-radius:12px; border-bottom-right-radius:12px; max-height:320px; overflow:auto; display:none; z-index:40 }
-    .dd.open .dd-panel{ display:block }
-    .dd-item{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:10px 12px; cursor:pointer; border-top:1px solid rgba(255,255,255,.04) }
-    .dd-item:hover{ background:rgba(255,255,255,.04) }
-    .badge-sm{ padding:2px 8px; border-radius:999px; font-weight:800; font-size:11px; border:1px solid rgba(0,0,0,.08) }
-    .badge-sm.fear{ background:#991b1b; color:#fde68a }
-    .badge-sm.neutral{ background:#92400e; color:#fff7ed }
-    .badge-sm.greed{ background:#065f46; color:#a7f3d0 }
-
-    /* простий модал */
-    .modal{ position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.5); z-index:60 }
-    .modal .box{ background:var(--card); border:1px solid var(--ring); border-radius:16px; padding:16px; max-width:480px; width:calc(100% - 32px) }
-    .modal .actions{ display:flex; gap:8px; justify-content:flex-end }
-  </style>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Crypto Sentiment OS — Fear & Greed</title>
+  <meta name="description" content="Multi-timeframe Fear & Greed gauges + Risk model. Works as a Chrome extension and as a web app."/>
+  <link rel="stylesheet" href="assets/styles.css"/>
 </head>
 <body>
-  <div class="wrap">
-    <header>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">CS</div>
       <div>
-        <div class="title">Fear & Greed Index</div>
-        <div class="muted small pill" id="quota-pill">Free pairs left today: <b id="quota-left">—</b></div>
+        <div class="brandTitle">Crypto Sentiment OS</div>
+        <div class="brandSub">Fear & Greed radar • Risk analysis</div>
       </div>
-      <div class="controls">
-        <label class="muted small" style="display:none">Preset
-          <select id="preset"></select>
-        </label>
-        <!-- Custom dropdown with live badges -->
-        <div id="preset-dd" class="dd"></div>
-        <label class="muted small">Symbol <input id="sym" value="SOLUSDT" /></label>
-        <button id="go">Refresh</button>
-        <button id="connect" class="toggle" title="Connect wallet">🦊 Connect</button>
-        <button id="theme" class="toggle" title="Theme">🌓 Theme</button>
-      </div>
-    </header>
-
-    <div class="grid" id="grid"></div>
-
-    <footer>
-      <div id="api-info">API: <code id="api-base"></code> · <span id="api-status" class="muted">checking…</span> · <span id="addr" class="muted"></span></div>
-      <div id="testpanel" class="muted" style="display:none"></div>
-    </footer>
-  </div>
-
-  <div id="alert"></div>
-
-  <!-- Paywall modal -->
-  <div class="modal" id="paywall" style="display:none">
-    <div class="box">
-      <h3>Daily free limit reached</h3>
-      <p class="muted">You can request up to <b id="free-cap">10</b> symbols per day for free. Connect MetaMask to purchase a plan and continue.</p>
-      <div class="actions">
-        <button id="close-pay">Close</button>
-        <button id="buy-day" class="toggle">Buy Day Pass</button>
-      </div>
-      <div class="muted small">Demo only: on-chain payment via MetaMask. In production, verify tx server‑side and issue a token.</div>
     </div>
-  </div>
+
+    <nav class="nav">
+      <a href="app.html">App</a>
+      <a href="plans.html">Plans</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+
+    <div class="navActions">
+      <a class="btn" href="plans.html">See plans</a>
+      <a class="btn primary" href="app.html">Open app</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <div class="heroText">
+        <h1>See market mood in seconds.</h1>
+        <p class="muted">
+          Four gauges (15m / 1h / 4h / 1d) + a risk score that shows instability —
+          not a buy/sell signal.
+        </p>
+        <div class="heroCtas">
+          <a class="btn primary" href="app.html">Open app</a>
+          <a class="btn" href="plans.html">Pricing</a>
+        </div>
+
+        <div class="miniBadges">
+          <span class="chip">Works in Chrome extension</span>
+          <span class="chip">Web version</span>
+          <span class="chip">API key subscription (soon)</span>
+        </div>
+      </div>
+
+      <div class="heroCard">
+        <div class="heroCardTitle">What you get</div>
+        <ul class="checkList">
+          <li>Fear/Greed zones per timeframe</li>
+          <li>Market structure panel (tilt / spread / extremes)</li>
+          <li>Risk score (0–100) with explanation</li>
+          <li>Plans, billing, API key access (next step)</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>How it works</h2>
+      <div class="grid3">
+        <div class="card">
+          <div class="cardTitle">1) Detect pair</div>
+          <div class="muted">Extension reads the symbol from your exchange tab. Web app uses input.</div>
+        </div>
+        <div class="card">
+          <div class="cardTitle">2) Compute sentiment</div>
+          <div class="muted">We fetch the index per timeframe and classify zone.</div>
+        </div>
+        <div class="card">
+          <div class="cardTitle">3) Show risk</div>
+          <div class="muted">Extremes + dispersion + impulses → risk score.</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="faq">
+      <h2>FAQ</h2>
+      <div class="faq">
+        <div class="faqItem">
+          <div class="faqQ">Is Risk a trading signal?</div>
+          <div class="faqA muted">No. It’s an instability indicator. Use it as context.</div>
+        </div>
+        <div class="faqItem">
+          <div class="faqQ">Will you support subscriptions?</div>
+          <div class="faqA muted">Yes. Plans page + API keys + validation in the extension (next).</div>
+        </div>
+      </div>
+    </section>
+
+    <footer class="footer muted">
+      <div>© <span id="y"></span> Crypto Sentiment OS</div>
+      <div class="footerLinks">
+        <a href="app.html">App</a>
+        <a href="plans.html">Plans</a>
+      </div>
+    </footer>
+  </main>
 
   <script>
-    'use strict';
-    // --------------------
-    // CONFIG
-    // --------------------
-    const API_BASE = "https://fear-greed-24pr.onrender.com"; // змініть за потреби
-    const FREE_PAIRS_PER_DAY = 100;             // безкоштовно пар на день
-    const RECEIVER_ADDRESS = "0x000000000000000000000000000000000000dEaD"; // demo-адреса (замінити на вашу)
-    const DAY_PASS_PRICE_ETH = "0x2386F26FC10000"; // 0.01 ETH у hex wei
-
-    const TFS = [
-      { key: '15m', title: '15 min' },
-      { key: '1h',  title: '1 hour' },
-      { key: '4h',  title: '4 hours' },
-      { key: '1d',  title: '1 day' }
-    ];
-
-    const PRESETS = [
-      { label: 'SOLUSDT',  value: 'SOLUSDT'  },
-      { label: 'BTCUSDT',  value: 'BTCUSDT'  },
-      { label: 'ETHUSDT',  value: 'ETHUSDT'  },
-      { label: 'BNBUSDT',  value: 'BNBUSDT'  },
-      { label: 'XRPUSDT',  value: 'XRPUSDT'  },
-      { label: 'ADAUSDT',  value: 'ADAUSDT'  },
-      { label: 'DOGEUSDT', value: 'DOGEUSDT' },
-      { label: 'MATICUSDT',value: 'MATICUSDT'},
-      { label: 'DOTUSDT',  value: 'DOTUSDT'  },
-      { label: 'AVAXUSDT', value: 'AVAXUSDT' }
-    ];
-
-    const COLORS = { track:'#1f2937', fear:'#ef4444', neutral:'#f59e0b', greed:'#34d399', needle:'#e5e7eb', center:'#e5e7eb', muted:'#9aa3b2' };
-
-    // --------------------
-    // Helpers & UI
-
-    // animate number in-place (easeOutCubic)
-    function animateNumber(el, from, to, dur=700){
-      const start = performance.now();
-      const ease = t=>1-Math.pow(1-t,3);
-      function step(now){
-        const p = Math.min(1, (now-start)/dur);
-        const v = from + (to-from)*ease(p);
-        el.textContent = v.toFixed(1);
-        if(p<1) requestAnimationFrame(step);
-      }
-      requestAnimationFrame(step);
-    }
-
-    // --------------------
-    // Helpers & UI
-    // --------------------
-    const $ = sel => document.querySelector(sel);
-    const alertBox = document.getElementById('alert');
-    function showAlert(msg, timeoutMs=6000){
-      if(!alertBox) return; alertBox.textContent = msg; alertBox.style.display='block';
-      clearTimeout(showAlert._t); showAlert._t = setTimeout(()=>{ alertBox.style.display='none'; }, timeoutMs);
-    }
-
-    function todayKey(){ const d=new Date(); return d.toISOString().slice(0,10); }
-    function readUsage(){ try{ return JSON.parse(localStorage.getItem('usage')||'{}'); }catch{return{}} }
-    function writeUsage(u){ localStorage.setItem('usage', JSON.stringify(u)); }
-
-    function getFreeLeft(){
-      const u = readUsage();
-      const key = todayKey();
-      const set = new Set(u[key]||[]);
-      return Math.max(0, FREE_PAIRS_PER_DAY - set.size);
-    }
-    function consumeSymbol(symbol){
-      const u = readUsage();
-      const key = todayKey();
-      const arr = u[key]||[];
-      if(!arr.includes(symbol)) arr.push(symbol);
-      u[key]=arr; writeUsage(u);
-      updateQuotaPill();
-    }
-    function resetToday(){ const u = readUsage(); u[todayKey()]=[]; writeUsage(u); updateQuotaPill(); }
-    function updateQuotaPill(){ $('#quota-left').textContent = getFreeLeft(); $('#free-cap').textContent = FREE_PAIRS_PER_DAY; }
-
-    function showModal(id, show=true){ const m = $(id); if(!m) return; m.style.display = show? 'flex':'none'; }
-
-    function labelFromValue(v){ if (v < 25) return 'Extreme Fear'; if (v < 45) return 'Fear'; if (v <= 55) return 'Neutral'; if (v < 76) return 'Greed'; return 'Extreme Greed'; }
-    function badgeClass(v){ const l = labelFromValue(v); if (l.includes('Greed')) return 'badge b-greed'; if (l.includes('Fear')) return 'badge b-fear'; return 'badge b-neutral'; }
-    function bandFromValue(v){ const l=labelFromValue(v); if(l.includes('Greed')) return 'greed'; if(l.includes('Fear')) return 'fear'; return 'neutral'; }
-    function toAngle(v){ const val = Math.max(0, Math.min(100, Number(v) || 0)); return -90 + (val/100)*180; }
-
-    // === G A U G E ===
-    function gaugeSVG(id, value=50){
-      const cx = 150, cy = 150;
-      const rTrack = 132;           // фонова дуга
-      const rArc   = rTrack - 8;    // кольорова дуга
-      const rTicks = rArc + 3;      // зовнішній радіус для штрихів
-      const needleLen = rArc - 18;
-
-      // 0% зліва (π рад), 50% вгорі (π/2), 100% справа (0)
-      const toTickA = (p)=> (Math.PI) - (Math.max(0, Math.min(100, p))/100)*Math.PI;
-      const polar = (rr, a)=> [ cx + rr*Math.cos(a), cy + rr*Math.sin(a) ];
-      const arcPath = (rr)=>`M ${cx-rr} ${cy} A ${rr} ${rr} 0 0 1 ${cx+rr} ${cy}`;
-
-      const initDeg = toAngle(value);
-
-      const tens  = Array.from({length:11}, (_,k)=>k*10); // 0..100 крок 10
-      const majors= new Set([0,25,50,75,100]);           // товстіші для акценту
-
-      return `
-      <svg class="gauge" viewBox="0 0 300 160" aria-labelledby="${id}-ttl" role="img">
-        <defs>
-          <linearGradient id="sweep-${id}" x1="${cx-rArc}" y1="${cy}" x2="${cx+rArc}" y2="${cy}" gradientUnits="userSpaceOnUse">
-            <stop offset="0%"   stop-color="${COLORS.fear}"/>
-            <stop offset="50%"  stop-color="${COLORS.neutral}"/>
-            <stop offset="100%" stop-color="${COLORS.greed}"/>
-          </linearGradient>
-          <filter id="glow-${id}" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="g"/>
-            <feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge>
-          </filter>
-        </defs>
-
-        <!-- фонова дуга -->
-        <path d="${arcPath(rTrack)}" fill="none" stroke="${COLORS.track}" stroke-width="22" stroke-linecap="round" />
-
-        <!-- кольорова дуга -->
-        <path d="${arcPath(rArc)}" fill="none" stroke="url(#sweep-${id})" stroke-width="14" stroke-linecap="round" filter="url(#glow-${id})" />
-
-        <!-- Штрихи кожні 10% з підписами; на 0/25/50/75/100 товстіші -->
-        ${tens.map(p=>{
-          const a = toTickA(p);
-          const isMajor = majors.has(p);
-          const [x2,y2] = polar(rTicks + (isMajor? 2:1), a);
-          const [x1,y1] = polar(isMajor? (rArc - 16) : (rArc - 10), a);
-          const [lx,ly] = polar(rArc-26, a);
-          const lw = isMajor? 3 : 2;
-          const sc = isMajor? '#e5e7eb' : '#9ca3af';
-          return `<g>
-            <line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${sc}" stroke-width="${lw}" stroke-linecap="round" />
-            <text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" fill="${COLORS.muted}" font-size="10" text-anchor="middle" dominant-baseline="central">${p}</text>
-          </g>`;
-        }).join('')}
-
-        <!-- (центр усунуто — цифра показується у верхній частині картки) -->
-
-        <!-- стрілка -->
-        <g id="needle-${id}" data-angle="${initDeg}" style="transform-origin:${cx}px ${cy}px; transform:rotate(${initDeg}deg); transition:transform 600ms cubic-bezier(.2,.8,.2,1);">
-          <polygon points="${cx - 5},${cy - 6} ${cx},${cy - needleLen} ${cx + 5},${cy - 6} ${cx},${cy + 22}" fill="${COLORS.needle}" />
-          <circle cx="${cx}" cy="${cy}" r="8" fill="#111827" stroke="${COLORS.needle}" stroke-width="2" />
-        </g>
-      </svg>`;
-    }
-
-    function makeCard(tf, idx){
-      const id = `g${idx}`; const el = document.createElement('div'); el.id = `card-${id}`; el.className = 'card neutral';
-      el.innerHTML = `
-        <div class="statusbar"><h3 id="${id}-ttl">${tf.title}</h3><div id="${id}-chip" class="tablo neutral">NEUTRAL</div></div>
-        <div class="card-body">
-          <div class="row" style="margin:12px 0 8px 0; justify-content:center;">
-            <div class="big" id="${id}-val" style="margin:0 auto; text-align:center;">—</div>
-          </div>
-          <div id="${id}-svg"></div>
-          <div class="legend"><span>Fear</span><span>Greed</span></div>
-          <div class="muted small" id="${id}-upd">—</div>
-        </div>`;
-      document.getElementById('grid').appendChild(el); return el;
-    }
-
-    let mounted=false;
-
-    // --------------------
-    // Wallet (MetaMask) — optional, robust, NO auto-connect
-    // --------------------
-    let currentAccount = null;
-    const hasEth = () => typeof window !== 'undefined' && !!window.ethereum;
-
-    async function safeEthRequest(method, params){
-      // НІКОЛИ не кидаємо помилку — повертаємо об'єкт стану
-      if(!hasEth()) return { ok:false, code:'NO_PROVIDER', message:'MetaMask not found' };
-      try{
-        const res = await window.ethereum.request({ method, params });
-        return { ok:true, result:res };
-      }catch(err){
-        const msg = (err && (err.message || err.toString())) || 'Unknown error';
-        const code = (err && (err.code!==undefined? String(err.code): 'ERR')) || 'ERR';
-        return { ok:false, code, message:msg };
-      }
-    }
-
-    async function connectWallet(){
-      if(!hasEth()){
-        showAlert('MetaMask is not available in this browser. Install the extension and try again.');
-        return null;
-      }
-      const r = await safeEthRequest('eth_requestAccounts');
-      if(!r.ok){ showAlert(`Failed to connect wallet: ${r.message}`); return null; }
-      const [acc] = r.result || [];
-      if(!acc){ showAlert('No account returned by wallet'); return null; }
-      currentAccount = acc; $('#addr').textContent = `Wallet: ${acc.slice(0,6)}…${acc.slice(-4)}`;
-      return acc;
-    }
-
-    async function buyDayPass(){
-      if(!currentAccount){ const acc = await connectWallet(); if(!acc) return; }
-      const tx = { from: currentAccount, to: RECEIVER_ADDRESS, value: DAY_PASS_PRICE_ETH };
-      const r = await safeEthRequest('eth_sendTransaction', [tx]);
-      if(!r.ok){ showAlert(`Payment failed: ${r.message}`); return; }
-      const k = 'premium:'+todayKey(); localStorage.setItem(k, '1');
-      updateQuotaPill(); showModal('#paywall', false); showAlert('Payment sent. Premium enabled for today (demo).');
-    }
-
-    // Reflect provider availability in UI
-    function reflectWalletAvailability(){
-      const available = hasEth();
-      const btnConnect = document.getElementById('connect');
-      const btnBuy = document.getElementById('buy-day');
-      if(btnConnect){ btnConnect.disabled = !available; btnConnect.title = available? 'Connect wallet' : 'MetaMask not detected'; }
-      if(btnBuy){ btnBuy.disabled = !available; btnBuy.title = available? 'Buy Day Pass' : 'MetaMask not detected'; }
-    }
-
-    reflectWalletAvailability();
-
-    if(hasEth()){
-      try{
-        window.ethereum.on?.('accountsChanged', (accs)=>{
-          currentAccount = accs && accs[0] ? accs[0] : null;
-          $('#addr').textContent = currentAccount ? `Wallet: ${currentAccount.slice(0,6)}…${currentAccount.slice(-4)}` : '';
-        });
-        window.ethereum.on?.('disconnect', ()=>{ currentAccount=null; $('#addr').textContent=''; });
-      }catch(_){ /* ignore */ }
-    }
-
-    // Глушимо лише повідомлення про гаманець, не падаємо
-    window.addEventListener('unhandledrejection', (e)=>{
-      const text = String(e?.reason?.message || e?.reason || '');
-      if(/metamask|ethereum|wallet/i.test(text)){ showAlert(`Wallet error: ${text}`); }
-    });
-
-    // --------------------
-    // API (з мок‑фолбеком)
-    // --------------------
-    function pseudoRandomFrom(str){ let h=0; for(let i=0;i<str.length;i++){ h=(h*31+str.charCodeAt(i))>>>0; } return (h%1000)/1000; }
-    function mockFNG(symbol, tf){ const base=30+70*pseudoRandomFrom(symbol+tf); const v=Math.max(0, Math.min(100, base)); return { coin:symbol, tf, value:Number(v.toFixed(1)), label:labelFromValue(v), components:{}, updatedAt:new Date().toISOString(), __mock:true }; }
-    async function fetchFNG(symbol, tf){
-      const url = `${API_BASE}/api/fng?symbol=${encodeURIComponent(symbol)}&tf=${encodeURIComponent(tf)}`;
-      try{
-        const ctrl=new AbortController(); const t=setTimeout(()=>ctrl.abort(), 8000);
-        const r=await fetch(url,{headers:{'Accept':'application/json'}, signal:ctrl.signal});
-        clearTimeout(t);
-        if(!r.ok){ const text=await r.text().catch(()=> ''); throw new Error(`HTTP ${r.status} ${r.statusText} — ${text.slice(0,200)}`); }
-        return await r.json();
-      }catch(err){ console.warn('API fallback to mock for', symbol, tf, err); return mockFNG(symbol, tf); }
-    }
-
-    async function renderAll(){
-      const symbol = $('#sym').value.trim().toUpperCase() || 'SOLUSDT';
-
-      if(!isPremiumToday()){
-        const left = getFreeLeft();
-        if(left <= 0){ showModal('#paywall', true); return; }
-        const u = readUsage(); const key=todayKey(); const set=new Set(u[key]||[]);
-        if(!set.has(symbol)) consumeSymbol(symbol);
-      }
-
-      if(!mounted){ TFS.forEach((tf,i)=>{ const id=`g${i}`; makeCard(tf,i); document.getElementById(`${id}-svg`).innerHTML = gaugeSVG(id, 50); }); mounted=true; }
-
-      await Promise.all(TFS.map(async (tf, i)=>{
-        const id=`g${i}`;
-        try{
-          const data = await fetchFNG(symbol, tf.key);
-          const v = Number(data.value)||50;
-          const updated = `Last updated: ${new Date(data.updatedAt||Date.now()).toLocaleString()}${data.__mock? ' (mock)': ''}`;
-          document.getElementById(`${id}-upd`).textContent = updated;
-          // classic header/tablo color
-          const band = bandFromValue(v);
-          const card = document.getElementById(`card-${id}`);
-          const chip = document.getElementById(`${id}-chip`);
-          if(card){ card.classList.remove('fear','neutral','greed'); card.classList.add(band); }
-          if(chip){ chip.className = `tablo ${band}`; chip.textContent = band.toUpperCase(); }
-          const targetDeg = toAngle(v);
-          const needle = document.querySelector(`#needle-${id}`);
-          if(!needle) return;
-          // оновлюємо центр прямо в SVG, щоб не перерендерювати всю іконку
-          const num = document.getElementById(`${id}-val`);
-          if (num) {
-            const from = Number(num.textContent.replace(/[^0-9.\-]/g,'')) || 0;
-            animateNumber(num, from, v, 700);
-          }
-          const prev = Number(needle.getAttribute('data-angle')) || targetDeg;
-          needle.style.transform = `rotate(${prev}deg)`;
-          requestAnimationFrame(()=>{ needle.style.transform=`rotate(${targetDeg}deg)`; needle.setAttribute('data-angle', String(targetDeg)); });
-        }catch(err){
-          document.getElementById(`${id}-val`).textContent='—';
-          document.getElementById(`${id}-lab`).textContent='Error';
-          document.getElementById(`${id}-upd`).textContent=String(err);
-        }
-      }));
-    }
-
-    function isPremiumToday(){ return localStorage.getItem('premium:'+todayKey()) === '1'; }
-
-    // Presets init
-    (function initPresets(){
-      const sel = document.getElementById('preset');
-      const opt0 = document.createElement('option'); opt0.value=''; opt0.textContent='— Custom —'; sel.appendChild(opt0);
-      PRESETS.forEach(p=>{ const o=document.createElement('option'); o.value=p.value; o.textContent=p.label; sel.appendChild(o); });
-      const symInput = document.getElementById('sym');
-      const setPresetFromInput = ()=>{ const v=symInput.value.trim().toUpperCase(); const f=PRESETS.find(p=>p.value===v); sel.value = f?f.value:''; };
-      setPresetFromInput(); sel.addEventListener('change', ()=>{ const v=sel.value; if(v){ symInput.value=v; } renderAll(); }); symInput.addEventListener('input', setPresetFromInput); symInput.addEventListener('keydown', e=>{ if(e.key==='Enter') renderAll(); });
-    })();
-
-    // Build custom dropdown with live daily F&G badges (sorted, auto-refresh, text-only badges)
-    function buildPresetDropdown(){
-      const dd = document.getElementById('preset-dd');
-      if(!dd) return;
-      dd.innerHTML = `<button type="button" class="dd-btn" id="ddbtn">Pairs ▾</button><div class="dd-panel" id="ddpanel"></div>`;
-      const btn = document.getElementById('ddbtn');
-      btn.addEventListener('click', ()=> dd.classList.toggle('open'));
-      document.addEventListener('click', (e)=>{ if(!dd.contains(e.target)) dd.classList.remove('open'); });
-      refreshPresetBadges(); // initial load
-      if(!buildPresetDropdown._interval){ buildPresetDropdown._interval = setInterval(refreshPresetBadges, 5*60*1000); }
-    }
-
-    function renderPresetPanel(results){
-      const panel = document.getElementById('ddpanel');
-      if(!panel) return;
-      panel.innerHTML = '';
-      results.forEach(({symbol, band})=>{
-        const row = document.createElement('div');
-        row.className = 'dd-item';
-        row.dataset.symbol = symbol;
-        const preset = PRESETS.find(p=>p.value===symbol);
-        const labelText = band.charAt(0).toUpperCase() + band.slice(1); // Fear/Neutral/Greed
-        row.innerHTML = `<span>${preset? preset.label : symbol}</span><span class="badge-sm ${band}" id="dd-${symbol}">${labelText}</span>`;
-        row.addEventListener('click', ()=>{
-          const input = document.getElementById('sym');
-          input.value = symbol; renderAll(); document.getElementById('preset-dd').classList.remove('open');
-        });
-        panel.appendChild(row);
-      });
-    }
-
-    async function refreshPresetBadges(){
-      const items = await Promise.all(PRESETS.map(async p=>{
-        try{
-          const data = await fetchFNG(p.value, '1d');
-          const val = Number(data.value)||0;
-          const band = bandFromValue(val);
-          return { symbol: p.value, value: val, band };
-        }catch(_){ return { symbol: p.value, value: 50, band: 'neutral' }; }
-      }));
-      // Fear -> Greed (ascending by value)
-      items.sort((a,b)=> a.value - b.value);
-      renderPresetPanel(items);
-    }
-
-    buildPresetDropdown();
-
-    document.getElementById('go').addEventListener('click', renderAll);
-    document.getElementById('theme').addEventListener('click', ()=>{ document.body.classList.toggle('light'); });
-    document.getElementById('connect').addEventListener('click', connectWallet);
-    document.getElementById('buy-day').addEventListener('click', buyDayPass);
-    document.getElementById('close-pay').addEventListener('click', ()=> showModal('#paywall', false));
-
-    // --- Attach click pulse animation to buttons ---
-    function attachPressFX(){
-      const btns = document.querySelectorAll('button, .toggle, .dd-btn');
-      btns.forEach(b=>{
-        // Avoid duplicate listeners
-        if(b.dataset.fxAttached) return; b.dataset.fxAttached = '1';
-        b.addEventListener('click', ()=>{
-          b.classList.remove('press-pulse'); // restart if already applied
-          // force reflow to restart animation
-          void b.offsetWidth;
-          b.classList.add('press-pulse');
-          // clean up at end
-          b.addEventListener('animationend', ()=> b.classList.remove('press-pulse'), { once:true });
-        });
-      });
-    }
-    attachPressFX();
-    // re-attach when dropdown rebuilt
-    const origBuildDD = buildPresetDropdown;
-    buildPresetDropdown = function(){ origBuildDD(); attachPressFX(); };
-    // also re-run after theme toggle as DOM classes may change
-    document.getElementById('theme').addEventListener('click', attachPressFX);
-
-    // API ping
-    (async function ping(){ try{ const r=await fetch(`${API_BASE}/health`, {cache:'no-store'}); document.getElementById('api-status').textContent = r.ok ? 'online' : 'offline'; }catch(e){ document.getElementById('api-status').textContent='offline'; } document.getElementById('api-base').textContent=API_BASE; })();
-
-    // Self-tests (do not change existing; add extras)
-    (function runSelfTests(){
-      const DEBUG_TESTPANEL = false; // set true to show in footer; console always logs
-      const out=[]; const assert=(n,c)=>out.push(`${c?'✅':'❌'} ${n}`);
-      // existing
-      assert('toAngle(0) === -90', toAngle(0)===-90);
-      assert('toAngle(50) === 0', toAngle(50)===0);
-      assert('toAngle(100) === 90', toAngle(100)===90);
-      const svg=gaugeSVG('test', 50); assert('gaugeSVG returns <svg>', typeof svg==='string' && svg.includes('<svg'));
-      const before=getFreeLeft(); consumeSymbol('ZZZUSDT'); const after=getFreeLeft(); assert('consumeSymbol reduces freeLeft by ≤1', after === Math.max(0,before - (before>0?1:0)));
-      // added tests
-      assert('labelFromValue(0) Extreme Fear', labelFromValue(0)==='Extreme Fear');
-      assert('labelFromValue(25) Fear', labelFromValue(25)==='Fear');
-      assert('labelFromValue(55) Neutral', labelFromValue(55)==='Neutral');
-      assert('labelFromValue(76) Extreme Greed', labelFromValue(76)==='Extreme Greed');
-      assert('hasEth() is boolean', typeof hasEth()==='boolean');
-      (async()=>{ const r = await safeEthRequest('eth_chainId'); assert('safeEthRequest handles no provider', r.ok===false || typeof r.result!=='undefined'); })();
-      // extra safety
-      assert('toAngle(-10) clamps to -90', toAngle(-10)===-90);
-      assert('toAngle(150) clamps to 90', toAngle(150)===90);
-      const svg2=gaugeSVG('needlecheck', 33); assert('gaugeSVG has needle group', svg2.includes('id="needle-needlecheck"'));
-      const b1 = bandFromValue(10), b2 = bandFromValue(50), b3 = bandFromValue(90);
-      assert('bandFromValue mapping', b1==='fear' && b2==='neutral' && b3==='greed');
-      if (DEBUG_TESTPANEL) { document.getElementById('testpanel').textContent = out.join('  |  '); }
-      try{ console.info('[Self-tests]', out.join('\n')); }catch{}
-      updateQuotaPill();
-      reflectWalletAvailability();
-    })();
-
-    renderAll();
-    setInterval(renderAll, 5*60*1000);
+    document.getElementById('y').textContent = new Date().getFullYear();
   </script>
 </body>
 </html>

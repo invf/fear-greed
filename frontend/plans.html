@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Crypto Sentiment OS — Plans</title>
+  <link rel="stylesheet" href="assets/styles.css"/>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <a class="brandLink" href="index.html">
+        <div class="logo">CS</div>
+        <div>
+          <div class="brandTitle">Crypto Sentiment OS</div>
+          <div class="brandSub">Pricing</div>
+        </div>
+      </a>
+    </div>
+
+    <nav class="nav">
+      <a href="index.html">Home</a>
+      <a href="app.html">App</a>
+    </nav>
+
+    <div class="navActions">
+      <a class="btn primary" href="app.html">Open app</a>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="section">
+      <h1>Plans</h1>
+      <p class="muted">Choose a plan. Soon: API keys, billing, and extension activation.</p>
+
+      <div class="pricing">
+        <div class="priceCard">
+          <div class="priceTop">
+            <div class="priceName">Free</div>
+            <div class="priceValue">$0</div>
+            <div class="muted small">Limited daily requests</div>
+          </div>
+          <ul class="priceList">
+            <li>Web app access</li>
+            <li>Basic gauges</li>
+            <li>Daily limit</li>
+          </ul>
+          <button class="btn" type="button" data-plan="FREE">Current</button>
+        </div>
+
+        <div class="priceCard featured">
+          <div class="priceTop">
+            <div class="priceName">Pro</div>
+            <div class="priceValue">$9</div>
+            <div class="muted small">per month</div>
+          </div>
+          <ul class="priceList">
+            <li>Higher limits</li>
+            <li>API key</li>
+            <li>Extension activation</li>
+          </ul>
+          <button class="btn primary" type="button" data-plan="PRO">Choose Pro</button>
+        </div>
+
+        <div class="priceCard">
+          <div class="priceTop">
+            <div class="priceName">Team</div>
+            <div class="priceValue">$29</div>
+            <div class="muted small">per month</div>
+          </div>
+          <ul class="priceList">
+            <li>Multiple keys</li>
+            <li>Team dashboard</li>
+            <li>Priority support</li>
+          </ul>
+          <button class="btn" type="button" data-plan="TEAM">Choose Team</button>
+        </div>
+      </div>
+
+      <div class="card pad" style="margin-top:18px;">
+        <div class="cardTitle">Next step</div>
+        <div class="muted">
+          We will connect this page to the database: plans → checkout → subscription → API key → extension validation.
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    document.querySelectorAll('[data-plan]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const plan = btn.getAttribute('data-plan');
+        alert('Plan selected: ' + plan + ' (will be connected to DB later)');
+      });
+    });
+  </script>
+</body>
+</html>

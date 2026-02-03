@@ -1,0 +1,77 @@
+{
+  "extName": { "message": "Crypto Sentiment OS" },
+  "extDesc": { "message": "带多时间周期风险分析的 Fear & Greed 雷达。" },
+
+  "tabOverviewTitle": { "message": "概览" },
+  "tabDetailsTitle": { "message": "详情" },
+  "tabSettingsTitle": { "message": "设置" },
+  "tabHelpTitle": { "message": "帮助" },
+
+  "riskTitle": { "message": "风险" },
+  "detectedPair": { "message": "检测到的交易对" },
+  "refresh": { "message": "刷新" },
+
+  "settingsTitle": { "message": "设置" },
+  "apiBaseLabel": { "message": "API 服务器" },
+  "apiBasePlaceholder": { "message": "https://fear-greed-24pr.onrender.com" },
+  "apiBaseHint": { "message": "当前为只读。" },
+
+  "autoRefresh": { "message": "自动刷新" },
+  "autoRefreshHint": { "message": "切换交易对或每 N 秒自动刷新。" },
+
+  "refreshInterval": { "message": "刷新间隔（秒）" },
+  "refreshIntervalHint": { "message": "每 N 秒更新一次（5–300）。" },
+
+  "waiting": { "message": "正在等待市场数据..." },
+
+  "fearLabelShort": { "message": "恐惧" },
+  "greedLabelShort": { "message": "贪婪" },
+
+  "labelExtremeFear": { "message": "极度恐惧" },
+  "labelFear": { "message": "恐惧" },
+  "labelNeutral": { "message": "中性" },
+  "labelGreed": { "message": "贪婪" },
+  "labelExtremeGreed": { "message": "极度贪婪" },
+
+  "zoneExtremeFear": { "message": "极度恐惧" },
+  "zoneFear": { "message": "恐惧" },
+  "zoneNeutral": { "message": "中性" },
+  "zoneGreed": { "message": "贪婪" },
+  "zoneExtremeGreed": { "message": "极度贪婪" },
+
+  "detailsMarketStructureTitle": { "message": "市场结构" },
+  "marketTilt": { "message": "市场倾向" },
+  "tfSpread": { "message": "时间周期分歧" },
+  "dispersion": { "message": "分散度" },
+  "extremes": { "message": "极端值 (E)" },
+  "distanceFrom50": { "message": "偏离 50 的距离" },
+  "timeframesTitle": { "message": "时间周期" },
+
+  "errNoActiveTab": { "message": "没有活动标签页。" },
+  "errNoSymbol": { "message": "无法从当前页面识别交易对。" },
+
+  "chipE": { "message": "E" },
+  "chipSpread": { "message": "Spread" },
+  "chip15_1": { "message": "15m↔1h" },
+  "chip15_4": { "message": "15m↔4h" },
+
+  "help_detectedPair": { "message": "Detected pair 显示从当前页面识别的交易所和交易对（例如 BINANCE:BTCUSDT）。" },
+  "help_fng_range": { "message": "Fear & Greed 是每个时间周期的市场情绪指数，范围 0 到 100。" },
+  "help_zones": { "message": "区间：0–25 极度恐惧 · 25–45 恐惧 · 45–55 中性 · 55–76 贪婪 · 76–100 极度贪婪" },
+
+  "help_timeframes_title": { "message": "时间周期：" },
+  "help_tf_15m": { "message": "• 15分钟 — 极短期情绪（快速、噪音大）" },
+  "help_tf_1h": { "message": "• 1小时 — 短期情绪" },
+  "help_tf_4h": { "message": "• 4小时 — 中期交易者情绪" },
+  "help_tf_1d": { "message": "• 1天 — 日线市场结构 / 背景" },
+
+  "help_risk_title": { "message": "Risk (0–100) 是市场不稳定指数，不是买卖信号。" },
+  "help_risk_levels": { "message": "等级：LOW 平稳 · MEDIUM 不稳定 · HIGH 波动 · EXTREME 极端状态" },
+
+  "help_details_title": { "message": "Details → 市场结构：" },
+  "help_market_tilt": { "message": "• Market Tilt — 所有周期的平均情绪。" },
+  "help_tf_spread": { "message": "• TF Spread — 各周期分歧程度。" },
+  "help_extremes": { "message": "• Extremes (E) — 偏离中性值 50 的程度。" },
+
+  "help_tip": { "message": "提示：如果未识别交易对，请打开包含交易对的交易或图表页面，然后点击刷新。" }
+}
