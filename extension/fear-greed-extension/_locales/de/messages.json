@@ -73,5 +73,9 @@
   "help_tf_spread": { "message": "• TF Spread — wie stark sich Zeitrahmen unterscheiden." },
   "help_extremes": { "message": "• Extremes (E) — Abstand von der neutralen Zone 50." },
 
-  "help_tip": { "message": "Tipp: Wenn das Symbol nicht erkannt wird, öffne eine Chart- oder Handelsseite mit dem Symbol in der URL und klicke auf Refresh." }
+  "help_tip": { "message": "Tipp: Wenn das Symbol nicht erkannt wird, öffne eine Chart- oder Handelsseite mit dem Symbol in der URL und klicke auf Refresh." },
+
+  "apiKeyLabel": { "message": "API-Schlüssel" },
+  "apiKeyPlaceholder": { "message": "Schlüssel einfügen…" },
+  "apiKeyHint": { "message": "Füge den Schlüssel aus deinem Dashboard ein." }
 }

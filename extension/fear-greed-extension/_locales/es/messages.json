@@ -73,5 +73,9 @@
   "help_tf_spread": { "message": "• TF Spread — cuánto difieren los timeframes." },
   "help_extremes": { "message": "• Extremes (E) — distancia desde la zona neutral 50." },
 
-  "help_tip": { "message": "Consejo: si no se detecta el par, abre una página de trading o gráfico con el símbolo en la URL y presiona Refresh." }
+  "help_tip": { "message": "Consejo: si no se detecta el par, abre una página de trading o gráfico con el símbolo en la URL y presiona Refresh." },
+
+  "apiKeyLabel": { "message": "Clave API" },
+  "apiKeyPlaceholder": { "message": "Pega tu clave…" },
+  "apiKeyHint": { "message": "Pega la clave desde tu panel de usuario." }
 }

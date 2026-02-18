@@ -9,6 +9,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 from datetime import datetime, timezone
 from fastapi.responses import HTMLResponse
+import os
+from supabase import create_client, Client
+
 
 # ---- APP
 app = FastAPI(title="Custom Fear & Greed Index")
@@ -293,6 +296,19 @@ def compute_oi_score(symbol="SOLUSDT", tf="1d") -> dict:
         "oi_delta_val": float(d_rel),
         "oi_delta_p": float(p_delta),
     }
+
+    install_id = request.headers.get("X-Install-Id")
+    api_key = request.headers.get("X-Api-Key")
+
+    gate = supabase.rpc("consume_pair_access", {
+      "p_install_id": install_id,
+      "p_api_key": api_key,
+      "p_symbol": symbol
+    }).execute()
+
+    if not gate.data["ok"]:
+        raise HTTPException(status_code=402, detail=gate.data)
+
 
 # ---- MAIN INDEX
 def compute_fng(symbol="SOLUSDT", tf="1d") -> tuple[float, str, dict]:

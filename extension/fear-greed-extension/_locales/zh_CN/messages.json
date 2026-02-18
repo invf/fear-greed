@@ -73,5 +73,9 @@
   "help_tf_spread": { "message": "• TF Spread — 各周期分歧程度。" },
   "help_extremes": { "message": "• Extremes (E) — 偏离中性值 50 的程度。" },
 
-  "help_tip": { "message": "提示：如果未识别交易对，请打开包含交易对的交易或图表页面，然后点击刷新。" }
+  "help_tip": { "message": "提示：如果未识别交易对，请打开包含交易对的交易或图表页面，然后点击刷新。" },
+
+  "apiKeyLabel": { "message": "API 密钥" },
+  "apiKeyPlaceholder": { "message": "粘贴您的密钥…" },
+  "apiKeyHint": { "message": "从您的控制面板复制并粘贴密钥。" }
 }

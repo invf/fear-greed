@@ -85,5 +85,9 @@
   "help_tf_spread": { "message": "• TF Spread — how strongly timeframes disagree." },
   "help_extremes": { "message": "• Extremes (E) — distance from the neutral zone 50." },
 
-  "help_tip": { "message": "Tip: if the symbol is not detected, open a chart or trading page with the symbol in the URL and click Refresh." }
+  "help_tip": { "message": "Tip: if the symbol is not detected, open a chart or trading page with the symbol in the URL and click Refresh." },
+
+  "apiKeyLabel": { "message": "API key" },
+  "apiKeyPlaceholder": { "message": "Paste your key…" },
+  "apiKeyHint": { "message": "Paste the key from your account dashboard." }
 }

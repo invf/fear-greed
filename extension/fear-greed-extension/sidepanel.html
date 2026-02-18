@@ -164,14 +164,21 @@
       <div class="detailsTitle" data-i18n="settingsTitle">Settings</div>
 
       <div class="formRow">
-        <label class="lbl" data-i18n="apiBaseLabel">API base</label>
-        <input class="inp"
-               id="s_apiBase"
-               type="text"
-               data-i18n-placeholder="apiBasePlaceholder"
-               placeholder="https://fear-greed-24pr.onrender.com" />
-        <div class="hint" data-i18n="apiBaseHint">Readonly for now.</div>
-      </div>
+  <label class="lbl" data-i18n="apiKeyLabel">API key</label>
+
+  <input class="inp"
+         id="s_apiKey"
+         type="password"
+         autocomplete="off"
+         spellcheck="false"
+         data-i18n-placeholder="apiKeyPlaceholder"
+         placeholder="Paste your key…" />
+
+  <div class="hint" id="apiKeyStatus" data-i18n="apiKeyHint">
+    Paste the key from your account dashboard.
+  </div>
+</div>
+
 
       <div class="formRow">
         <label class="lbl" data-i18n="autoRefresh">Auto refresh</label>

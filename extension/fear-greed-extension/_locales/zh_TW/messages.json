@@ -73,5 +73,9 @@
   "help_tf_spread": { "message": "• TF Spread — 各週期分歧程度。" },
   "help_extremes": { "message": "• Extremes (E) — 偏離中性值 50 的程度。" },
 
-  "help_tip": { "message": "提示：如果未識別交易對，請打開包含交易對的交易或圖表頁面，然後點擊重新整理。" }
+  "help_tip": { "message": "提示：如果未識別交易對，請打開包含交易對的交易或圖表頁面，然後點擊重新整理。" },
+
+  "apiKeyLabel": { "message": "API 金鑰" },
+  "apiKeyPlaceholder": { "message": "貼上您的金鑰…" },
+  "apiKeyHint": { "message": "請從您的控制台複製並貼上金鑰。" }
 }
