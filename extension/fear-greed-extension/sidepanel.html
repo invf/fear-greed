@@ -76,7 +76,7 @@
     </button>
   </div>
 
-  <!-- Pair badge -->
+  <!-- Pair badge + Plan badge -->
   <div class="pairCenter">
     <div class="pairBadge"
          id="pairBadge"
@@ -85,6 +85,15 @@
       <span class="venue" id="venue">—</span>
       <span class="sep">:</span>
       <span class="symbol" id="symbol">—</span>
+    </div>
+
+    <!-- Plan badge (Free/PRO/Premium) -->
+    <div class="planBadge"
+         id="planBadge"
+         data-i18n-title="planStatusTitle"
+         data-i18n-aria="planStatusTitle">
+      <span class="planLabel" data-i18n="planStatus">Plan</span>
+      <span class="planValue" id="planValue">FREE</span>
     </div>
   </div>
 
@@ -109,6 +118,9 @@
       </div>
 
       <div class="riskChips" id="riskChips"></div>
+
+      <!-- Optional: usage text (free pairs left / etc.) -->
+      <div class="planMeta" id="planMeta" style="display:none"></div>
     </div>
 
     <div class="grid">
@@ -163,22 +175,31 @@
     <div class="detailsCard">
       <div class="detailsTitle" data-i18n="settingsTitle">Settings</div>
 
+      <!-- API Key -->
       <div class="formRow">
-  <label class="lbl" data-i18n="apiKeyLabel">API key</label>
+        <label class="lbl" data-i18n="apiKeyLabel">API ключ</label>
 
-  <input class="inp"
-         id="s_apiKey"
-         type="password"
-         autocomplete="off"
-         spellcheck="false"
-         data-i18n-placeholder="apiKeyPlaceholder"
-         placeholder="Paste your key…" />
+        <input class="inp"
+               id="s_apiKey"
+               type="password"
+               autocomplete="off"
+               spellcheck="false"
+               data-i18n-placeholder="apiKeyPlaceholder"
+               placeholder="Вставте ключ…" />
 
-  <div class="hint" id="apiKeyStatus" data-i18n="apiKeyHint">
-    Paste the key from your account dashboard.
-  </div>
-</div>
+        <div class="hint" id="apiKeyStatus" data-i18n="apiKeyHint">
+          Вставте ключ із вашого кабінету.
+        </div>
+      </div>
 
+      <!-- Optional: quick actions -->
+      <div class="formRow">
+        <div class="toggleRow" style="justify-content:space-between; gap:10px;">
+          <button id="btnCheckKey" class="btnSmall" type="button" data-i18n="checkKeyBtn">Check key</button>
+          <button id="btnClearKey" class="btnSmall" type="button" data-i18n="clearKeyBtn">Clear</button>
+        </div>
+        <div class="hint" data-i18n="checkKeyHint">Validate key and show your plan status.</div>
+      </div>
 
       <div class="formRow">
         <label class="lbl" data-i18n="autoRefresh">Auto refresh</label>

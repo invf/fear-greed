@@ -3,13 +3,19 @@
 // =========================
 const API_BASE = "https://fear-greed-24pr.onrender.com";
 const FNG_PATH = "/api/fng";
+const VALIDATE_PATH = "/api/validate-key";
 const TFS = ["15m", "1h", "4h", "1d"];
 const DECIMALS = 1;
 
 // Storage keys
 const STORE = {
   auto: "cs_auto_refresh",
-  interval: "cs_refresh_interval_sec"
+  interval: "cs_refresh_interval_sec",
+  apiKey: "cs_api_key",
+  installId: "cs_install_id",
+  plan: "cs_plan",              // cached plan label
+  planValid: "cs_plan_valid",   // cached validity
+  planUpdatedAt: "cs_plan_ts",  // cached timestamp
 };
 
 // Defaults
@@ -24,6 +30,25 @@ const MAX_INTERVAL_SEC = 300;
 const AUTO_POLL_MS = 900;
 const DEBOUNCE_MS = 650;
 
+// Plan cache TTL (ms)
+const PLAN_TTL_MS = 6 * 60 * 60 * 1000; // 6h
+
+// =========================
+// HTTP proxy (MV3 CSP-safe)
+// =========================
+function httpFetch(url, { method = "GET", headers = {}, body = null } = {}) {
+  return new Promise((resolve, reject) => {
+    chrome.runtime.sendMessage(
+      { type: "HTTP_FETCH", url, method, headers, body },
+      (res) => {
+        const err = chrome.runtime.lastError;
+        if (err) return reject(new Error(err.message));
+        resolve(res);
+      }
+    );
+  });
+}
+
 // =========================
 // i18n helpers
 // =========================
@@ -37,29 +62,25 @@ function t(key, substitutions) {
 }
 
 function applyI18n() {
-  // text nodes
-  document.querySelectorAll("[data-i18n]").forEach(el => {
+  document.querySelectorAll("[data-i18n]").forEach((el) => {
     const key = el.getAttribute("data-i18n");
     const val = t(key);
     if (val) el.textContent = val;
   });
 
-  // title
-  document.querySelectorAll("[data-i18n-title]").forEach(el => {
+  document.querySelectorAll("[data-i18n-title]").forEach((el) => {
     const key = el.getAttribute("data-i18n-title");
     const val = t(key);
     if (val) el.setAttribute("title", val);
   });
 
-  // aria-label
-  document.querySelectorAll("[data-i18n-aria]").forEach(el => {
+  document.querySelectorAll("[data-i18n-aria]").forEach((el) => {
     const key = el.getAttribute("data-i18n-aria");
     const val = t(key);
     if (val) el.setAttribute("aria-label", val);
   });
 
-  // placeholder
-  document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
+  document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
     const key = el.getAttribute("data-i18n-placeholder");
     const val = t(key);
     if (val) el.setAttribute("placeholder", val);
@@ -82,7 +103,9 @@ const state = {
   venue: "—",
   symbol: "—",
   values: { "15m": null, "1h": null, "4h": null, "1d": null },
-  risk: null
+  risk: null,
+  plan: "FREE",
+  planValid: false
 };
 
 const auto = {
@@ -95,7 +118,7 @@ const auto = {
   periodicTimer: null,
 
   lastSymbol: "",
-  lastVenue: ""
+  lastVenue: "",
 };
 
 let refreshInFlight = false;
@@ -123,25 +146,28 @@ function clampInterval(v) {
 // storage
 // =========================
 function storageGet(keys) {
-  return new Promise((resolve) => {
-    chrome.storage.sync.get(keys, (res) => resolve(res || {}));
-  });
+  return new Promise((resolve) => chrome.storage.sync.get(keys, (res) => resolve(res || {})));
 }
-
 function storageSet(obj) {
-  return new Promise((resolve) => {
-    chrome.storage.sync.set(obj, () => resolve(true));
-  });
+  return new Promise((resolve) => chrome.storage.sync.set(obj, () => resolve(true)));
 }
 
 async function loadSettings() {
   const res = await storageGet({
     [STORE.auto]: AUTO_REFRESH_DEFAULT,
-    [STORE.interval]: DEFAULT_INTERVAL_SEC
+    [STORE.interval]: DEFAULT_INTERVAL_SEC,
+    [STORE.apiKey]: "",
+    [STORE.installId]: "",
+    [STORE.plan]: "FREE",
+    [STORE.planValid]: false,
+    [STORE.planUpdatedAt]: 0,
   });
 
   auto.enabled = typeof res[STORE.auto] === "boolean" ? res[STORE.auto] : AUTO_REFRESH_DEFAULT;
   auto.intervalSec = clampInterval(Number(res[STORE.interval] ?? DEFAULT_INTERVAL_SEC));
+
+  state.plan = (res[STORE.plan] || "FREE").toUpperCase();
+  state.planValid = !!res[STORE.planValid];
 }
 
 async function saveSettingsPartial(partial) {
@@ -152,7 +178,6 @@ function listenStorageChanges() {
   try {
     chrome.storage.onChanged.addListener((changes, area) => {
       if (area !== "sync") return;
-
       let needRestart = false;
 
       if (changes[STORE.auto]) {
@@ -163,6 +188,8 @@ function listenStorageChanges() {
         auto.intervalSec = clampInterval(Number(changes[STORE.interval].newValue));
         needRestart = true;
       }
+      if (changes[STORE.plan]) state.plan = String(changes[STORE.plan].newValue || "FREE").toUpperCase();
+      if (changes[STORE.planValid]) state.planValid = !!changes[STORE.planValid].newValue;
 
       const autoChk = $("s_auto");
       if (autoChk) autoChk.checked = auto.enabled;
@@ -170,6 +197,7 @@ function listenStorageChanges() {
       const intInp = $("s_interval");
       if (intInp) intInp.value = String(auto.intervalSec);
 
+      renderPlanStatus(); // update UI if plan changed
       if (needRestart) restartPeriodic();
     });
   } catch {
@@ -178,14 +206,123 @@ function listenStorageChanges() {
 }
 
 // =========================
+// install_id + api_key helpers
+// =========================
+async function getOrCreateInstallId() {
+  const res = await storageGet({ [STORE.installId]: "" });
+  let id = res[STORE.installId];
+  if (!id) {
+    id = crypto.randomUUID();
+    await storageSet({ [STORE.installId]: id });
+  }
+  return id;
+}
+
+async function getApiKey() {
+  const res = await storageGet({ [STORE.apiKey]: "" });
+  return (res[STORE.apiKey] || "").trim();
+}
+
+async function setApiKey(v) {
+  await storageSet({ [STORE.apiKey]: (v || "").trim() });
+}
+
+// =========================
+// Plan UI
+// =========================
+function planText(plan) {
+  const p = (plan || "FREE").toUpperCase();
+  if (p === "PRO") return "PRO";
+  if (p === "VIP" || p === "PREMIUM") return "VIP";
+  return "FREE";
+}
+
+function planHint({ plan, valid, status }) {
+  const p = planText(plan);
+
+  if (!valid) {
+    if (status === "missing") return t("apiKeyHint") || "Paste the key from your account dashboard.";
+    if (status === "invalid") return (t("apiKeyInvalid") || "Invalid key. Please check and try again.");
+    if (status === "revoked") return (t("apiKeyRevoked") || "Key revoked.");
+    return (t("apiKeyHint") || "Paste the key from your account dashboard.");
+  }
+
+  // valid
+  if (p === "PRO") return (t("apiKeyPro") || "Verified. Plan: PRO");
+  if (p === "VIP") return (t("apiKeyVip") || "Verified. Plan: VIP");
+  return (t("apiKeyFree") || "Verified. Plan: FREE");
+}
+
+function renderPlanStatus(extra = null) {
+  const el = $("apiKeyStatus");
+  if (!el) return;
+
+  const plan = extra?.plan ?? state.plan;
+  const valid = extra?.valid ?? state.planValid;
+  const status = extra?.status;
+
+  // текст
+  const label = valid ? `✅ ${planText(plan)}` : `ℹ️ ${planText(plan)}`;
+  const hint = planHint({ plan, valid, status });
+
+  el.textContent = `${label} — ${hint}`;
+}
+
+// =========================
+// Validate API key (backend)
+// =========================
+async function validateCurrentKey({ force = false } = {}) {
+  const now = Date.now();
+  const cache = await storageGet({ [STORE.planUpdatedAt]: 0 });
+  const ts = Number(cache[STORE.planUpdatedAt] || 0);
+
+  if (!force && ts && (now - ts) < PLAN_TTL_MS) {
+    // cached ok
+    renderPlanStatus();
+    return { plan: state.plan, valid: state.planValid, cached: true };
+  }
+
+  const apiKey = await getApiKey();
+  const url = new URL(API_BASE + VALIDATE_PATH);
+
+  const headers = { Accept: "application/json" };
+  if (apiKey) headers["X-Api-Key"] = apiKey;
+
+  const res = await httpFetch(url.toString(), { headers });
+
+  if (!res || !res.ok) {
+    const statusCode = res?.status ?? 0;
+    const data = res?.data;
+    const msg = typeof data === "string" ? data : (data ? JSON.stringify(data) : "Request failed");
+    throw new Error(`${statusCode}: ${msg}`);
+  }
+
+  const data = res.data || {};
+  const plan = planText(data.plan || "FREE");
+  const valid = !!data.valid;
+
+  state.plan = plan;
+  state.planValid = valid;
+
+  await storageSet({
+    [STORE.plan]: plan,
+    [STORE.planValid]: valid,
+    [STORE.planUpdatedAt]: now,
+  });
+
+  renderPlanStatus({ plan, valid, status: data.status });
+  return { plan, valid, cached: false, data };
+}
+
+// =========================
 // Tabs
 // =========================
 function setActiveTab(tab) {
   const tabs = {
     overview: { btn: $("tabOverview"), view: $("viewOverview") },
-    details:  { btn: $("tabDetails"),  view: $("viewDetails") },
+    details: { btn: $("tabDetails"), view: $("viewDetails") },
     settings: { btn: $("tabSettings"), view: $("viewSettings") },
-    help:     { btn: $("tabHelp"),     view: $("viewHelp") }
+    help: { btn: $("tabHelp"), view: $("viewHelp") },
   };
 
   Object.entries(tabs).forEach(([key, obj]) => {
@@ -196,7 +333,7 @@ function setActiveTab(tab) {
 }
 
 // =========================
-// Sentiment helpers (labels i18n)
+// Sentiment helpers
 // =========================
 function stateFromValue(v) {
   if (typeof v !== "number" || !isFinite(v)) return "neutral";
@@ -209,20 +346,17 @@ function stateFromValue(v) {
 
 function labelFromValue(v) {
   if (typeof v !== "number" || !isFinite(v)) return "—";
-
   const key =
     v < 25 ? "labelExtremeFear" :
     v < 45 ? "labelFear" :
     v <= 55 ? "labelNeutral" :
-    v < 76 ? "labelGreed" :
-    "labelExtremeGreed";
+    v < 76 ? "labelGreed" : "labelExtremeGreed";
 
   return t(key) || (
     v < 25 ? "EXTREME FEAR" :
     v < 45 ? "FEAR" :
     v <= 55 ? "NEUTRAL" :
-    v < 76 ? "GREED" :
-    "EXTREME GREED"
+    v < 76 ? "GREED" : "EXTREME GREED"
   );
 }
 
@@ -232,15 +366,13 @@ function zoneName(v) {
     st === "extfear" ? "zoneExtremeFear" :
     st === "fear" ? "zoneFear" :
     st === "neutral" ? "zoneNeutral" :
-    st === "greed" ? "zoneGreed" :
-    "zoneExtremeGreed";
+    st === "greed" ? "zoneGreed" : "zoneExtremeGreed";
 
   return t(key) || (
     st === "extfear" ? "Extreme Fear" :
     st === "fear" ? "Fear" :
     st === "neutral" ? "Neutral" :
-    st === "greed" ? "Greed" :
-    "Extreme Greed"
+    st === "greed" ? "Greed" : "Extreme Greed"
   );
 }
 
@@ -330,22 +462,38 @@ async function getActiveTabUrl() {
 }
 
 // =========================
-// API fetch
+// API fetch (via SW proxy + headers)
 // =========================
 async function fetchFng(symbol, tf) {
   const url = new URL(API_BASE + FNG_PATH);
   url.searchParams.set("symbol", symbol);
   url.searchParams.set("tf", tf);
 
-  const r = await fetch(url.toString(), { headers: { "Accept": "application/json" } });
-  const text = await r.text();
-  if (!r.ok) throw new Error(`${tf} -> ${r.status}: ${text}`);
-  return JSON.parse(text);
+  const installId = await getOrCreateInstallId();
+  const apiKey = await getApiKey();
+
+  const headers = {
+    Accept: "application/json",
+    "X-Install-Id": installId,
+  };
+  if (apiKey) headers["X-Api-Key"] = apiKey;
+
+  const res = await httpFetch(url.toString(), { headers });
+
+  if (!res || !res.ok) {
+    const status = res?.status ?? 0;
+    const data = res?.data;
+    const msg = typeof data === "string" ? data : (data ? JSON.stringify(data) : "Request failed");
+    throw new Error(`${tf} -> ${status}: ${msg}`);
+  }
+
+  return res.data;
 }
 
 // =========================
-// Gauge drawing
+// Gauge drawing (UNCHANGED)
 // =========================
+// ... (тут залишив як у тебе: colorAt / drawGradientArc / drawGlowArc / drawTicks / drawGauge)
 function colorAt(tN) {
   let rC, gC, bC;
   if (tN < 0.5) {
@@ -508,7 +656,7 @@ function drawGauge(canvas, value, st) {
 }
 
 // =========================
-// Risk computation
+// Risk computation + render (UNCHANGED)
 // =========================
 function zoneIndex(v) {
   if (typeof v !== "number" || !isFinite(v)) return 2;
@@ -518,14 +666,12 @@ function zoneIndex(v) {
   if (v < 76) return 3;
   return 4;
 }
-
 function spreadPenalty(spread) {
   return spread === 0 ? 0 :
          spread === 1 ? 15 :
          spread === 2 ? 35 :
          spread === 3 ? 60 : 80;
 }
-
 function impulseScore(v15, v1h, v4h) {
   const imp = Math.max(Math.abs(v15 - v1h), Math.abs(v15 - v4h));
   if (imp < 6)  return { I: 0 };
@@ -534,7 +680,6 @@ function impulseScore(v15, v1h, v4h) {
   if (imp < 25) return { I: 75 };
   return { I: 90 };
 }
-
 function computeRisk(values) {
   const v15 = values["15m"], v1 = values["1h"], v4 = values["4h"], vD = values["1d"];
   const w = { "15m": 0.15, "1h": 0.20, "4h": 0.30, "1d": 0.35 };
@@ -544,7 +689,6 @@ function computeRisk(values) {
   const zones = [zoneIndex(v15), zoneIndex(v1), zoneIndex(v4), zoneIndex(vD)];
   const spread = Math.max(...zones) - Math.min(...zones);
   const D = spreadPenalty(spread);
-
   const impA = Math.abs(v15 - v1);
   const impB = Math.abs(v15 - v4);
   const { I } = impulseScore(v15, v1, v4);
@@ -558,7 +702,6 @@ function computeRisk(values) {
     risk < 75 ? { key: (t("riskHigh") || "HIGH"), cls: "risk-high" } :
                 { key: (t("riskExtreme") || "EXTREME"), cls: "risk-ext" };
 
-  // i18n chips
   const chipE = t("chipE") || "E";
   const chipSpread = t("chipSpread") || "Spread";
   const chip15_1 = t("chip15_1") || "15m↔1h";
@@ -570,10 +713,8 @@ function computeRisk(values) {
     `${chip15_1}:${impA.toFixed(1)}`,
     `${chip15_4}:${impB.toFixed(1)}`
   ];
-
   return { risk, level, chips, E, spread, impA, impB };
 }
-
 function renderRisk(r) {
   const card = $("riskCard");
   if (!card) return;
@@ -617,14 +758,12 @@ function applyCard(tf, d) {
 }
 
 // =========================
-// Details bars (market structure)
+// Details (UNCHANGED)
 // =========================
 let detailsStylesInjected = false;
-
 function ensureDetailsStyles() {
   if (detailsStylesInjected) return;
   detailsStylesInjected = true;
-
   const css = `
   #detailsBars{margin-bottom:14px}
   .d-wrap{display:flex;flex-direction:column;gap:12px}
@@ -648,18 +787,15 @@ function ensureDetailsStyles() {
   st.textContent = css;
   document.head.appendChild(st);
 }
-
 function detailsClassByValue(v) {
   const st = stateFromValue(v);
   return (
     st === "extfear" ? "z-extfear" :
     st === "fear" ? "z-fear" :
     st === "neutral" ? "z-neutral" :
-    st === "greed" ? "z-greed" :
-    "z-extgreed"
+    st === "greed" ? "z-greed" : "z-extgreed"
   );
 }
-
 function detailsBarRow(title, value, rightText) {
   const v = (typeof value === "number" && isFinite(value)) ? Math.max(0, Math.min(100, value)) : null;
   const cls = (v == null) ? "z-neutral" : detailsClassByValue(v);
@@ -679,7 +815,6 @@ function detailsBarRow(title, value, rightText) {
     </div>
   `;
 }
-
 function renderDetails() {
   ensureDetailsStyles();
   const host = $("detailsBars");
@@ -707,7 +842,7 @@ function renderDetails() {
 
   const minV = Math.min(...arr);
   const maxV = Math.max(...arr);
-  const diff = maxV - minV; // TF spread
+  const diff = maxV - minV;
   const tilt = arr.reduce((a, b) => a + b, 0) / arr.length;
   const eValue = state.risk ? state.risk.E : 0;
 
@@ -752,25 +887,20 @@ function restartPeriodic() {
 // =========================
 function scheduleRefresh(reason, url) {
   if (auto.debounceTimer) clearTimeout(auto.debounceTimer);
-  auto.debounceTimer = setTimeout(() => {
-    refresh(url || lastSeenUrl, reason);
-  }, DEBOUNCE_MS);
+  auto.debounceTimer = setTimeout(() => refresh(url || lastSeenUrl, reason), DEBOUNCE_MS);
 }
 
 async function checkActiveUrl(reason) {
   try {
     const url = await getActiveTabUrl();
     if (!url) return;
-
     lastSeenUrl = url;
 
     if (url !== auto.lastUrl) {
       auto.lastUrl = url;
       if (auto.enabled) scheduleRefresh(reason || "url-change", url);
     }
-  } catch {
-    // ignore
-  }
+  } catch {}
 }
 
 function startAutoEngines() {
@@ -785,14 +915,9 @@ function startAutoEngines() {
       }
     });
     chrome.windows.onFocusChanged.addListener(() => checkActiveUrl("focus"));
-  } catch {
-    // ignore
-  }
+  } catch {}
 
-  auto.pollTimer = setInterval(() => {
-    if (auto.enabled) checkActiveUrl("poll");
-  }, AUTO_POLL_MS);
-
+  auto.pollTimer = setInterval(() => { if (auto.enabled) checkActiveUrl("poll"); }, AUTO_POLL_MS);
   restartPeriodic();
 }
 
@@ -806,10 +931,7 @@ function stopAutoEngines() {
 // Refresh flow
 // =========================
 async function refresh(urlOverride, reason) {
-  if (refreshInFlight) {
-    refreshQueued = true;
-    return;
-  }
+  if (refreshInFlight) { refreshQueued = true; return; }
 
   refreshInFlight = true;
   refreshQueued = false;
@@ -855,9 +977,7 @@ async function refresh(urlOverride, reason) {
     if (!symbol) {
       if (reason !== "poll" && reason !== "periodic") {
         setErr(t("errNoSymbol") || "Cannot detect symbol from URL on this page.");
-      } else {
-        setErr("");
-      }
+      } else setErr("");
 
       TFS.forEach(tf => applyCard(tf, null));
       state.values = { "15m": null, "1h": null, "4h": null, "1d": null };
@@ -877,14 +997,10 @@ async function refresh(urlOverride, reason) {
       })
     );
 
-    for (const r of results) {
-      applyCard(r.tf, r.ok ? r.d : null);
-    }
+    for (const r of results) applyCard(r.tf, r.ok ? r.d : null);
 
     const values = { "15m": null, "1h": null, "4h": null, "1d": null };
-    for (const r of results) {
-      if (r.ok && typeof r.d?.value === "number") values[r.tf] = r.d.value;
-    }
+    for (const r of results) if (r.ok && typeof r.d?.value === "number") values[r.tf] = r.d.value;
     state.values = values;
 
     if (values["15m"] != null && values["1h"] != null && values["4h"] != null && values["1d"] != null) {
@@ -919,7 +1035,6 @@ async function refresh(urlOverride, reason) {
 // Init bindings + Boot
 // =========================
 function initDomReady() {
-  // i18n first (DOM exists now)
   applyI18n();
 
   $("tabOverview")?.addEventListener("click", () => setActiveTab("overview"));
@@ -928,19 +1043,22 @@ function initDomReady() {
   $("tabHelp")?.addEventListener("click", () => setActiveTab("help"));
 
   $("refresh")?.addEventListener("click", () => refresh(lastSeenUrl, "manual"));
-
   setActiveTab("overview");
-
-  // API base field (readonly)
-  const apiInp = $("s_apiBase");
-  if (apiInp) {
-    apiInp.value = API_BASE;
-    apiInp.setAttribute("readonly", "readonly");
-  }
 
   (async function boot() {
     await loadSettings();
     listenStorageChanges();
+    await getOrCreateInstallId();
+
+    // show cached plan immediately
+    renderPlanStatus();
+
+    // validate (auto) once on open (best effort)
+    try { await validateCurrentKey({ force: false }); } catch (e) {
+      // only show error in settings hint, not global err
+      renderPlanStatus({ plan: "FREE", valid: false, status: "invalid" });
+      console.warn("validate key failed:", e);
+    }
 
     const autoChk = $("s_auto");
     if (autoChk) {
@@ -948,13 +1066,8 @@ function initDomReady() {
       autoChk.addEventListener("change", async () => {
         auto.enabled = !!autoChk.checked;
         await saveSettingsPartial({ [STORE.auto]: auto.enabled });
-
-        if (auto.enabled) {
-          checkActiveUrl("auto-on");
-          scheduleRefresh("auto-on", lastSeenUrl);
-        } else {
-          setErr("");
-        }
+        if (auto.enabled) { await checkActiveUrl("auto-on"); scheduleRefresh("auto-on", lastSeenUrl); }
+        else setErr("");
         restartPeriodic();
       });
     }
@@ -971,13 +1084,50 @@ function initDomReady() {
       });
     }
 
+    // API key input
+    const keyInp = $("s_apiKey");
+    if (keyInp) {
+      keyInp.value = await getApiKey();
+
+      // save on change
+      keyInp.addEventListener("change", async () => {
+        await setApiKey((keyInp.value || "").trim());
+        // invalidate plan cache
+        await storageSet({ [STORE.planUpdatedAt]: 0 });
+        // update status (auto validate)
+        try { await validateCurrentKey({ force: true }); }
+        catch (e) { renderPlanStatus({ plan: "FREE", valid: false, status: "invalid" }); }
+        scheduleRefresh("apikey-change", lastSeenUrl);
+      });
+    }
+
+    // Buttons
+    $("btnCheckKey")?.addEventListener("click", async () => {
+      const hint = $("apiKeyStatus");
+      if (hint) hint.textContent = "⏳ Checking...";
+      try {
+        await validateCurrentKey({ force: true });
+      } catch (e) {
+        const msg = String(e?.message || e);
+        if (hint) hint.textContent = `❌ Check failed: ${msg}`;
+      }
+    });
+
+    $("btnClearKey")?.addEventListener("click", async () => {
+      await setApiKey("");
+      await storageSet({
+        [STORE.plan]: "FREE",
+        [STORE.planValid]: false,
+        [STORE.planUpdatedAt]: 0,
+      });
+      const keyInp2 = $("s_apiKey");
+      if (keyInp2) keyInp2.value = "";
+      renderPlanStatus({ plan: "FREE", valid: false, status: "missing" });
+      scheduleRefresh("apikey-clear", lastSeenUrl);
+    });
+
     await refresh("", "init");
     startAutoEngines();
-
-    try {
-      console.log("UI language:", chrome.i18n.getUILanguage());
-      console.log("extName:", chrome.i18n.getMessage("extName"));
-    } catch {}
   })();
 }
 
