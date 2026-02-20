@@ -88,7 +88,6 @@ def validate_api_key_with_supabase(api_key: str) -> dict:
       { valid: bool, plan: "FREE"/"PRO"/"VIP"/..., status: "...", ... }
     """
     if not supabase:
-        # backend not configured -> treat as free (or raise, your call)
         return {"valid": False, "plan": "FREE", "status": "supabase_not_configured"}
 
     api_key = (api_key or "").strip()
@@ -101,8 +100,7 @@ def validate_api_key_with_supabase(api_key: str) -> dict:
     if not data:
         return {"valid": False, "plan": "FREE", "status": "invalid"}
 
-    # If your RPC already returns {valid, plan, status}, just pass through.
-    # Otherwise normalize minimal fields:
+    # Normalize minimal fields if RPC returns partial shape
     if "valid" not in data:
         data["valid"] = True
     if "plan" not in data:
@@ -112,14 +110,25 @@ def validate_api_key_with_supabase(api_key: str) -> dict:
     return data
 
 
-def consume_pair_access_or_raise(install_id: str, api_key: str, symbol: str):
+def consume_pair_access_or_raise(install_id: str, api_key: str, symbol: str) -> dict:
     """
-    Calls RPC consume_pair_access(...) and raises 402 if not ok.
+    Calls RPC consume_pair_access(...) and returns its dict.
+    Raises 402 if not ok.
+
     Expected RPC return example:
-      { ok: true, plan: "FREE", remaining: 9, reset_at: "...", ... }
+      { ok: true, plan: "FREE", valid: false, limit: 10, used: 3, remaining: 7, day: "2026-02-20", ... }
     """
     if not supabase:
-        return  # if you want strict behavior: raise HTTPException(500,...)
+        # Backend not configured -> allow, but no quota info
+        return {
+            "ok": True,
+            "valid": False,
+            "plan": "FREE",
+            "limit": None,
+            "used": None,
+            "remaining": None,
+            "status": "supabase_not_configured",
+        }
 
     res = supabase.rpc(
         "consume_pair_access",
@@ -131,8 +140,14 @@ def consume_pair_access_or_raise(install_id: str, api_key: str, symbol: str):
     ).execute()
 
     data = _sb_data(res.data) or {}
+
+    if not isinstance(data, dict):
+        data = {"ok": False, "status": "bad_rpc_payload", "raw": data}
+
     if not data.get("ok", False):
         raise HTTPException(status_code=402, detail=data)
+
+    return data
 
 
 # =========================
@@ -373,7 +388,6 @@ async def fng_quad(symbol: str = "BTCUSDT"):
     values = {}
 
     async with httpx.AsyncClient(timeout=10.0) as client:
-        # call local endpoints (same app) by direct compute to avoid internal http
         for tf in tfs:
             try:
                 v, lbl, _ = compute_fng(symbol=symbol, tf=tf)
@@ -438,20 +452,18 @@ def fng(
     if tf not in VALID_TF:
         return JSONResponse({"error": f"Invalid tf={tf}. Allowed: {sorted(VALID_TF)}"}, status_code=400)
 
-    # ---- GATE (pair access)
     install_id = (request.headers.get("X-Install-Id") or "").strip()
     api_key = (request.headers.get("X-Api-Key") or "").strip()
 
-    # If you want to force install_id always:
     if not install_id:
         raise HTTPException(status_code=400, detail="Missing X-Install-Id")
 
+    # ---- GATE + QUOTA META
     try:
-        consume_pair_access_or_raise(install_id=install_id, api_key=api_key, symbol=symbol)
+        quota = consume_pair_access_or_raise(install_id=install_id, api_key=api_key, symbol=symbol)
     except HTTPException:
         raise
     except Exception as e:
-        # Supabase not configured or RPC error
         raise HTTPException(status_code=500, detail=str(e))
 
     # ---- Compute
@@ -471,6 +483,16 @@ def fng(
                 "oi": round(comps["scores"]["oi"], 2),
             },
             "updatedAt": ts_iso_now(),
+
+            # ✅ QUOTA META for extension UI
+            "ok": True,
+            "status": quota.get("status", "ok"),
+            "plan": quota.get("plan", "FREE"),
+            "valid": bool(quota.get("valid", False)),
+            "limit": quota.get("limit", None),
+            "used": quota.get("used", None),
+            "remaining": quota.get("remaining", None),
+            "day": quota.get("day", None),
         }
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
@@ -485,13 +507,14 @@ def fng_components(
     if tf not in VALID_TF:
         return JSONResponse({"error": f"Invalid tf={tf}. Allowed: {sorted(VALID_TF)}"}, status_code=400)
 
-    # Gate here too (so components isn't a bypass)
     install_id = (request.headers.get("X-Install-Id") or "").strip()
     api_key = (request.headers.get("X-Api-Key") or "").strip()
     if not install_id:
         raise HTTPException(status_code=400, detail="Missing X-Install-Id")
+
+    # Gate here too (so components isn't a bypass)
     try:
-        consume_pair_access_or_raise(install_id=install_id, api_key=api_key, symbol=symbol)
+        quota = consume_pair_access_or_raise(install_id=install_id, api_key=api_key, symbol=symbol)
     except HTTPException:
         raise
     except Exception as e:
@@ -508,6 +531,16 @@ def fng_components(
             "scores": comps["scores"],
             "raw": comps["raw"],
             "updatedAt": ts_iso_now(),
+
+            # ✅ QUOTA META
+            "ok": True,
+            "status": quota.get("status", "ok"),
+            "plan": quota.get("plan", "FREE"),
+            "valid": bool(quota.get("valid", False)),
+            "limit": quota.get("limit", None),
+            "used": quota.get("used", None),
+            "remaining": quota.get("remaining", None),
+            "day": quota.get("day", None),
         }
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)

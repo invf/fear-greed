@@ -2,7 +2,6 @@
 <html>
 <head>
   <meta charset="utf-8" />
-  <!-- title is not a normal element, but we can still set it by applyI18n (textContent) -->
   <title data-i18n="extName">Crypto Panel</title>
   <link rel="stylesheet" href="sidepanel.css" />
 </head>
@@ -76,7 +75,7 @@
     </button>
   </div>
 
-  <!-- Pair badge + Plan badge -->
+  <!-- Pair badge + Plan badge + quota -->
   <div class="pairCenter">
     <div class="pairBadge"
          id="pairBadge"
@@ -87,13 +86,18 @@
       <span class="symbol" id="symbol">—</span>
     </div>
 
-    <!-- Plan badge (Free/PRO/Premium) -->
-    <div class="planBadge"
-         id="planBadge"
-         data-i18n-title="planStatusTitle"
-         data-i18n-aria="planStatusTitle">
-      <span class="planLabel" data-i18n="planStatus">Plan</span>
-      <span class="planValue" id="planValue">FREE</span>
+    <div class="planWrap">
+      <!-- Plan badge -->
+      <div class="planBadge"
+           id="planBadge"
+           data-i18n-title="planStatusTitle"
+           data-i18n-aria="planStatusTitle">
+        <span class="planLabel" data-i18n="planStatus">Plan</span>
+        <span class="planValue" id="planValue">FREE</span>
+      </div>
+
+      <!-- Quota badge (FREE • 3/10 etc.) -->
+      <div class="planMeta" id="planMeta" style="display:none"></div>
     </div>
   </div>
 
@@ -118,9 +122,6 @@
       </div>
 
       <div class="riskChips" id="riskChips"></div>
-
-      <!-- Optional: usage text (free pairs left / etc.) -->
-      <div class="planMeta" id="planMeta" style="display:none"></div>
     </div>
 
     <div class="grid">
@@ -175,7 +176,6 @@
     <div class="detailsCard">
       <div class="detailsTitle" data-i18n="settingsTitle">Settings</div>
 
-      <!-- API Key -->
       <div class="formRow">
         <label class="lbl" data-i18n="apiKeyLabel">API ключ</label>
 
@@ -192,7 +192,6 @@
         </div>
       </div>
 
-      <!-- Optional: quick actions -->
       <div class="formRow">
         <div class="toggleRow" style="justify-content:space-between; gap:10px;">
           <button id="btnCheckKey" class="btnSmall" type="button" data-i18n="checkKeyBtn">Check key</button>
@@ -217,7 +216,7 @@
     </div>
   </div>
 
-  <!-- HELP VIEW (DO NOT TOUCH) -->
+  <!-- HELP VIEW -->
   <div class="view" id="viewHelp" role="tabpanel">
     <div class="detailsCard">
       <div class="detailsTitle" data-i18n="tabHelpTitle">Help</div>

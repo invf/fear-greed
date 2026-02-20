@@ -585,4 +585,29 @@ canvas{
 #btnCheckKey, #btnClearKey{
   flex: 1;
 }
+.planBadge.plan-free  { border-color:#555; }
+.planBadge.plan-pro   { border-color:#F0B90B; }
+.planBadge.plan-vip   { border-color:#0ECB81; }
 
+/* Plan wrap: badge + quota under it */
+.planWrap{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:6px;
+}
+
+/* Quota badge (FREE • 3/10) */
+.planMeta{
+  display:block;              /* JS все одно керує display, але хай буде дефолт */
+  margin-top: 0;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .2px;
+  color: rgba(234,236,239,0.88);
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(43,49,57,0.85);
+  background: rgba(11,14,17,0.22);
+  white-space: nowrap;
+}

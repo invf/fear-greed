@@ -4,6 +4,11 @@
 const API_BASE = "https://fear-greed-24pr.onrender.com";
 const FNG_PATH = "/api/fng";
 const VALIDATE_PATH = "/api/validate-key";
+
+// NEW: endpoint that calls consume_pair_access() and returns {plan, valid, limit, used, remaining, day}
+// If your backend uses another route (e.g. /api/consume-pair), just change it here.
+const QUOTA_PATH = "/api/quota";
+
 const TFS = ["15m", "1h", "4h", "1d"];
 const DECIMALS = 1;
 
@@ -13,9 +18,11 @@ const STORE = {
   interval: "cs_refresh_interval_sec",
   apiKey: "cs_api_key",
   installId: "cs_install_id",
-  plan: "cs_plan",              // cached plan label
-  planValid: "cs_plan_valid",   // cached validity
-  planUpdatedAt: "cs_plan_ts",  // cached timestamp
+
+  // plan cache
+  plan: "cs_plan",
+  planValid: "cs_plan_valid",
+  planUpdatedAt: "cs_plan_ts",
 };
 
 // Defaults
@@ -32,6 +39,9 @@ const DEBOUNCE_MS = 650;
 
 // Plan cache TTL (ms)
 const PLAN_TTL_MS = 6 * 60 * 60 * 1000; // 6h
+
+// Quota refresh tuning (anti-spam)
+const QUOTA_TTL_MS = 3500; // do not refetch quota more often than this for same symbol
 
 // =========================
 // HTTP proxy (MV3 CSP-safe)
@@ -97,6 +107,16 @@ function escapeHtml(str) {
 }
 
 // =========================
+// API payload unwrap helper
+// Supports backend responses like { ok:true, data:{...} } or direct {...}
+// =========================
+function unwrapPayload(x) {
+  if (!x) return null;
+  if (typeof x === "object" && x.data && typeof x.data === "object") return x.data;
+  return x;
+}
+
+// =========================
 // State
 // =========================
 const state = {
@@ -104,8 +124,17 @@ const state = {
   symbol: "—",
   values: { "15m": null, "1h": null, "4h": null, "1d": null },
   risk: null,
+
   plan: "FREE",
-  planValid: false
+  planValid: false,
+};
+
+// NEW: quota fetch state to ensure it updates and doesn't spam
+const quotaState = {
+  lastSymbol: "",
+  lastAt: 0,
+  inFlight: false,
+  queued: false,
 };
 
 const auto = {
@@ -128,9 +157,17 @@ let lastSeenUrl = "";
 // =========================
 // DOM helpers
 // =========================
-function $(id) { return document.getElementById(id); }
-function setText(id, txt) { const el = $(id); if (el) el.textContent = (txt ?? "—"); }
-function setErr(txt) { const el = $("err"); if (el) el.textContent = txt || ""; }
+function $(id) {
+  return document.getElementById(id);
+}
+function setText(id, txt) {
+  const el = $(id);
+  if (el) el.textContent = txt ?? "—";
+}
+function setErr(txt) {
+  const el = $("err");
+  if (el) el.textContent = txt || "";
+}
 
 function fmt(v) {
   if (typeof v !== "number" || !isFinite(v)) return "—";
@@ -140,6 +177,110 @@ function fmt(v) {
 function clampInterval(v) {
   if (!isFinite(v)) return DEFAULT_INTERVAL_SEC;
   return Math.max(MIN_INTERVAL_SEC, Math.min(MAX_INTERVAL_SEC, v));
+}
+
+// =========================
+// Plan UI (badge + hint)
+// =========================
+function renderPlan(plan, valid) {
+  const el = $("planValue");
+  const badge = $("planBadge");
+  if (!el || !badge) return;
+
+  const p = String(plan || "FREE").toUpperCase();
+  el.textContent = p;
+
+  badge.classList.remove("plan-free", "plan-pro", "plan-vip");
+
+  if (!valid) {
+    badge.classList.add("plan-free");
+    return;
+  }
+
+  if (p === "PRO") badge.classList.add("plan-pro");
+  else if (p === "VIP") badge.classList.add("plan-vip");
+  else badge.classList.add("plan-free");
+}
+
+function planText(plan) {
+  const p = String(plan || "FREE").toUpperCase();
+  if (p === "PRO") return "PRO";
+  if (p === "VIP" || p === "PREMIUM") return "VIP";
+  return "FREE";
+}
+
+function planHint({ plan, valid, status } = {}) {
+  const p = planText(plan);
+
+  if (!valid) {
+    if (status === "missing") return t("apiKeyHint") || "Paste the key from your account dashboard.";
+    if (status === "invalid") return t("apiKeyInvalid") || "Invalid key. Please check and try again.";
+    if (status === "revoked") return t("apiKeyRevoked") || "Key revoked.";
+    return t("apiKeyHint") || "Paste the key from your account dashboard.";
+  }
+
+  if (p === "PRO") return t("apiKeyPro") || "Verified. Plan: PRO";
+  if (p === "VIP") return t("apiKeyVip") || "Verified. Plan: VIP";
+  return t("apiKeyFree") || "Verified. Plan: FREE";
+}
+
+function renderPlanStatus(extra = null) {
+  const el = $("apiKeyStatus");
+  if (!el) return;
+
+  const plan = extra?.plan ?? state.plan;
+  const valid = extra?.valid ?? state.planValid;
+  const status = extra?.status;
+
+  const label = valid ? `✅ ${planText(plan)}` : `ℹ️ ${planText(plan)}`;
+  const hint = planHint({ plan, valid, status });
+
+  el.textContent = `${label} — ${hint}`;
+}
+
+async function setPlanState({ plan, valid, status, save = true } = {}) {
+  const p = planText(plan || "FREE");
+  const v = !!valid;
+
+  state.plan = p;
+  state.planValid = v;
+
+  renderPlan(p, v);
+  renderPlanStatus({ plan: p, valid: v, status });
+
+  if (save) {
+    await storageSet({
+      [STORE.plan]: p,
+      [STORE.planValid]: v,
+      [STORE.planUpdatedAt]: Date.now(),
+    });
+  }
+}
+
+// =========================
+// Quota UI (pairs per day)
+// =========================
+function renderQuota(metaLike) {
+  const el = document.getElementById("planMeta");
+  if (!el) return;
+
+  const meta = unwrapPayload(metaLike);
+
+  const plan = String(meta?.plan || state.plan || "FREE").toUpperCase();
+  const planLabel = plan === "VIP" ? "VIP" : plan === "PRO" ? "PRO" : "FREE";
+
+  // VIP (unlimited) OR backend could omit limit
+  if (!meta || meta.limit == null) {
+    el.style.display = "block";
+    el.textContent = `${planLabel} • Unlimited`;
+    return;
+  }
+
+  const used = Number(meta.used ?? 0);
+  const limit = Number(meta.limit ?? 0);
+
+  el.style.display = "block";
+  el.textContent = `${planLabel} • ${used}/${limit}`;
 }
 
 // =========================
@@ -166,7 +307,7 @@ async function loadSettings() {
   auto.enabled = typeof res[STORE.auto] === "boolean" ? res[STORE.auto] : AUTO_REFRESH_DEFAULT;
   auto.intervalSec = clampInterval(Number(res[STORE.interval] ?? DEFAULT_INTERVAL_SEC));
 
-  state.plan = (res[STORE.plan] || "FREE").toUpperCase();
+  state.plan = planText(res[STORE.plan] || "FREE");
   state.planValid = !!res[STORE.planValid];
 }
 
@@ -178,6 +319,7 @@ function listenStorageChanges() {
   try {
     chrome.storage.onChanged.addListener((changes, area) => {
       if (area !== "sync") return;
+
       let needRestart = false;
 
       if (changes[STORE.auto]) {
@@ -188,7 +330,7 @@ function listenStorageChanges() {
         auto.intervalSec = clampInterval(Number(changes[STORE.interval].newValue));
         needRestart = true;
       }
-      if (changes[STORE.plan]) state.plan = String(changes[STORE.plan].newValue || "FREE").toUpperCase();
+      if (changes[STORE.plan]) state.plan = planText(changes[STORE.plan].newValue || "FREE");
       if (changes[STORE.planValid]) state.planValid = !!changes[STORE.planValid].newValue;
 
       const autoChk = $("s_auto");
@@ -197,7 +339,9 @@ function listenStorageChanges() {
       const intInp = $("s_interval");
       if (intInp) intInp.value = String(auto.intervalSec);
 
-      renderPlanStatus(); // update UI if plan changed
+      renderPlan(state.plan, state.planValid);
+      renderPlanStatus();
+
       if (needRestart) restartPeriodic();
     });
   } catch {
@@ -228,90 +372,136 @@ async function setApiKey(v) {
 }
 
 // =========================
-// Plan UI
-// =========================
-function planText(plan) {
-  const p = (plan || "FREE").toUpperCase();
-  if (p === "PRO") return "PRO";
-  if (p === "VIP" || p === "PREMIUM") return "VIP";
-  return "FREE";
-}
-
-function planHint({ plan, valid, status }) {
-  const p = planText(plan);
-
-  if (!valid) {
-    if (status === "missing") return t("apiKeyHint") || "Paste the key from your account dashboard.";
-    if (status === "invalid") return (t("apiKeyInvalid") || "Invalid key. Please check and try again.");
-    if (status === "revoked") return (t("apiKeyRevoked") || "Key revoked.");
-    return (t("apiKeyHint") || "Paste the key from your account dashboard.");
-  }
-
-  // valid
-  if (p === "PRO") return (t("apiKeyPro") || "Verified. Plan: PRO");
-  if (p === "VIP") return (t("apiKeyVip") || "Verified. Plan: VIP");
-  return (t("apiKeyFree") || "Verified. Plan: FREE");
-}
-
-function renderPlanStatus(extra = null) {
-  const el = $("apiKeyStatus");
-  if (!el) return;
-
-  const plan = extra?.plan ?? state.plan;
-  const valid = extra?.valid ?? state.planValid;
-  const status = extra?.status;
-
-  // текст
-  const label = valid ? `✅ ${planText(plan)}` : `ℹ️ ${planText(plan)}`;
-  const hint = planHint({ plan, valid, status });
-
-  el.textContent = `${label} — ${hint}`;
-}
-
-// =========================
 // Validate API key (backend)
 // =========================
-async function validateCurrentKey({ force = false } = {}) {
+async function validateCurrentKey({ force = false, silent = false } = {}) {
   const now = Date.now();
-  const cache = await storageGet({ [STORE.planUpdatedAt]: 0 });
-  const ts = Number(cache[STORE.planUpdatedAt] || 0);
+  const cached = await storageGet({
+    [STORE.plan]: "FREE",
+    [STORE.planValid]: false,
+    [STORE.planUpdatedAt]: 0,
+  });
 
-  if (!force && ts && (now - ts) < PLAN_TTL_MS) {
-    // cached ok
-    renderPlanStatus();
-    return { plan: state.plan, valid: state.planValid, cached: true };
+  const cacheTs = Number(cached[STORE.planUpdatedAt] || 0);
+  const cacheFresh = cacheTs && (now - cacheTs) < PLAN_TTL_MS;
+
+  await setPlanState({
+    plan: cached[STORE.plan] || "FREE",
+    valid: !!cached[STORE.planValid],
+    status: "cached",
+    save: false,
+  });
+
+  if (!force && cacheFresh) return { cached: true, plan: state.plan, valid: state.planValid };
+
+  const installId = await getOrCreateInstallId();
+  const apiKey = await getApiKey();
+
+  if (!apiKey) {
+    await setPlanState({ plan: "FREE", valid: false, status: "missing", save: true });
+    return { cached: false, plan: "FREE", valid: false, status: "missing" };
   }
 
-  const apiKey = await getApiKey();
   const url = new URL(API_BASE + VALIDATE_PATH);
 
-  const headers = { Accept: "application/json" };
-  if (apiKey) headers["X-Api-Key"] = apiKey;
+  const headers = {
+    Accept: "application/json",
+    "X-Install-Id": installId,
+    "X-Api-Key": apiKey,
+  };
 
   const res = await httpFetch(url.toString(), { headers });
 
   if (!res || !res.ok) {
     const statusCode = res?.status ?? 0;
-    const data = res?.data;
-    const msg = typeof data === "string" ? data : (data ? JSON.stringify(data) : "Request failed");
-    throw new Error(`${statusCode}: ${msg}`);
+    const raw = res?.data;
+    const msg = typeof raw === "string" ? raw : (raw ? JSON.stringify(raw) : "Request failed");
+    const err = new Error(`${statusCode}: ${msg}`);
+    if (!silent) throw err;
+    return { cached: false, error: String(err.message || err) };
   }
 
-  const data = res.data || {};
+  const data = unwrapPayload(res.data || {}) || {};
   const plan = planText(data.plan || "FREE");
   const valid = !!data.valid;
+  const status = data.status || (valid ? "ok" : "invalid");
 
-  state.plan = plan;
-  state.planValid = valid;
+  await setPlanState({ plan, valid, status, save: true });
+  return { cached: false, plan, valid, status, data };
+}
 
-  await storageSet({
-    [STORE.plan]: plan,
-    [STORE.planValid]: valid,
-    [STORE.planUpdatedAt]: now,
-  });
+// =========================
+// Quota fetch (backend)
+// =========================
+async function fetchQuota(symbol) {
+  const url = new URL(API_BASE + QUOTA_PATH);
+  url.searchParams.set("symbol", symbol);
 
-  renderPlanStatus({ plan, valid, status: data.status });
-  return { plan, valid, cached: false, data };
+  const installId = await getOrCreateInstallId();
+  const apiKey = await getApiKey();
+
+  const headers = {
+    Accept: "application/json",
+    "X-Install-Id": installId,
+  };
+  if (apiKey) headers["X-Api-Key"] = apiKey;
+
+  const res = await httpFetch(url.toString(), { headers });
+
+  if (res && res.ok) return unwrapPayload(res.data);
+
+  const status = res?.status ?? 0;
+  const raw = res?.data;
+  const msg = typeof raw === "string" ? raw : (raw ? JSON.stringify(raw) : "Request failed");
+  throw new Error(`quota -> ${status}: ${msg}`);
+}
+
+// Fetch quota only when symbol changes (and throttle)
+async function maybeUpdateQuota(symbol, { force = false } = {}) {
+  if (!symbol) return;
+
+  const now = Date.now();
+  const sameSym = quotaState.lastSymbol === symbol;
+  const fresh = (now - quotaState.lastAt) < QUOTA_TTL_MS;
+
+  if (!force && sameSym && fresh) return;
+
+  if (quotaState.inFlight) {
+    quotaState.queued = true;
+    return;
+  }
+
+  quotaState.inFlight = true;
+  quotaState.queued = false;
+
+  try {
+    const meta = await fetchQuota(symbol);
+
+    // update plan badge too if backend returns it
+    if (meta && typeof meta === "object") {
+      if ("plan" in meta || "valid" in meta) {
+        await setPlanState({
+          plan: meta.plan ?? state.plan,
+          valid: typeof meta.valid === "boolean" ? meta.valid : state.planValid,
+          status: meta.status,
+          save: false,
+        });
+      }
+      renderQuota(meta);
+    }
+
+    quotaState.lastSymbol = symbol;
+    quotaState.lastAt = Date.now();
+  } catch {
+    // don't crash UI if quota endpoint is missing or fails
+  } finally {
+    quotaState.inFlight = false;
+    if (quotaState.queued) {
+      quotaState.queued = false;
+      // one more attempt soon
+      setTimeout(() => maybeUpdateQuota(symbol, { force: true }), 250);
+    }
+  }
 }
 
 // =========================
@@ -480,20 +670,42 @@ async function fetchFng(symbol, tf) {
 
   const res = await httpFetch(url.toString(), { headers });
 
-  if (!res || !res.ok) {
-    const status = res?.status ?? 0;
-    const data = res?.data;
-    const msg = typeof data === "string" ? data : (data ? JSON.stringify(data) : "Request failed");
-    throw new Error(`${tf} -> ${status}: ${msg}`);
+  const raw = res?.data ?? null;
+  const data = unwrapPayload(raw);
+
+  // NOTE:
+  // We DO NOT update quota from /api/fng anymore, because /api/fng is called 4 times (TFS),
+  // and quota/consume should be counted once per symbol, not 4 times.
+  // Quota is updated via /api/quota only when symbol changes.
+  if (data && typeof data === "object") {
+    if ("plan" in data || "valid" in data) {
+      await setPlanState({
+        plan: data.plan ?? state.plan,
+        valid: typeof data.valid === "boolean" ? data.valid : state.planValid,
+        status: data.status,
+        save: false,
+      });
+    }
   }
 
-  return res.data;
+  if (res && res.ok) return data;
+
+  const status = res?.status ?? 0;
+  if (data && typeof data === "object" && data.status === "limit_exceeded") return data;
+
+  const msg =
+    typeof raw === "string"
+      ? raw
+      : raw
+      ? JSON.stringify(raw)
+      : "Request failed";
+
+  throw new Error(`${tf} -> ${status}: ${msg}`);
 }
 
 // =========================
-// Gauge drawing (UNCHANGED)
+// Gauge drawing
 // =========================
-// ... (тут залишив як у тебе: colorAt / drawGradientArc / drawGlowArc / drawTicks / drawGauge)
 function colorAt(tN) {
   let rC, gC, bC;
   if (tN < 0.5) {
@@ -610,10 +822,10 @@ function drawGauge(canvas, value, st) {
 
   const cx = w / 2;
   const cy = h * 0.88;
-  const r  = Math.min(w * 0.42, h * 0.92);
+  const r = Math.min(w * 0.42, h * 0.92);
 
   const start = Math.PI;
-  const end   = 2 * Math.PI;
+  const end = 2 * Math.PI;
   const baseW = Math.max(14, Math.round(r * 0.17));
 
   ctx.strokeStyle = "rgba(15, 23, 42, 0.60)";
@@ -656,7 +868,7 @@ function drawGauge(canvas, value, st) {
 }
 
 // =========================
-// Risk computation + render (UNCHANGED)
+// Risk computation + render
 // =========================
 function zoneIndex(v) {
   if (typeof v !== "number" || !isFinite(v)) return 2;
@@ -666,12 +878,14 @@ function zoneIndex(v) {
   if (v < 76) return 3;
   return 4;
 }
+
 function spreadPenalty(spread) {
   return spread === 0 ? 0 :
          spread === 1 ? 15 :
          spread === 2 ? 35 :
          spread === 3 ? 60 : 80;
 }
+
 function impulseScore(v15, v1h, v4h) {
   const imp = Math.max(Math.abs(v15 - v1h), Math.abs(v15 - v4h));
   if (imp < 6)  return { I: 0 };
@@ -680,6 +894,7 @@ function impulseScore(v15, v1h, v4h) {
   if (imp < 25) return { I: 75 };
   return { I: 90 };
 }
+
 function computeRisk(values) {
   const v15 = values["15m"], v1 = values["1h"], v4 = values["4h"], vD = values["1d"];
   const w = { "15m": 0.15, "1h": 0.20, "4h": 0.30, "1d": 0.35 };
@@ -713,8 +928,10 @@ function computeRisk(values) {
     `${chip15_1}:${impA.toFixed(1)}`,
     `${chip15_4}:${impB.toFixed(1)}`
   ];
+
   return { risk, level, chips, E, spread, impA, impB };
 }
+
 function renderRisk(r) {
   const card = $("riskCard");
   if (!card) return;
@@ -744,7 +961,8 @@ function renderRisk(r) {
 // Rendering (Overview)
 // =========================
 function applyCard(tf, d) {
-  const value = (typeof d?.value === "number") ? d.value : null;
+  const p = unwrapPayload(d);
+  const value = (typeof p?.value === "number") ? p.value : null;
   const st = value == null ? "neutral" : stateFromValue(value);
 
   const bar = $(`bar_${tf}`);
@@ -758,12 +976,14 @@ function applyCard(tf, d) {
 }
 
 // =========================
-// Details (UNCHANGED)
+// Details
 // =========================
 let detailsStylesInjected = false;
+
 function ensureDetailsStyles() {
   if (detailsStylesInjected) return;
   detailsStylesInjected = true;
+
   const css = `
   #detailsBars{margin-bottom:14px}
   .d-wrap{display:flex;flex-direction:column;gap:12px}
@@ -787,6 +1007,7 @@ function ensureDetailsStyles() {
   st.textContent = css;
   document.head.appendChild(st);
 }
+
 function detailsClassByValue(v) {
   const st = stateFromValue(v);
   return (
@@ -796,6 +1017,7 @@ function detailsClassByValue(v) {
     st === "greed" ? "z-greed" : "z-extgreed"
   );
 }
+
 function detailsBarRow(title, value, rightText) {
   const v = (typeof value === "number" && isFinite(value)) ? Math.max(0, Math.min(100, value)) : null;
   const cls = (v == null) ? "z-neutral" : detailsClassByValue(v);
@@ -815,6 +1037,7 @@ function detailsBarRow(title, value, rightText) {
     </div>
   `;
 }
+
 function renderDetails() {
   ensureDetailsStyles();
   const host = $("detailsBars");
@@ -900,7 +1123,9 @@ async function checkActiveUrl(reason) {
       auto.lastUrl = url;
       if (auto.enabled) scheduleRefresh(reason || "url-change", url);
     }
-  } catch {}
+  } catch {
+    // ignore
+  }
 }
 
 function startAutoEngines() {
@@ -915,23 +1140,40 @@ function startAutoEngines() {
       }
     });
     chrome.windows.onFocusChanged.addListener(() => checkActiveUrl("focus"));
-  } catch {}
+  } catch {
+    // ignore
+  }
 
-  auto.pollTimer = setInterval(() => { if (auto.enabled) checkActiveUrl("poll"); }, AUTO_POLL_MS);
+  auto.pollTimer = setInterval(() => {
+    if (auto.enabled) checkActiveUrl("poll");
+  }, AUTO_POLL_MS);
+
   restartPeriodic();
 }
 
 function stopAutoEngines() {
-  if (auto.debounceTimer) { clearTimeout(auto.debounceTimer); auto.debounceTimer = null; }
-  if (auto.pollTimer) { clearInterval(auto.pollTimer); auto.pollTimer = null; }
-  if (auto.periodicTimer) { clearInterval(auto.periodicTimer); auto.periodicTimer = null; }
+  if (auto.debounceTimer) {
+    clearTimeout(auto.debounceTimer);
+    auto.debounceTimer = null;
+  }
+  if (auto.pollTimer) {
+    clearInterval(auto.pollTimer);
+    auto.pollTimer = null;
+  }
+  if (auto.periodicTimer) {
+    clearInterval(auto.periodicTimer);
+    auto.periodicTimer = null;
+  }
 }
 
 // =========================
 // Refresh flow
 // =========================
 async function refresh(urlOverride, reason) {
-  if (refreshInFlight) { refreshQueued = true; return; }
+  if (refreshInFlight) {
+    refreshQueued = true;
+    return;
+  }
 
   refreshInFlight = true;
   refreshQueued = false;
@@ -969,6 +1211,8 @@ async function refresh(urlOverride, reason) {
     auto.lastVenue = symbol ? venue : "";
     auto.lastSymbol = symbol ? symbol : "";
 
+    const prevSymbol = state.symbol; // keep old for change detection
+
     state.venue = symbol ? venue : "—";
     state.symbol = symbol ? symbol : "—";
     setText("venue", state.venue);
@@ -977,7 +1221,9 @@ async function refresh(urlOverride, reason) {
     if (!symbol) {
       if (reason !== "poll" && reason !== "periodic") {
         setErr(t("errNoSymbol") || "Cannot detect symbol from URL on this page.");
-      } else setErr("");
+      } else {
+        setErr("");
+      }
 
       TFS.forEach(tf => applyCard(tf, null));
       state.values = { "15m": null, "1h": null, "4h": null, "1d": null };
@@ -986,10 +1232,17 @@ async function refresh(urlOverride, reason) {
       return;
     }
 
+    // NEW: update quota ONLY when symbol changes (or on manual refresh/init)
+    const symbolChanged = (prevSymbol !== symbol) && (prevSymbol !== "—");
+    if (symbolChanged || reason === "manual" || reason === "init" || reason === "apikey-change") {
+      await maybeUpdateQuota(symbol, { force: symbolChanged });
+    }
+
     const results = await Promise.all(
       TFS.map(async (tf) => {
         try {
           const d = await fetchFng(symbol, tf);
+          if (d && d.status === "limit_exceeded") return { tf, ok: true, d, limited: true };
           return { tf, ok: true, d };
         } catch (e) {
           return { tf, ok: false, error: String(e?.message || e) };
@@ -1000,7 +1253,10 @@ async function refresh(urlOverride, reason) {
     for (const r of results) applyCard(r.tf, r.ok ? r.d : null);
 
     const values = { "15m": null, "1h": null, "4h": null, "1d": null };
-    for (const r of results) if (r.ok && typeof r.d?.value === "number") values[r.tf] = r.d.value;
+    for (const r of results) {
+      const p = r.ok ? unwrapPayload(r.d) : null;
+      if (r.ok && typeof p?.value === "number") values[r.tf] = p.value;
+    }
     state.values = values;
 
     if (values["15m"] != null && values["1h"] != null && values["4h"] != null && values["1d"] != null) {
@@ -1010,15 +1266,24 @@ async function refresh(urlOverride, reason) {
       state.risk = null;
       setText("riskLevel", "—");
       setText("riskScore", "—");
-      const fill = $("riskFill"); if (fill) fill.style.width = "0%";
-      const chipsEl = $("riskChips"); if (chipsEl) chipsEl.innerHTML = "";
+      const fill = $("riskFill");
+      if (fill) fill.style.width = "0%";
+      const chipsEl = $("riskChips");
+      if (chipsEl) chipsEl.innerHTML = "";
     }
 
     renderDetails();
 
-    const errors = results.filter(x => !x.ok);
-    if (errors.length && reason !== "poll") {
-      setErr(errors.map(x => `${x.tf}: ${x.error}`).join(" | "));
+    const limited = results.find(x => x.ok && x.limited);
+    if (limited) {
+      const used = limited.d?.used ?? "?";
+      const limit = limited.d?.limit ?? "?";
+      setErr(`Daily pair limit reached (${used}/${limit}). Upgrade to PRO/VIP.`);
+    } else {
+      const errors = results.filter(x => !x.ok);
+      if (errors.length && reason !== "poll") {
+        setErr(errors.map(x => `${x.tf}: ${x.error}`).join(" | "));
+      }
     }
   } finally {
     rb?.classList.remove("is-loading");
@@ -1050,15 +1315,10 @@ function initDomReady() {
     listenStorageChanges();
     await getOrCreateInstallId();
 
-    // show cached plan immediately
+    renderPlan(state.plan, state.planValid);
     renderPlanStatus();
 
-    // validate (auto) once on open (best effort)
-    try { await validateCurrentKey({ force: false }); } catch (e) {
-      // only show error in settings hint, not global err
-      renderPlanStatus({ plan: "FREE", valid: false, status: "invalid" });
-      console.warn("validate key failed:", e);
-    }
+    await validateCurrentKey({ force: false, silent: true });
 
     const autoChk = $("s_auto");
     if (autoChk) {
@@ -1066,8 +1326,13 @@ function initDomReady() {
       autoChk.addEventListener("change", async () => {
         auto.enabled = !!autoChk.checked;
         await saveSettingsPartial({ [STORE.auto]: auto.enabled });
-        if (auto.enabled) { await checkActiveUrl("auto-on"); scheduleRefresh("auto-on", lastSeenUrl); }
-        else setErr("");
+
+        if (auto.enabled) {
+          await checkActiveUrl("auto-on");
+          scheduleRefresh("auto-on", lastSeenUrl);
+        } else {
+          setErr("");
+        }
         restartPeriodic();
       });
     }
@@ -1089,27 +1354,35 @@ function initDomReady() {
     if (keyInp) {
       keyInp.value = await getApiKey();
 
-      // save on change
       keyInp.addEventListener("change", async () => {
-        await setApiKey((keyInp.value || "").trim());
-        // invalidate plan cache
+        const v = (keyInp.value || "").trim();
+        await setApiKey(v);
+
         await storageSet({ [STORE.planUpdatedAt]: 0 });
-        // update status (auto validate)
-        try { await validateCurrentKey({ force: true }); }
-        catch (e) { renderPlanStatus({ plan: "FREE", valid: false, status: "invalid" }); }
+
+        try {
+          await validateCurrentKey({ force: true, silent: false });
+        } catch {
+          renderPlanStatus({ plan: "FREE", valid: false, status: "invalid" });
+        }
+
+        // refresh quota for current symbol after key change (plan might change)
+        if (auto.lastSymbol) await maybeUpdateQuota(auto.lastSymbol, { force: true });
+
         scheduleRefresh("apikey-change", lastSeenUrl);
       });
     }
 
-    // Buttons
     $("btnCheckKey")?.addEventListener("click", async () => {
       const hint = $("apiKeyStatus");
       if (hint) hint.textContent = "⏳ Checking...";
       try {
-        await validateCurrentKey({ force: true });
+        await validateCurrentKey({ force: true, silent: false });
+        if (auto.lastSymbol) await maybeUpdateQuota(auto.lastSymbol, { force: true });
       } catch (e) {
         const msg = String(e?.message || e);
         if (hint) hint.textContent = `❌ Check failed: ${msg}`;
+        await setPlanState({ plan: "FREE", valid: false, status: "invalid", save: false });
       }
     });
 
@@ -1120,9 +1393,15 @@ function initDomReady() {
         [STORE.planValid]: false,
         [STORE.planUpdatedAt]: 0,
       });
+
       const keyInp2 = $("s_apiKey");
       if (keyInp2) keyInp2.value = "";
-      renderPlanStatus({ plan: "FREE", valid: false, status: "missing" });
+
+      await setPlanState({ plan: "FREE", valid: false, status: "missing", save: false });
+
+      // quota may change (back to FREE)
+      if (auto.lastSymbol) await maybeUpdateQuota(auto.lastSymbol, { force: true });
+
       scheduleRefresh("apikey-clear", lastSeenUrl);
     });
 
