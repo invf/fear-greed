@@ -1,103 +1,121 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title data-i18n="extName">Crypto Panel</title>
   <link rel="stylesheet" href="sidepanel.css" />
 </head>
 <body>
-
   <!-- Header: tabs + refresh -->
   <div class="header">
     <div class="tabbar" role="tablist" aria-label="Pages">
-
-      <button class="tabIcon is-active"
-              id="tabOverview"
-              type="button"
-              role="tab"
-              aria-selected="true"
-              data-i18n-title="tabOverviewTitle"
-              data-i18n-aria="tabOverviewTitle">
+      <button
+        class="tabIcon is-active"
+        id="tabOverview"
+        type="button"
+        role="tab"
+        aria-selected="true"
+        data-i18n-title="tabOverviewTitle"
+        data-i18n-aria="tabOverviewTitle"
+      >
         <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M4 4h7v7H4V4zm9 0h7v7h-7V4zM4 13h7v7H4v-7zm9 0h7v7h-7v-7z"/>
+          <path d="M4 4h7v7H4V4zm9 0h7v7h-7V4zM4 13h7v7H4v-7zm9 0h7v7h-7v-7z" />
         </svg>
       </button>
 
-      <button class="tabIcon"
-              id="tabDetails"
-              type="button"
-              role="tab"
-              aria-selected="false"
-              data-i18n-title="tabDetailsTitle"
-              data-i18n-aria="tabDetailsTitle">
+      <button
+        class="tabIcon"
+        id="tabDetails"
+        type="button"
+        role="tab"
+        aria-selected="false"
+        data-i18n-title="tabDetailsTitle"
+        data-i18n-aria="tabDetailsTitle"
+      >
         <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M5 6h14v2H5V6zm0 5h14v2H5v-2zm0 5h14v2H5v-2z"/>
+          <path d="M5 6h14v2H5V6zm0 5h14v2H5v-2zm0 5h14v2H5v-2z" />
         </svg>
       </button>
 
-      <button class="tabIcon"
-              id="tabSettings"
-              type="button"
-              role="tab"
-              aria-selected="false"
-              data-i18n-title="tabSettingsTitle"
-              data-i18n-aria="tabSettingsTitle">
+      <button
+        class="tabIcon"
+        id="tabSettings"
+        type="button"
+        role="tab"
+        aria-selected="false"
+        data-i18n-title="tabSettingsTitle"
+        data-i18n-aria="tabSettingsTitle"
+      >
         <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54A.5.5 0 0 0 13.9 1h-3.8a.5.5 0 0 0-.49.42l-.36 2.54c-.59.24-1.12.56-1.62.94l-2.39-.96a.5.5 0 0 0-.6.22L2.72 7.48a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94L2.84 14.52a.5.5 0 0 0-.12.64l1.92 3.32c.13.22.39.3.6.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.25.42.49.42h3.8c.24 0 .44-.18.49-.42l.36-2.54c.59-.24 1.12-.56 1.62-.94l2.39.96c.22.09.47 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5z"/>
+          <path
+            d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54A.5.5 0 0 0 13.9 1h-3.8a.5.5 0 0 0-.49.42l-.36 2.54c-.59.24-1.12.56-1.62.94l-2.39-.96a.5.5 0 0 0-.6.22L2.72 7.48a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94L2.84 14.52a.5.5 0 0 0-.12.64l1.92 3.32c.13.22.39.3.6.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.25.42.49.42h3.8c.24 0 .44-.18.49-.42l.36-2.54c.59-.24 1.12-.56 1.62-.94l2.39.96c.22.09.47 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5z"
+          />
         </svg>
       </button>
 
-      <button class="tabIcon"
-              id="tabHelp"
-              type="button"
-              role="tab"
-              aria-selected="false"
-              data-i18n-title="tabHelpTitle"
-              data-i18n-aria="tabHelpTitle">
+      <button
+        class="tabIcon"
+        id="tabHelp"
+        type="button"
+        role="tab"
+        aria-selected="false"
+        data-i18n-title="tabHelpTitle"
+        data-i18n-aria="tabHelpTitle"
+      >
         <svg viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 17a1.2 1.2 0 1 1 0-2.4A1.2 1.2 0 0 1 12 19zm1.4-6.7c-.9.6-1 .9-1 1.7v.3h-1.8v-.5c0-1.2.4-2 1.6-2.8.9-.6 1.3-1 1.3-1.7 0-.8-.7-1.4-1.6-1.4-1 0-1.7.6-1.8 1.6H8.4c.1-2 1.8-3.3 3.8-3.3 2 0 3.6 1.2 3.6 3.1 0 1.6-.8 2.4-2.4 3.3z"/>
+          <path
+            d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 17a1.2 1.2 0 1 1 0-2.4A1.2 1.2 0 0 1 12 19zm1.4-6.7c-.9.6-1 .9-1 1.7v.3h-1.8v-.5c0-1.2.4-2 1.6-2.8.9-.6 1.3-1 1.3-1.7 0-.8-.7-1.4-1.6-1.4-1 0-1.7.6-1.8 1.6H8.4c.1-2 1.8-3.3 3.8-3.3 2 0 3.6 1.2 3.6 3.1 0 1.6-.8 2.4-2.4 3.3z"
+          />
         </svg>
       </button>
     </div>
 
     <!-- Refresh -->
-    <button id="refresh"
-            class="iconBtn"
-            data-i18n-title="refresh"
-            data-i18n-aria="refresh"
-            aria-label="Refresh">
+    <button
+      id="refresh"
+      class="iconBtn"
+      type="button"
+      data-i18n-title="refresh"
+      data-i18n-aria="refresh"
+      aria-label="Refresh"
+    >
       <svg class="ico-refresh" viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M21 12a9 9 0 0 0-15.4-6.4"/>
-        <polyline points="5.6,5.6 5.6,2.8 2.8,2.8"/>
-        <path d="M3 12a9 9 0 0 0 15.4 6.4"/>
-        <polyline points="18.4,18.4 18.4,21.2 21.2,21.2"/>
+        <path d="M21 12a9 9 0 0 0-15.4-6.4" />
+        <polyline points="5.6,5.6 5.6,2.8 2.8,2.8" />
+        <path d="M3 12a9 9 0 0 0 15.4 6.4" />
+        <polyline points="18.4,18.4 18.4,21.2 21.2,21.2" />
       </svg>
     </button>
   </div>
 
-  <!-- Pair badge + Plan badge + quota -->
+  <!-- Pair badge + Plan badge + Quota -->
   <div class="pairCenter">
-    <div class="pairBadge"
-         id="pairBadge"
-         data-i18n-title="detectedPair"
-         data-i18n-aria="detectedPair">
+    <div
+      class="pairBadge"
+      id="pairBadge"
+      data-i18n-title="detectedPair"
+      data-i18n-aria="detectedPair"
+    >
       <span class="venue" id="venue">—</span>
       <span class="sep">:</span>
       <span class="symbol" id="symbol">—</span>
     </div>
 
-    <div class="planWrap">
-      <!-- Plan badge -->
-      <div class="planBadge"
-           id="planBadge"
-           data-i18n-title="planStatusTitle"
-           data-i18n-aria="planStatusTitle">
-        <span class="planLabel" data-i18n="planStatus">Plan</span>
-        <span class="planValue" id="planValue">FREE</span>
-      </div>
+    <!-- keep IDs intact for sidepanel.js -->
+    <div
+      class="planBadge"
+      id="planBadge"
+      data-i18n-title="planStatusTitle"
+      data-i18n-aria="planStatusTitle"
+    >
+      <div class="planCol">
+        <!-- optional: plan text (sidepanel.js uses #planValue in renderPlan()) -->
+        <div class="planValue" id="planValue" style="display:none">FREE</div>
 
-      <!-- Quota badge (FREE • 3/10 etc.) -->
-      <div class="planMeta" id="planMeta" style="display:none"></div>
+        <!-- quota text from JS: "FREE • 3/10", hidden by default -->
+        <div class="planMeta inline" id="planMeta" style="display:none"></div>
+      </div>
     </div>
   </div>
 
@@ -109,6 +127,7 @@
           <div class="riskTitle" data-i18n="riskTitle">RISK</div>
           <div class="riskLevel" id="riskLevel">—</div>
         </div>
+
         <div class="riskScore">
           <div class="riskScoreNum" id="riskScore">—</div>
           <div class="riskScoreSub">/100</div>
@@ -177,15 +196,17 @@
       <div class="detailsTitle" data-i18n="settingsTitle">Settings</div>
 
       <div class="formRow">
-        <label class="lbl" data-i18n="apiKeyLabel">API ключ</label>
+        <label class="lbl" for="s_apiKey" data-i18n="apiKeyLabel">API ключ</label>
 
-        <input class="inp"
-               id="s_apiKey"
-               type="password"
-               autocomplete="off"
-               spellcheck="false"
-               data-i18n-placeholder="apiKeyPlaceholder"
-               placeholder="Вставте ключ…" />
+        <input
+          class="inp"
+          id="s_apiKey"
+          type="password"
+          autocomplete="off"
+          spellcheck="false"
+          data-i18n-placeholder="apiKeyPlaceholder"
+          placeholder="Вставте ключ…"
+        />
 
         <div class="hint" id="apiKeyStatus" data-i18n="apiKeyHint">
           Вставте ключ із вашого кабінету.
@@ -201,15 +222,15 @@
       </div>
 
       <div class="formRow">
-        <label class="lbl" data-i18n="autoRefresh">Auto refresh</label>
+        <label class="lbl" for="s_auto" data-i18n="autoRefresh">Auto refresh</label>
         <div class="toggleRow">
-          <input type="checkbox" id="s_auto"/>
+          <input type="checkbox" id="s_auto" />
           <span class="hint" data-i18n="autoRefreshHint">Auto refresh on pair change / every N seconds.</span>
         </div>
       </div>
 
       <div class="formRow">
-        <label class="lbl" data-i18n="refreshInterval">Refresh interval (sec)</label>
+        <label class="lbl" for="s_interval" data-i18n="refreshInterval">Refresh interval (sec)</label>
         <input class="inp" id="s_interval" type="number" min="5" max="300" step="5" value="30" />
         <div class="hint" data-i18n="refreshIntervalHint">Updates every N seconds (5–300).</div>
       </div>
@@ -246,6 +267,28 @@
   </div>
 
   <div class="err" id="err"></div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast" aria-live="polite" style="display:none">
+    <div class="toastInner">
+      <div class="toastTitle" id="toastTitle">Ліміт вичерпано</div>
+      <div class="toastText" id="toastText"></div>
+
+      <div class="toastActions">
+        <a
+          id="toastLink"
+          class="toastLink"
+          href="#"
+          target="_blank"
+          rel="noreferrer noopener"
+          style="display:none"
+        >
+          Переглянути тарифи
+        </a>
+        <button id="toastClose" class="toastClose" type="button">OK</button>
+      </div>
+    </div>
+  </div>
 
   <script src="sidepanel.js"></script>
 </body>

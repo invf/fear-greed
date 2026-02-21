@@ -77,5 +77,27 @@
 
   "apiKeyLabel": { "message": "Clave API" },
   "apiKeyPlaceholder": { "message": "Pega tu clave…" },
-  "apiKeyHint": { "message": "Pega la clave desde tu panel de usuario." }
+  "apiKeyHint": { "message": "Pega la clave desde tu panel de usuario." },
+  "checking": { "message": "Comprobando..." },
+
+  "toast_default_title": { "message": "Aviso" },
+  "toast_limit_title": { "message": "Límite diario alcanzado" },
+  "toast_limit_text": { "message": "Has alcanzado el límite diario de pares ({0}/{1}). Inténtalo mañana o mejora tu plan." },
+
+  "quota_unlimited": { "message": "{0} • Ilimitado" },
+  "quota_used": { "message": "{0} • {1}/{2}" },
+
+  "err_offline": { "message": "Servidor inaccesible o no hay conexión a internet." },
+  "err_timeout": { "message": "El servidor no respondió a tiempo. Inténtalo de nuevo." },
+  "err_server_unavailable": { "message": "El servidor no está disponible temporalmente. Inténtalo más tarde." },
+
+  "err_payment_required": { "message": "Se requiere pago (restricción del plan). Revisa tu suscripción." },
+  "err_too_many_requests": { "message": "Demasiadas solicitudes. Espera un poco e inténtalo de nuevo." },
+
+  "err_unauthorized": { "message": "No autorizado (401). Revisa tu clave API." },
+  "err_forbidden": { "message": "Acceso denegado (403)." },
+  "err_not_found": { "message": "No encontrado (404). Falta el endpoint." },
+
+  "err_limit_exceeded": { "message": "Límite diario excedido. Mejora tu plan o inténtalo mañana." },
+  "err_no_data": { "message": "No hay datos disponibles o ocurrió un error desconocido del servidor." }
 }

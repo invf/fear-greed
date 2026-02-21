@@ -77,5 +77,27 @@
 
   "apiKeyLabel": { "message": "API-Schlüssel" },
   "apiKeyPlaceholder": { "message": "Schlüssel einfügen…" },
-  "apiKeyHint": { "message": "Füge den Schlüssel aus deinem Dashboard ein." }
+  "apiKeyHint": { "message": "Füge den Schlüssel aus deinem Dashboard ein." },
+  "checking": { "message": "Wird geprüft..." },
+
+  "toast_default_title": { "message": "Hinweis" },
+  "toast_limit_title": { "message": "Tageslimit erreicht" },
+  "toast_limit_text": { "message": "Du hast das Tageslimit für Paare erreicht ({0}/{1}). Bitte versuche es morgen erneut oder upgrade deinen Plan." },
+
+  "quota_unlimited": { "message": "{0} • Unbegrenzt" },
+  "quota_used": { "message": "{0} • {1}/{2}" },
+
+  "err_offline": { "message": "Server nicht erreichbar oder keine Internetverbindung." },
+  "err_timeout": { "message": "Server hat nicht rechtzeitig geantwortet. Bitte erneut versuchen." },
+  "err_server_unavailable": { "message": "Server ist vorübergehend nicht verfügbar. Bitte später erneut versuchen." },
+
+  "err_payment_required": { "message": "Zahlung erforderlich (Plan-Einschränkung). Bitte überprüfe dein Abo." },
+  "err_too_many_requests": { "message": "Zu viele Anfragen. Bitte kurz warten und erneut versuchen." },
+
+  "err_unauthorized": { "message": "Nicht autorisiert (401). Bitte prüfe deinen API-Schlüssel." },
+  "err_forbidden": { "message": "Zugriff verweigert (403)." },
+  "err_not_found": { "message": "Nicht gefunden (404). Endpunkt fehlt." },
+
+  "err_limit_exceeded": { "message": "Tageslimit überschritten. Bitte upgrade deinen Plan oder versuche es morgen." },
+  "err_no_data": { "message": "Keine Daten verfügbar oder ein unbekannter Serverfehler ist aufgetreten." }
 }

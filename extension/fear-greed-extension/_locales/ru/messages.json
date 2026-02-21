@@ -77,5 +77,49 @@
 
   "apiKeyLabel": { "message": "API ключ" },
   "apiKeyPlaceholder": { "message": "Вставьте ключ…" },
-  "apiKeyHint": { "message": "Вставьте ключ из вашего кабинета." }
+  "apiKeyHint": { "message": "Вставьте ключ из вашего кабинета." },
+  "checking": { "message": "Проверка..." },
+
+  "toast_default_title": { "message": "Уведомление" },
+  "toast_limit_title": { "message": "Дневной лимит достигнут" },
+  "toast_limit_text": {
+    "message": "Вы достигли дневного лимита пар ({0}/{1}). Попробуйте завтра или перейдите на другой тариф."
+  },
+
+  "quota_unlimited": { "message": "{0} • Безлимит" },
+  "quota_used": { "message": "{0} • {1}/{2}" },
+
+  "err_offline": {
+    "message": "Сервер недоступен или отсутствует интернет-соединение."
+  },
+  "err_timeout": {
+    "message": "Сервер не ответил вовремя. Попробуйте ещё раз."
+  },
+  "err_server_unavailable": {
+    "message": "Сервер временно недоступен. Попробуйте позже."
+  },
+
+  "err_payment_required": {
+    "message": "Требуется оплата (ограничение тарифа). Проверьте подписку."
+  },
+  "err_too_many_requests": {
+    "message": "Слишком много запросов. Подождите и попробуйте снова."
+  },
+
+  "err_unauthorized": {
+    "message": "Нет доступа (401). Проверьте API-ключ."
+  },
+  "err_forbidden": {
+    "message": "Доступ запрещён (403)."
+  },
+  "err_not_found": {
+    "message": "Не найдено (404). Эндпоинт отсутствует."
+  },
+
+  "err_limit_exceeded": {
+    "message": "Дневной лимит превышен. Попробуйте завтра или обновите тариф."
+  },
+  "err_no_data": {
+    "message": "Нет данных или произошла ошибка сервера."
+  }
 }

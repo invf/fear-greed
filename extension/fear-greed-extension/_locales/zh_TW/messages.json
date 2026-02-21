@@ -77,5 +77,29 @@
 
   "apiKeyLabel": { "message": "API 金鑰" },
   "apiKeyPlaceholder": { "message": "貼上您的金鑰…" },
-  "apiKeyHint": { "message": "請從您的控制台複製並貼上金鑰。" }
+  "apiKeyHint": { "message": "請從您的控制台複製並貼上金鑰。" },
+  "checking": { "message": "正在檢查…" },
+
+  "toast_default_title": { "message": "提示" },
+  "toast_limit_title": { "message": "今日額度已用完" },
+  "toast_limit_text": {
+    "message": "很抱歉，今日可用交易對數量已達上限（{0}/{1}）。請明天再試或升級方案。"
+  },
+
+  "quota_unlimited": { "message": "{0} • 無限制" },
+  "quota_used": { "message": "{0} • {1}/{2}" },
+
+  "err_offline": { "message": "伺服器無回應或網路連線不可用。" },
+  "err_timeout": { "message": "伺服器回應逾時，請稍後再試。" },
+  "err_server_unavailable": { "message": "伺服器暫時無法使用，請稍後再試。" },
+
+  "err_payment_required": { "message": "需要付費/方案限制（402）。請檢查訂閱。" },
+  "err_too_many_requests": { "message": "請求過多（429）。請稍後再試。" },
+
+  "err_unauthorized": { "message": "未授權（401）。請檢查 API 金鑰。" },
+  "err_forbidden": { "message": "存取被拒（403）。" },
+  "err_not_found": { "message": "未找到（404）。端點不存在。" },
+
+  "err_limit_exceeded": { "message": "今日額度已用完。請明天再試或升級方案。" },
+  "err_no_data": { "message": "沒有資料或伺服器發生錯誤。" }
 }

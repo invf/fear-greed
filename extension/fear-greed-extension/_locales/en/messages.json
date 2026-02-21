@@ -89,5 +89,27 @@
 
   "apiKeyLabel": { "message": "API key" },
   "apiKeyPlaceholder": { "message": "Paste your key…" },
-  "apiKeyHint": { "message": "Paste the key from your account dashboard." }
+  "apiKeyHint": { "message": "Paste the key from your account dashboard." },
+  "checking": { "message": "Checking..." },
+
+  "toast_default_title": { "message": "Message" },
+  "toast_limit_title": { "message": "Daily limit reached" },
+  "toast_limit_text": { "message": "You've reached today's pair limit ({0}/{1}). Please try again tomorrow or upgrade your plan." },
+
+  "quota_unlimited": { "message": "{0} • Unlimited" },
+  "quota_used": { "message": "{0} • {1}/{2}" },
+
+  "err_offline": { "message": "Server is unreachable or you have no internet connection." },
+  "err_timeout": { "message": "Server did not respond in time. Please try again." },
+  "err_server_unavailable": { "message": "Server is temporarily unavailable. Please try again later." },
+
+  "err_payment_required": { "message": "Payment required (plan restriction). Please check your subscription." },
+  "err_too_many_requests": { "message": "Too many requests. Please slow down and try again." },
+
+  "err_unauthorized": { "message": "Unauthorized (401). Please check your API key." },
+  "err_forbidden": { "message": "Forbidden (403). Access denied." },
+  "err_not_found": { "message": "Not found (404). Endpoint is missing." },
+
+  "err_limit_exceeded": { "message": "Daily limit exceeded. Please upgrade or try again tomorrow." },
+  "err_no_data": { "message": "No data available or an unknown server error occurred." }
 }

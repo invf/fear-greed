@@ -77,5 +77,30 @@
 
   "apiKeyLabel": { "message": "API 密钥" },
   "apiKeyPlaceholder": { "message": "粘贴您的密钥…" },
-  "apiKeyHint": { "message": "从您的控制面板复制并粘贴密钥。" }
+  "apiKeyHint": { "message": "从您的控制面板复制并粘贴密钥。" },
+  "checking": { "message": "正在检查..." },
+
+  "toast_default_title": { "message": "提示" },
+  "toast_limit_title": { "message": "已达今日上限" },
+  "toast_limit_text": {
+    "message": "很抱歉，今日可用交易对数量已用完（{0}/{1}）。请明天再试或升级套餐。"
+  },
+
+  "quota_unlimited": { "message": "{0} • 不限量" },
+  "quota_used": { "message": "{0} • {1}/{2}" },
+
+  "err_offline": { "message": "服务器无响应或网络连接不可用。" },
+  "err_timeout": { "message": "服务器响应超时。请稍后重试。" },
+  "err_server_unavailable": { "message": "服务器暂时不可用。请稍后重试。" },
+
+  "err_payment_required": { "message": "需要付费/套餐限制（402）。请检查订阅。" },
+  "err_too_many_requests": { "message": "请求过多（429）。请稍后再试。" },
+
+  "err_unauthorized": { "message": "未授权（401）。请检查 API 密钥。" },
+  "err_forbidden": { "message": "访问被拒绝（403）。" },
+  "err_not_found": { "message": "未找到（404）。接口不存在。" },
+
+  "err_limit_exceeded": { "message": "已超过今日限额。请明天再试或升级套餐。" },
+  "err_no_data": { "message": "暂无数据或服务器发生错误。" }
+
 }

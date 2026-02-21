@@ -77,5 +77,49 @@
 
   "apiKeyLabel": { "message": "API ключ" },
   "apiKeyPlaceholder": { "message": "Вставте ключ…" },
-  "apiKeyHint": { "message": "Вставте ключ із вашого кабінету." }
+  "apiKeyHint": { "message": "Вставте ключ із вашого кабінету." },
+  "checking": { "message": "Перевірка..." },
+
+  "toast_default_title": { "message": "Сповіщення" },
+  "toast_limit_title": { "message": "Ліміт вичерпано" },
+  "toast_limit_text": {
+    "message": "На жаль, кількість пар на сьогодні вичерпано ({0}/{1}). Поверніться завтра або перейдіть на інший тариф."
+  },
+
+  "quota_unlimited": { "message": "{0} • Безліміт" },
+  "quota_used": { "message": "{0} • {1}/{2}" },
+
+  "err_offline": {
+    "message": "Сервер не відповідає або відсутнє інтернет-з’єднання."
+  },
+  "err_timeout": {
+    "message": "Сервер не відповів вчасно. Спробуйте ще раз."
+  },
+  "err_server_unavailable": {
+    "message": "Сервер тимчасово недоступний. Спробуйте пізніше."
+  },
+
+  "err_payment_required": {
+    "message": "Потрібна оплата (обмеження тарифу). Перевірте підписку."
+  },
+  "err_too_many_requests": {
+    "message": "Забагато запитів. Зачекайте та спробуйте ще раз."
+  },
+
+  "err_unauthorized": {
+    "message": "Немає доступу (401). Перевірте API-ключ."
+  },
+  "err_forbidden": {
+    "message": "Доступ заборонено (403)."
+  },
+  "err_not_found": {
+    "message": "Не знайдено (404). Endpoint відсутній."
+  },
+
+  "err_limit_exceeded": {
+    "message": "Денний ліміт перевищено. Спробуйте завтра або змініть тариф."
+  },
+  "err_no_data": {
+    "message": "Дані відсутні або сталася помилка сервера."
+  }
 }
