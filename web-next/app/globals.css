@@ -1,0 +1,189 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root{
+  --bg:#0B0E11;
+  --bg2:#070A0D;
+  --panel:#11161C;
+  --panel2:#0F141A;
+  --border:#2B3139;
+  --border2:#1D242C;
+  --text:#EAECEF;
+  --muted:#9AA4B2;
+
+  --yellow:#F0B90B;
+  --yellow2:#FCD535;
+
+  --green:#0ECB81;
+  --red:#F6465D;
+
+  --shadow: 0 12px 34px rgba(0,0,0,0.45);
+  --shadow2: 0 18px 70px rgba(0,0,0,0.55);
+}
+
+html,body{height:100%}
+body{
+  margin:0;
+  color:var(--text);
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  background:
+    radial-gradient(1200px 700px at 20% -10%, rgba(240,185,11,0.18), transparent 55%),
+    radial-gradient(900px 600px at 90% 10%, rgba(14,203,129,0.10), transparent 55%),
+    radial-gradient(800px 600px at 40% 110%, rgba(246,70,93,0.08), transparent 60%),
+    linear-gradient(180deg, var(--bg2), var(--bg));
+}
+
+a{color:inherit;text-decoration:none}
+
+/* ====== Utilities (Binance-like) ====== */
+.containerMax{
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.card{
+  border: 1px solid rgba(43,49,57,0.85);
+  background: linear-gradient(180deg, rgba(17,22,28,0.92), rgba(11,14,17,0.85));
+  box-shadow: var(--shadow);
+  border-radius: 18px;
+}
+
+.cardSoft{
+  border: 1px solid rgba(43,49,57,0.70);
+  background: rgba(17,22,28,0.55);
+  border-radius: 18px;
+}
+
+.glow{
+  position: relative;
+}
+.glow::before{
+  content:"";
+  position:absolute;
+  inset:-1px;
+  border-radius: 20px;
+  background: radial-gradient(600px 180px at 20% 0%, rgba(240,185,11,0.22), transparent 60%),
+              radial-gradient(500px 160px at 80% 0%, rgba(14,203,129,0.10), transparent 65%);
+  filter: blur(10px);
+  z-index:-1;
+}
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding: 8px 12px;
+  border-radius:999px;
+  border:1px solid rgba(240,185,11,0.28);
+  background: rgba(17,22,28,0.70);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+}
+
+.muted{color:rgba(234,236,239,0.72)}
+.hr{height:1px;background:rgba(43,49,57,0.75);margin:20px 0}
+
+/* Buttons */
+.btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+  border-radius: 14px;
+  padding: 11px 14px;
+  font-weight: 900;
+  letter-spacing: .2px;
+  border: 1px solid rgba(43,49,57,0.90);
+  background: rgba(17,22,28,0.75);
+  box-shadow: 0 10px 28px rgba(0,0,0,0.35);
+  transition: transform .08s ease, border-color .18s ease, background .18s ease, opacity .18s ease;
+}
+.btn:hover{
+  border-color: rgba(240,185,11,0.35);
+  background: rgba(17,22,28,0.95);
+}
+.btn:active{ transform: translateY(1px); }
+
+.btnPrimary{
+  border-color: rgba(240,185,11,0.65);
+  background: linear-gradient(180deg, rgba(240,185,11,0.22), rgba(240,185,11,0.10));
+}
+.btnPrimary:hover{
+  border-color: rgba(240,185,11,0.90);
+  background: linear-gradient(180deg, rgba(240,185,11,0.30), rgba(240,185,11,0.14));
+}
+
+.btnGhost{
+  border-color: rgba(43,49,57,0.9);
+  background: rgba(11,14,17,0.25);
+}
+.btnGhost:hover{
+  background: rgba(11,14,17,0.45);
+  border-color: rgba(240,185,11,0.25);
+}
+
+.btn:disabled{
+  opacity:.55;
+  pointer-events:none;
+}
+
+/* Inputs */
+.input{
+  width:100%;
+  border-radius: 14px;
+  border: 1px solid rgba(43,49,57,0.90);
+  background: rgba(11,14,17,0.35);
+  color: rgba(234,236,239,0.95);
+  padding: 11px 12px;
+  font-weight: 800;
+  outline: none;
+}
+.input:focus{
+  border-color: rgba(240,185,11,0.55);
+  box-shadow: 0 0 0 4px rgba(240,185,11,0.10);
+}
+
+/* Small label */
+.kicker{
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .35px;
+  color: rgba(154,164,178,0.95);
+  text-transform: uppercase;
+}
+
+/* Gradient text */
+.gradText{
+  background: linear-gradient(90deg, rgba(252,213,53,1), rgba(240,185,11,1));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* “Screenshot” placeholder box */
+.shot{
+  border-radius: 18px;
+  border: 1px solid rgba(43,49,57,0.85);
+  background:
+    radial-gradient(700px 240px at 20% 0%, rgba(240,185,11,0.18), transparent 55%),
+    linear-gradient(180deg, rgba(17,22,28,0.85), rgba(11,14,17,0.70));
+  box-shadow: var(--shadow2);
+  overflow:hidden;
+}
+.shotInner{
+  padding: 16px;
+  border-top: 1px solid rgba(43,49,57,0.60);
+  color: rgba(234,236,239,0.75);
+  font-weight: 800;
+  font-size: 12px;
+}
+
+/* Subtle grid background */
+.gridBg{
+  background-image:
+    linear-gradient(to right, rgba(43,49,57,0.35) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(43,49,57,0.25) 1px, transparent 1px);
+  background-size: 28px 28px;
+  background-position: 0 0;
+  border-radius: 18px;
+}

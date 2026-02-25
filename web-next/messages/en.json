@@ -1,0 +1,173 @@
+{
+  "brand": { "title": "Fear&Greed", "sub": "Crypto Panel" },
+  "meta": {
+  "title": "Fear & Greed • Crypto Panel",
+  "description": "A Binance-style Chrome extension sidepanel that detects the current pair, shows Fear & Greed across timeframes, and calculates a clean Risk score — right where you trade. Works on Binance, OKX, Bybit and TradingView."
+},
+  "nav": {
+    "home": "Home",
+    "pricing": "Pricing",
+    "dashboard": "Dashboard",
+    "docs": "Docs",
+    "pay": "Pay",
+    "install": "Install Extension",
+    "language": "Language"
+  },
+  "footer": {
+    "copyright": "Fear & Greed — Web + Extension"
+  },
+  "home": {
+    "kicker": "Fear & Greed Index",
+    "title": "Cinematic crypto sentiment,",
+    "titleAccent": "inside your chart",
+    "subtitle": "A professional Chrome Extension for crypto traders. Instantly detect the active pair, visualize Fear & Greed across timeframes, and get a clean Risk score directly on your chart.",
+
+    "ctaPricing": "See Pricing",
+    "ctaDocs": "Read Docs",
+
+    "trustLineStrong": "Built for traders.",
+    "trustLine": "Fast, minimal, and built for Binance, OKX and Bybit.",
+    "videoCaption": "Live preview of the extension sidepanel",
+
+    "howItWorksKicker": "How it works",
+    "howItWorksTitle": "Start in 2 minutes",
+    "howItWorksSub": "Install the extension, get your API key, and paste it into Settings. Quota and plan status update automatically.",
+
+    "step1Kicker": "Step 1",
+    "step1Title": "Install the extension",
+    "step1Text": "Open Binance, OKX and Bybit and launch the Extension. The pair is detected automatically from the URL.",
+
+    "step2Kicker": "Step 2",
+    "step2Title": "Get an API key",
+    "step2Text": "Choose a plan on Pricing. After checkout, your key appears in the Dashboard and can be used instantly.",
+
+    "step3Kicker": "Step 3",
+    "step3Title": "Paste & validate",
+    "step3Text": "Go to Settings in the extension, paste the key, and press Check key. Your plan badge and daily quota will show up."
+  },
+  "pricing": {
+    "hero": {
+      "kicker": "Pricing",
+      "title": "Simple plans,",
+      "titleAccent": "clear quota",
+      "subtitle": "The extension is the product UI. The website handles pricing, billing and API key management. Pay with MetaMask and get your key instantly.",
+      "viewPlans": "View plans",
+      "faq": "FAQ",
+      "backHome": "Back to home"
+    },
+    "plansSection": {
+      "kicker": "Plans",
+      "title": "Choose what fits your trading",
+      "subtitle": "Upgrade/downgrade anytime. Quota resets daily."
+    },
+    "badge": { "web3": "WEB3", "metamask": "MetaMask checkout", "beta": "BETA", "demo": "Safe demo mode" },
+    "stepLabel": "Step",
+    "checkout": {
+      "kicker": "Checkout",
+      "title": "Pay with MetaMask",
+      "subtitle": "Today: UI + flow. Next step: real smart contract / backend verification."
+    },
+    "steps": {
+      "s1": { "title": "Connect wallet", "text": "User connects MetaMask. We show network and address." },
+      "s2": { "title": "Send payment", "text": "User pays for PRO/VIP. We show pending/confirmed status." },
+      "s3": { "title": "Receive API key", "text": "After confirmation, Dashboard shows the API key." }
+    },
+    "demo": {
+      "kicker": "Demo",
+      "title": "MetaMask connection (UI)",
+      "text": "We can add a real MetaMask integration later via wagmi + viem. For now it’s clean layout and buttons.",
+      "btnConnect": "Connect MetaMask",
+      "btnPro": "Choose PRO",
+      "btnVip": "Choose VIP",
+      "statusLabel": "Status:",
+      "statusValue": "Not connected",
+      "networkLabel": "Network:",
+      "addressLabel": "Address:"
+    },
+    "faq": {
+      "kicker": "FAQ",
+      "title": "Questions",
+      "q1": { "q": "Do I need the website if I have the extension?", "a": "Yes — the extension is the product UI. The website handles pricing, payments, and key management." },
+      "q2": { "q": "Why MetaMask?", "a": "Fast crypto checkout without card processing. We can add card payments later." },
+      "q3": { "q": "How do I get the API key?", "a": "After payment, the dashboard shows your key. Then paste it into extension Settings." },
+      "q4": { "q": "Can I cancel or change plan?", "a": "Yes. We’ll implement upgrade/downgrade and show current quota/plan status in the dashboard." }
+    },
+    "plans": {
+      "free": {
+        "name": "Free",
+        "price": "$0",
+        "sub": "Starter",
+        "p1": "10 pairs / day",
+        "p2": "Basic access",
+        "p3": "Perfect to try",
+        "cta": "Install Extension"
+      },
+      "pro": {
+        "name": "Pro",
+        "price": "$9 / 30 days",
+        "sub": "Most popular",
+        "p1": "40 pairs / day",
+        "p2": "Stable access",
+        "p3": "Best for active traders",
+        "cta": "Pay with MetaMask"
+      },
+      "vip": {
+        "name": "VIP",
+        "price": "$29 / 30 days",
+        "sub": "Unlimited",
+        "p1": "Unlimited pairs / day",
+        "p2": "Priority API",
+        "p3": "Heavy usage friendly",
+        "cta": "Pay with MetaMask"
+      }
+    }
+  },
+  "docs": {
+    "hero": {
+      "kicker": "Docs",
+      "title": "How to use",
+      "titleAccent": "Fear & Greed Extension",
+      "subtitle": "Everything you need: install the extension, get an API key, and troubleshoot common issues.",
+      "install": "Install Extension",
+      "pricing": "Pricing",
+      "dashboard": "Dashboard"
+    },
+    "quick": {
+      "kicker": "Quick start",
+      "title": "Start in 2–3 minutes",
+      "subtitle": "Recommended: install → get key → paste in Settings."
+    },
+    "badge": { "tip": "TIP", "tipText": "Use Binance / TradingView" },
+    "stepLabel": "Step",
+    "links": { "pricing": "Pricing", "dashboard": "Dashboard" },
+    "steps": {
+      "s1": { "title": "Install extension", "text": "Install from Chrome Web Store. Open Binance/TradingView and use the sidepanel." },
+      "s2": { "title": "Get API key", "text": "Choose a plan on", "text2": "Your key will be available in" },
+      "s3": { "title": "Paste key in Settings", "text": "Open extension Settings → paste key → click Check key. Plan and quota will update automatically." }
+    },
+    "cards": {
+      "extension": { "kicker": "Extension", "title": "Where do I enter the key?", "text": "Open sidepanel → Settings → API key → Check key. If valid, you’ll see plan and quota (e.g., PRO • 3/50)." },
+      "website": { "kicker": "Website", "title": "Where do I get the key?", "text": "On the site, your key appears in", "text2": "Pricing page:" }
+    },
+    "trouble": {
+      "kicker": "Troubleshooting",
+      "title": "If something doesn’t work",
+      "p1": { "kicker": "Problem", "title": "I see “—” instead of data", "text": "Make sure you are on supported pages (Binance/Bybit/OKX/TradingView). Change symbol and click Refresh. Check internet/VPN." },
+      "p2": { "kicker": "Problem", "title": "Check key says invalid / unauthorized", "text": "Paste key without extra spaces. Press Clear → paste again → Check key. If revoked, generate a new key in Dashboard." },
+      "p3": { "kicker": "Problem", "title": "Limit reached / quota exceeded", "text": "Daily quota is exhausted. Wait for reset or upgrade your plan on" },
+      "p4": { "kicker": "Problem", "title": "Plan badge shows wrong plan", "text": "Press Check key to force validation. Refresh and change symbol to update quota." }
+    },
+    "example": { "kicker": "Example", "title": "What a valid response looks like", "subtitle": "Example only — actual format depends on backend." },
+    "security": {
+      "s1": { "kicker": "Security", "title": "Is it safe to paste the key?", "text": "Yes. The key is for API access and quota only. Don’t share it with third-party sites. Revoke and generate a new key if needed." },
+      "s2": { "kicker": "Privacy", "title": "What data do we store?", "text": "Minimal: Install ID for anti-fraud + your API key stored in browser sync storage. We don’t store exchange data." }
+    },
+    "cta": {
+      "kicker": "Next",
+      "title": "Ready to upgrade?",
+      "subtitle": "Go PRO/VIP, pay via MetaMask, and get your key for the extension.",
+      "goCheckout": "Go to Checkout",
+      "install": "Install Extension"
+    }
+  }
+}
