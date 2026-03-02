@@ -1,16 +1,17 @@
 import PlanCard from "@/components/PlanCard";
+import CheckoutBox from "@/components/CheckoutBox";
 import { getTranslations } from "next-intl/server";
 
 export const metadata = {
   title: "Pricing • Fear & Greed",
-  description: "Choose a plan and pay with MetaMask. Get your API key instantly.",
+  description: "Choose a plan and pay with MetaMask. Get your API key instantly."
 };
 
 function Step({
   n,
   title,
   text,
-  stepLabel,
+  stepLabel
 }: {
   n: number;
   title: string;
@@ -37,7 +38,7 @@ export default async function PricingPage() {
       price: t("plans.free.price"),
       sub: t("plans.free.sub"),
       perks: [t("plans.free.p1"), t("plans.free.p2"), t("plans.free.p3")],
-      cta: { label: t("plans.free.cta"), href: "/" },
+      cta: { label: t("plans.free.cta"), href: "/" }
     },
     {
       name: t("plans.pro.name"),
@@ -45,15 +46,15 @@ export default async function PricingPage() {
       sub: t("plans.pro.sub"),
       perks: [t("plans.pro.p1"), t("plans.pro.p2"), t("plans.pro.p3")],
       cta: { label: t("plans.pro.cta"), href: "#checkout" },
-      highlight: true,
+      highlight: true
     },
     {
       name: t("plans.vip.name"),
       price: t("plans.vip.price"),
       sub: t("plans.vip.sub"),
       perks: [t("plans.vip.p1"), t("plans.vip.p2"), t("plans.vip.p3")],
-      cta: { label: t("plans.vip.cta"), href: "#checkout" },
-    },
+      cta: { label: t("plans.vip.cta"), href: "#checkout" }
+    }
   ];
 
   return (
@@ -64,7 +65,9 @@ export default async function PricingPage() {
         <h1 className="mt-2 text-4xl md:text-5xl font-black leading-tight">
           {t("hero.title")} <span className="gradText">{t("hero.titleAccent")}</span>
         </h1>
-        <p className="mt-4 muted text-base leading-relaxed max-w-2xl">{t("hero.subtitle")}</p>
+        <p className="mt-4 muted text-base leading-relaxed max-w-2xl">
+          {t("hero.subtitle")}
+        </p>
 
         <div className="mt-6 flex gap-3 flex-wrap">
           <a className="btn btnPrimary" href="#plans">
@@ -133,31 +136,8 @@ export default async function PricingPage() {
           <Step n={3} stepLabel={t("stepLabel")} title={t("steps.s3.title")} text={t("steps.s3.text")} />
         </div>
 
-        <div className="mt-6 card p-5">
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <div>
-              <div className="kicker">{t("demo.kicker")}</div>
-              <div className="mt-1 text-xl font-black">{t("demo.title")}</div>
-              <div className="mt-2 muted text-sm">{t("demo.text")}</div>
-            </div>
-
-            <div className="flex gap-3 flex-wrap">
-              <button className="btn btnPrimary" type="button">
-                {t("demo.btnConnect")}
-              </button>
-              <button className="btn" type="button">
-                {t("demo.btnPro")}
-              </button>
-              <button className="btn" type="button">
-                {t("demo.btnVip")}
-              </button>
-            </div>
-          </div>
-
-          <div className="mt-4 muted text-sm">
-            {t("demo.statusLabel")} <b>{t("demo.statusValue")}</b> • {t("demo.networkLabel")} <b>—</b> •{" "}
-            {t("demo.addressLabel")} <b>—</b>
-          </div>
+        <div className="mt-6">
+          <CheckoutBox />
         </div>
       </section>
 
@@ -171,7 +151,7 @@ export default async function PricingPage() {
             { q: t("faq.q1.q"), a: t("faq.q1.a") },
             { q: t("faq.q2.q"), a: t("faq.q2.a") },
             { q: t("faq.q3.q"), a: t("faq.q3.a") },
-            { q: t("faq.q4.q"), a: t("faq.q4.a") },
+            { q: t("faq.q4.q"), a: t("faq.q4.a") }
           ].map((x) => (
             <div key={x.q} className="card p-5">
               <div className="text-lg font-black">{x.q}</div>

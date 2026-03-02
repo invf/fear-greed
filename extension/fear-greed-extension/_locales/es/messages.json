@@ -99,5 +99,6 @@
   "err_not_found": { "message": "No encontrado (404). Falta el endpoint." },
 
   "err_limit_exceeded": { "message": "Límite diario excedido. Mejora tu plan o inténtalo mañana." },
-  "err_no_data": { "message": "No hay datos disponibles o ocurrió un error desconocido del servidor." }
+  "err_no_data": { "message": "No hay datos disponibles o ocurrió un error desconocido del servidor." },
+  "toast_view_plans": { "message": "Ver planes" }
 }

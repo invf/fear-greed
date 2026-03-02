@@ -44,6 +44,7 @@ const QUOTA_TTL_MS = 3500; // do not refetch quota more often than this for same
 
 // Toast (limit exceeded)
 const PRICING_URL = "https://fear-greed.to/pricing";
+const GET_API_KEY_URL = "https://fear-greed.to/get-api-key";
 const TOAST_COOLDOWN_MS = 60 * 1000; // 1 min
 
 // =========================
@@ -1551,6 +1552,15 @@ function initDomReady() {
   applyI18n();
   initToastBindings();
 
+  $("btnGetKey")?.addEventListener("click", async () => {
+  try {
+    await chrome.tabs.create({ url: GET_API_KEY_URL });
+  } catch {
+    // fallback (rare)
+    window.open(GET_API_KEY_URL, "_blank", "noopener,noreferrer");
+  }
+});
+
   $("tabOverview")?.addEventListener("click", () => setActiveTab("overview"));
   $("tabDetails")?.addEventListener("click", () => setActiveTab("details"));
   $("tabSettings")?.addEventListener("click", () => setActiveTab("settings"));
@@ -1602,6 +1612,12 @@ function initDomReady() {
     const keyInp = $("s_apiKey");
     if (keyInp) {
       keyInp.value = await getApiKey();
+      const btnGet = $("btnGetKey");
+    if (btnGet) btnGet.style.display = keyInp.value ? "none" : "inline-flex";
+
+    keyInp.addEventListener("input", () => {
+      if (btnGet) btnGet.style.display = keyInp.value.trim() ? "none" : "inline-flex";
+    });
 
       keyInp.addEventListener("change", async () => {
         const v = (keyInp.value || "").trim();
@@ -1621,15 +1637,57 @@ function initDomReady() {
     }
 
     $("btnCheckKey")?.addEventListener("click", async () => {
+
+      const btn = $("btnCheckKey");   // ← ОЦЕ ДОДАЛИ
       const hint = $("apiKeyStatus");
+
+      // 🔒 блокуємо кнопку
+      if (btn) btn.disabled = true;
+
       if (hint) hint.textContent = t("checking") || "Checking...";
+
       try {
-        await validateCurrentKey({ force: true, silent: false });
-        if (auto.lastSymbol) await maybeUpdateQuota(auto.lastSymbol, { force: true });
+
+        const res = await validateCurrentKey({ force: true, silent: false });
+
+        renderPlanStatus({
+          plan: res?.plan || "FREE",
+          valid: !!res?.valid,
+          status: res?.status || "ok",
+        });
+
+        syncGetKeyVisibility();
+
+        if (auto.lastSymbol) {
+          await maybeUpdateQuota(auto.lastSymbol, { force: true });
+        }
+
       } catch (e) {
+
         const msg = friendlyErrorText(e);
-        if (hint) hint.textContent = `❌ ${msg}`;
-        await setPlanState({ plan: "FREE", valid: false, status: "invalid", save: false });
+
+        renderPlanStatus({
+          plan: "FREE",
+          valid: false,
+          status: "invalid",
+        });
+
+        await setPlanState({
+          plan: "FREE",
+          valid: false,
+          status: "invalid",
+          save: false,
+        });
+
+        syncGetKeyVisibility({ forceShow: true });
+
+        setErr(msg);
+      }
+      finally {
+
+        // 🔓 розблокувати кнопку (ВАЖЛИВО!)
+        if (btn) btn.disabled = false;
+
       }
     });
 

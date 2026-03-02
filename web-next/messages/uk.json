@@ -1,0 +1,21 @@
+{
+  "nav": {
+    "home": "Головна",
+    "pricing": "Тарифи",
+    "dashboard": "Дашборд",
+    "docs": "Документація"
+  },
+  "common": {
+    "getApiKey": "Отримати API ключ",
+    "checkKey": "Перевірити ключ",
+    "clear": "Очистити",
+    "learnMore": "Дізнатися більше",
+    "loading": "Завантаження…"
+  },
+  "home": {
+    "heroTitle": "Fear & Greed • Crypto Panel",
+    "heroSubtitle": "Панель настроїв і ризику для криптографіків.",
+    "ctaInstall": "Встановити розширення",
+    "ctaPricing": "Переглянути тарифи"
+  }
+}

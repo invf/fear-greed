@@ -111,5 +111,6 @@
   "err_not_found": { "message": "Not found (404). Endpoint is missing." },
 
   "err_limit_exceeded": { "message": "Daily limit exceeded. Please upgrade or try again tomorrow." },
-  "err_no_data": { "message": "No data available or an unknown server error occurred." }
+  "err_no_data": { "message": "No data available or an unknown server error occurred." },
+  "toast_view_plans": { "message": "View plans" }
 }

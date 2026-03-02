@@ -102,7 +102,6 @@
       <span class="symbol" id="symbol">—</span>
     </div>
 
-    <!-- keep IDs intact for sidepanel.js -->
     <div
       class="planBadge"
       id="planBadge"
@@ -110,10 +109,7 @@
       data-i18n-aria="planStatusTitle"
     >
       <div class="planCol">
-        <!-- optional: plan text (sidepanel.js uses #planValue in renderPlan()) -->
         <div class="planValue" id="planValue" style="display:none">FREE</div>
-
-        <!-- quota text from JS: "FREE • 3/10", hidden by default -->
         <div class="planMeta inline" id="planMeta" style="display:none"></div>
       </div>
     </div>
@@ -214,9 +210,16 @@
       </div>
 
       <div class="formRow">
-        <div class="toggleRow" style="justify-content:space-between; gap:10px;">
-          <button id="btnCheckKey" class="btnSmall" type="button" data-i18n="checkKeyBtn">Check key</button>
-          <button id="btnClearKey" class="btnSmall" type="button" data-i18n="clearKeyBtn">Clear</button>
+        <!-- ВАЖЛИВО: без inline-style; керуємо класами у CSS -->
+        <div class="keyActions">
+          <button id="btnGetKey" class="btnSmall btnPrimary" type="button" data-i18n="getApiKeyBtn">
+            Get API key
+          </button>
+
+          <div class="keyActionsRow">
+            <button id="btnCheckKey" class="btnSmall" type="button" data-i18n="checkKeyBtn">Check key</button>
+            <button id="btnClearKey" class="btnSmall" type="button" data-i18n="clearKeyBtn">Clear</button>
+          </div>
         </div>
         <div class="hint" data-i18n="checkKeyHint">Validate key and show your plan status.</div>
       </div>
@@ -275,15 +278,12 @@
       <div class="toastText" id="toastText"></div>
 
       <div class="toastActions">
-        <a
-          id="toastLink"
-          class="toastLink"
-          href="#"
-          target="_blank"
-          rel="noreferrer noopener"
-          style="display:none"
-        >
-          Переглянути тарифи
+        <a id="toastLink"
+           class="toastLink"
+           href="#"
+           target="_blank"
+           rel="noreferrer noopener"
+           data-i18n="toast_view_plans">
         </a>
         <button id="toastClose" class="toastClose" type="button">OK</button>
       </div>

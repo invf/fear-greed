@@ -101,6 +101,7 @@
   "err_not_found": { "message": "未找到（404）。接口不存在。" },
 
   "err_limit_exceeded": { "message": "已超过今日限额。请明天再试或升级套餐。" },
-  "err_no_data": { "message": "暂无数据或服务器发生错误。" }
+  "err_no_data": { "message": "暂无数据或服务器发生错误。" },
+  "toast_view_plans": { "message": "查看套餐" }
 
 }

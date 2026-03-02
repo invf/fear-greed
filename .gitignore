@@ -1,0 +1,23 @@
+# Next.js
+web-next/.next/
+web-next/out/
+web-next/.turbo/
+web-next/.swc/
+
+# deps
+web-next/node_modules/
+
+# env
+.env
+.env.*
+!.env.example
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db

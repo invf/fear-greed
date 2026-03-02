@@ -101,5 +101,6 @@
   "err_not_found": { "message": "未找到（404）。端點不存在。" },
 
   "err_limit_exceeded": { "message": "今日額度已用完。請明天再試或升級方案。" },
-  "err_no_data": { "message": "沒有資料或伺服器發生錯誤。" }
+  "err_no_data": { "message": "沒有資料或伺服器發生錯誤。" },
+  "toast_view_plans": { "message": "查看方案" }
 }

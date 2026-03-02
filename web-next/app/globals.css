@@ -187,3 +187,100 @@ a{color:inherit;text-decoration:none}
   background-position: 0 0;
   border-radius: 18px;
 }
+/* =========================
+   Premium Crypto Badge
+   ========================= */
+
+.pcBadgeWrap{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom: 10px;
+}
+
+.pcBadge{
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  padding: 8px 12px;
+  border-radius: 999px;
+
+  /* “gradient border” trick */
+  border: 1px solid transparent;
+  background:
+    linear-gradient(rgba(30,35,41,0.72), rgba(30,35,41,0.72)) padding-box,
+    linear-gradient(90deg, rgba(240,185,11,0.90), rgba(14,203,129,0.85), rgba(96,165,250,0.75)) border-box;
+
+  box-shadow:
+    0 14px 34px rgba(0,0,0,0.45),
+    0 0 0 1px rgba(240,185,11,0.12) inset;
+
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  overflow: hidden;
+  transform: translateZ(0);
+}
+
+.pcBadgeDot{
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(240,185,11,0.95);
+  box-shadow:
+    0 0 0 3px rgba(240,185,11,0.14),
+    0 0 18px rgba(240,185,11,0.28);
+}
+
+.pcBadgeLeft{
+  font-weight: 900;
+  font-size: 12px;
+  letter-spacing: .2px;
+  color: rgba(234,236,239,0.96);
+  text-transform: uppercase;
+}
+
+.pcBadgeSep{
+  font-weight: 900;
+  font-size: 12px;
+  opacity: 0.55;
+}
+
+.pcBadgeRight{
+  font-weight: 900;
+  font-size: 12px;
+  letter-spacing: .2px;
+  color: rgba(234,236,239,0.88);
+}
+
+.pcBadgeShine{
+  position:absolute;
+  inset:-60px -120px;
+  background: linear-gradient(
+    120deg,
+    transparent 35%,
+    rgba(240,185,11,0.10) 45%,
+    rgba(240,185,11,0.22) 50%,
+    rgba(14,203,129,0.12) 55%,
+    transparent 65%
+  );
+  transform: translateX(-40%);
+  animation: pcShine 3.6s ease-in-out infinite;
+  pointer-events:none;
+  mix-blend-mode: screen;
+}
+
+@keyframes pcShine{
+  0%   { transform: translateX(-40%) rotate(0deg); opacity: 0.0; }
+  15%  { opacity: 0.9; }
+  50%  { transform: translateX(22%) rotate(0deg); opacity: 0.65; }
+  85%  { opacity: 0.9; }
+  100% { transform: translateX(60%) rotate(0deg); opacity: 0.0; }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce){
+  .pcBadgeShine{ animation: none; opacity: 0.25; }
+}

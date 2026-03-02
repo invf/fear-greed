@@ -99,5 +99,6 @@
   "err_not_found": { "message": "Nicht gefunden (404). Endpunkt fehlt." },
 
   "err_limit_exceeded": { "message": "Tageslimit überschritten. Bitte upgrade deinen Plan oder versuche es morgen." },
-  "err_no_data": { "message": "Keine Daten verfügbar oder ein unbekannter Serverfehler ist aufgetreten." }
+  "err_no_data": { "message": "Keine Daten verfügbar oder ein unbekannter Serverfehler ist aufgetreten." },
+  "toast_view_plans": { "message": "Tarife ansehen" }
 }

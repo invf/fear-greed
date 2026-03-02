@@ -7,6 +7,14 @@ from typing import Optional
 import httpx
 import numpy as np
 import pandas as pd
+
+from decimal import Decimal
+from datetime import timedelta
+import secrets
+
+from web3 import Web3
+from web3._utils.events import get_event_data
+
 from ta.momentum import RSIIndicator
 
 from fastapi import FastAPI, Query, HTTPException, Response, Request
@@ -16,6 +24,68 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from datetime import datetime, timezone
 from supabase import create_client, Client
 
+# =========================
+# PAYMENTS (USDT + MetaMask)
+# =========================
+
+MERCHANT_ADDRESS = "0xe834d1940BC9A516a63d1C1a17BfD6F1deFB04f1"
+
+BSC_RPC = os.getenv("BSC_RPC_URL")
+w3 = Web3(Web3.HTTPProvider(BSC_RPC))
+
+USDT_ADDRESS = Web3.to_checksum_address(
+    "0x55d398326f99059fF775485246999027B3197955"
+)
+
+TRANSFER_TOPIC = w3.keccak(text="Transfer(address,address,uint256)").hex()
+
+RECEIVE_WALLET = os.getenv("RECEIVE_WALLET", "")
+RPC_56 = os.getenv("RPC_56", "")         # BSC
+RPC_42161 = os.getenv("RPC_42161", "")   # Arbitrum
+
+USDT_56 = os.getenv("USDT_56", "")           # USDT contract on BSC
+USDT_42161 = os.getenv("USDT_42161", "")     # USDT contract on Arbitrum
+
+SUPPORTED_CHAINS = {56, 42161}
+
+ERC20_TRANSFER_ABI = {
+    "anonymous": False,
+    "inputs": [
+        {"indexed": True, "name": "from", "type": "address"},
+        {"indexed": True, "name": "to", "type": "address"},
+        {"indexed": False, "name": "value", "type": "uint256"},
+    ],
+    "name": "Transfer",
+    "type": "event",
+}
+
+TRANSFER_TOPIC = Web3.keccak(text="Transfer(address,address,uint256)").hex()
+
+
+def _w3(chain_id: int) -> Web3:
+    if chain_id == 56 and RPC_56:
+        return Web3(Web3.HTTPProvider(RPC_56))
+    if chain_id == 42161 and RPC_42161:
+        return Web3(Web3.HTTPProvider(RPC_42161))
+    raise HTTPException(status_code=400, detail=f"Unsupported chain_id={chain_id} or missing RPC env")
+
+
+def _usdt_address(chain_id: int) -> str:
+    if chain_id == 56 and USDT_56:
+        return Web3.to_checksum_address(USDT_56)
+    if chain_id == 42161 and USDT_42161:
+        return Web3.to_checksum_address(USDT_42161)
+    raise HTTPException(status_code=400, detail=f"Missing USDT env for chain_id={chain_id}")
+
+
+def _receive_wallet() -> str:
+    if not RECEIVE_WALLET:
+        raise HTTPException(status_code=500, detail="RECEIVE_WALLET env is missing")
+    return Web3.to_checksum_address(RECEIVE_WALLET)
+
+
+def _gen_api_key() -> str:
+    return "fg_" + secrets.token_urlsafe(32)
 
 # =========================
 # APP
@@ -544,3 +614,282 @@ def fng_components(
         }
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
+
+from pydantic import BaseModel, Field
+
+class CheckoutCreateIn(BaseModel):
+    user_id: str
+    plan_code: str = Field(pattern="^(free|pro|vip|FREE|PRO|VIP)$")
+    chain_id: int
+
+class CheckoutCreateOut(BaseModel):
+    payment_id: str
+    chain_id: int
+    token_address: str
+    to_address: str
+    amount: str
+    decimals: int
+
+
+@app.post("/api/checkout/create", response_model=CheckoutCreateOut)
+def checkout_create(payload: CheckoutCreateIn):
+    if not supabase:
+        raise HTTPException(status_code=500, detail="Supabase not configured")
+
+    plan_code = payload.plan_code.lower()
+    if plan_code == "free":
+        raise HTTPException(status_code=400, detail="Free plan doesn't require payment")
+
+    if payload.chain_id not in SUPPORTED_CHAINS:
+        raise HTTPException(status_code=400, detail="Unsupported chain")
+
+    # price береться з plans.price_usd
+    plan_row = supabase.table("plans").select("code,price_usd").eq("code", plan_code).limit(1).execute()
+    plan_data = _sb_data(plan_row.data)
+    if not plan_data:
+        raise HTTPException(status_code=404, detail="Plan not found in plans table")
+
+    amount = str(plan_data["price_usd"])
+    decimals = 6  # USDT (store as constant, or store in DB)
+
+    token_addr = _usdt_address(payload.chain_id)
+    to_addr = _receive_wallet()
+
+    # create payment record (pending)
+    ins = supabase.table("payments").insert({
+        "user_id": payload.user_id,
+        "plan_code": plan_code,
+        "chain_id": payload.chain_id,
+        "token_address": token_addr,
+        "to_address": to_addr,
+        "amount": Decimal(amount),
+        "decimals": decimals,
+        "status": "pending",
+        "period_days": 30
+    }).execute()
+
+    row = _sb_data(ins.data)
+    if not row:
+        raise HTTPException(status_code=500, detail="Failed to create payment")
+
+    return CheckoutCreateOut(
+        payment_id=row["id"],
+        chain_id=payload.chain_id,
+        token_address=token_addr,
+        to_address=to_addr,
+        amount=amount,
+        decimals=decimals
+    )
+
+
+class CheckoutConfirmIn(BaseModel):
+    payment_id: str
+    tx_hash: str
+
+class CheckoutConfirmOut(BaseModel):
+    ok: bool
+    plan: str
+    expires_at: str
+    api_key: str
+
+
+def _verify_usdt_transfer(chain_id: int, tx_hash: str, token_addr: str, to_addr: str, amount_human: Decimal, decimals: int) -> str:
+    web3 = _w3(chain_id)
+
+    receipt = web3.eth.get_transaction_receipt(tx_hash)
+    if not receipt:
+        raise HTTPException(status_code=400, detail="Transaction not found yet")
+
+    if receipt.get("status") != 1:
+        raise HTTPException(status_code=400, detail="Transaction failed")
+
+    token_addr = Web3.to_checksum_address(token_addr)
+    to_addr = Web3.to_checksum_address(to_addr)
+
+    expected_value = int(amount_human * (10 ** decimals))
+
+    for log in receipt["logs"]:
+        if Web3.to_checksum_address(log["address"]) != token_addr:
+            continue
+        if log["topics"][0].hex() != TRANSFER_TOPIC:
+            continue
+
+        decoded = get_event_data(web3.codec, ERC20_TRANSFER_ABI, log)
+        frm = Web3.to_checksum_address(decoded["args"]["from"])
+        to = Web3.to_checksum_address(decoded["args"]["to"])
+        value = int(decoded["args"]["value"])
+
+        if to == to_addr and value == expected_value:
+            return frm  # payer wallet
+
+    raise HTTPException(status_code=400, detail="No matching USDT Transfer(to,amount) found in tx logs")
+
+
+@app.post("/api/checkout/confirm", response_model=CheckoutConfirmOut)
+def checkout_confirm(payload: CheckoutConfirmIn):
+    if not supabase:
+        raise HTTPException(status_code=500, detail="Supabase not configured")
+
+    tx_hash = (payload.tx_hash or "").strip()
+    if not tx_hash.startswith("0x"):
+        raise HTTPException(status_code=400, detail="Invalid tx_hash")
+
+    # load payment
+    p_res = supabase.table("payments").select("*").eq("id", payload.payment_id).limit(1).execute()
+    pay = _sb_data(p_res.data)
+    if not pay:
+        raise HTTPException(status_code=404, detail="payment_id not found")
+
+    if pay["status"] == "confirmed":
+        # already confirmed -> return current state
+        user_id = pay["user_id"]
+        sub = _sb_data(supabase.table("subscriptions").select("plan,expires_at").eq("user_id", user_id).limit(1).execute().data) or {}
+        key = _sb_data(supabase.table("api_keys").select("api_key").eq("user_id", user_id).eq("revoked", False).eq("is_active", True).order("created_at", desc=True).limit(1).execute().data) or {}
+        return CheckoutConfirmOut(ok=True, plan=str(sub.get("plan","free")).upper(), expires_at=str(sub.get("expires_at","")), api_key=str(key.get("api_key","")))
+
+    chain_id = int(pay["chain_id"])
+    token_addr = pay["token_address"]
+    to_addr = pay["to_address"]
+    amount = Decimal(str(pay["amount"]))
+    decimals = int(pay.get("decimals", 6))
+    plan_code = str(pay["plan_code"]).lower()
+    user_id = pay["user_id"]
+    period_days = int(pay.get("period_days", 30))
+
+    payer = _verify_usdt_transfer(chain_id, tx_hash, token_addr, to_addr, amount, decimals)
+
+    # mark payment confirmed
+    supabase.table("payments").update({
+        "status": "confirmed",
+        "tx_hash": tx_hash,
+        "from_address": payer,
+        "confirmed_at": ts_iso_now()
+    }).eq("id", payload.payment_id).execute()
+
+    # extend subscription (30 days)
+    sub_res = supabase.table("subscriptions").select("expires_at").eq("user_id", user_id).limit(1).execute()
+    sub = _sb_data(sub_res.data)
+
+    now = datetime.now(timezone.utc)
+    base = now
+    if sub and sub.get("expires_at"):
+        try:
+            cur_exp = datetime.fromisoformat(sub["expires_at"].replace("Z","+00:00"))
+            if cur_exp > base:
+                base = cur_exp
+        except Exception:
+            pass
+
+    new_expires = base + timedelta(days=period_days)
+
+    # upsert subscription (unique user_id)
+    supabase.table("subscriptions").upsert({
+        "user_id": user_id,
+        "plan": plan_code,
+        "status": "active",
+        "expires_at": new_expires.isoformat()
+    }, on_conflict="user_id").execute()
+
+    # ensure API key exists
+    k_res = supabase.table("api_keys").select("api_key").eq("user_id", user_id).eq("revoked", False).eq("is_active", True).order("created_at", desc=True).limit(1).execute()
+    keyrow = _sb_data(k_res.data)
+    if keyrow:
+        api_key = keyrow["api_key"]
+    else:
+        api_key = _gen_api_key()
+        supabase.table("api_keys").insert({
+            "user_id": user_id,
+            "api_key": api_key,
+            "revoked": False,
+            "is_active": True,
+            "label": "main",
+            "created_at": ts_iso_now()
+        }).execute()
+
+    return CheckoutConfirmOut(
+        ok=True,
+        plan=plan_code.upper(),
+        expires_at=new_expires.isoformat(),
+        api_key=api_key
+    )
+@app.post("/api/checkout/start")
+def checkout_start(payload: dict):
+    plan = payload.get("plan")
+    user_id = payload.get("user_id")
+    wallet = payload.get("wallet")
+
+    if plan not in ["PRO", "VIP"]:
+        raise HTTPException(status_code=400, detail="Invalid plan")
+
+    amount = "9" if plan == "PRO" else "29"
+
+    return {
+        "plan": plan,
+        "chain_id": 56,
+        "token_address": USDT_ADDRESS,
+        "merchant_address": MERCHANT_ADDRESS,
+        "amount": amount
+    }
+@app.post("/api/checkout/confirm")
+def checkout_confirm(payload: dict):
+    tx_hash = payload.get("tx_hash")
+    user_id = payload.get("user_id")
+    plan = payload.get("plan")
+
+    receipt = w3.eth.get_transaction_receipt(tx_hash)
+
+    if receipt.status != 1:
+        raise HTTPException(status_code=400, detail="Transaction failed")
+
+    found = False
+    payer = None
+    amount_raw = None
+
+    for log in receipt.logs:
+        if log["address"].lower() == USDT_ADDRESS.lower() and log["topics"][0].hex() == TRANSFER_TOPIC:
+            from_addr = "0x" + log["topics"][1].hex()[-40:]
+            to_addr = "0x" + log["topics"][2].hex()[-40:]
+            value = int(log["data"], 16)
+
+            if Web3.to_checksum_address(to_addr) == MERCHANT_ADDRESS:
+                found = True
+                payer = Web3.to_checksum_address(from_addr)
+                amount_raw = str(value)
+
+    if not found:
+        raise HTTPException(status_code=400, detail="Payment not found")
+
+    # 🔹 Запис платежу
+    supabase.table("payments").insert({
+        "user_id": user_id,
+        "plan": plan,
+        "chain_id": 56,
+        "token_address": USDT_ADDRESS,
+        "merchant_address": MERCHANT_ADDRESS,
+        "payer_address": payer,
+        "amount_raw": amount_raw,
+        "tx_hash": tx_hash,
+        "status": "confirmed"
+    }).execute()
+
+    # 🔹 Активація підписки
+    expires = datetime.now(timezone.utc) + timedelta(days=30)
+
+    supabase.table("subscriptions").upsert({
+        "user_id": user_id,
+        "plan": plan,
+        "status": "active",
+        "expires_at": expires.isoformat()
+    }).execute()
+
+    # 🔹 Генерація API key якщо немає
+    key = secrets.token_hex(32)
+
+    supabase.table("api_keys").insert({
+        "user_id": user_id,
+        "api_key": key,
+        "is_active": True,
+        "revoked": False
+    }).execute()
+
+    return {"success": True, "api_key": key}
