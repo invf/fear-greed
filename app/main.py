@@ -772,9 +772,12 @@ def checkout_confirm(payload: CheckoutConfirmIn):
 
     supabase.table("subscriptions").upsert({
         "user_id": user_id,
-        "plan": plan_code,
+        "plan": plan_code.upper(),  # ✅ FREE/PRO/VIP
         "status": "active",
         "expires_at": new_expires.isoformat(),
+        "wallet_address": payer.lower(),  # опційно, корисно
+        "chain_id": chain_id,  # опційно
+        "last_payment_tx": tx_hash,  # опційно
     }, on_conflict="user_id").execute()
 
     # 5) ensure API key exists
