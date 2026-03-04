@@ -28,11 +28,15 @@ const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE?.replace(/\/$/, "") ||
   "https://fear-greed-24pr.onrender.com";
 
-// ✅ MVP: force BSC
+// ✅ Force BSC
 const TARGET_CHAIN_ID_HEX = "0x38"; // 56
 const TARGET_CHAIN_ID_DEC = 56;
 
-// BSC chain params (for wallet_addEthereumChain)
+// ✅ Default USDT on BSC (BEP20)
+const DEFAULT_USDT_BSC = "0x55d398326f99059fF775485246999027B3197955";
+const DEFAULT_USDT_DECIMALS = 18;
+
+// BSC chain params
 const BSC_PARAMS = {
   chainId: TARGET_CHAIN_ID_HEX,
   chainName: "BNB Smart Chain",
@@ -66,22 +70,18 @@ function normalizeEthersError(e: any): string {
 
   const m = String(msg).toLowerCase();
 
-  // User rejected
   if (e?.code === 4001 || m.includes("user rejected") || m.includes("rejected")) {
     return "Transaction was rejected in MetaMask.";
   }
 
-  // Insufficient token balance
   if (m.includes("transfer amount exceeds balance") || m.includes("exceeds balance")) {
     return "Not enough USDT for this payment. Please top up your USDT (BSC) balance.";
   }
 
-  // Insufficient gas
-  if (m.includes("insufficient funds") || m.includes("gas") && m.includes("insufficient")) {
+  if (m.includes("insufficient funds") || (m.includes("gas") && m.includes("insufficient"))) {
     return "Not enough BNB for network gas fee. Please add a small amount of BNB on BSC.";
   }
 
-  // Wrong network hints
   if (m.includes("chain") && m.includes("switch")) {
     return "Please switch MetaMask to BSC (BNB Chain) to pay with USDT.";
   }
@@ -100,11 +100,11 @@ export default function CheckoutBox() {
   const [txHash, setTxHash] = useState<string>("");
   const [paymentId, setPaymentId] = useState<string>("");
 
-  // Show balances for user guidance
+  // Balances
   const [bnBWei, setBnBWei] = useState<bigint>(0n);
   const [usdtRaw, setUsdtRaw] = useState<bigint>(0n);
-  const [usdtDecimals, setUsdtDecimals] = useState<number>(18);
-  const [usdtAddress, setUsdtAddress] = useState<string>("");
+  const [usdtDecimals, setUsdtDecimals] = useState<number>(DEFAULT_USDT_DECIMALS);
+  const [usdtAddress, setUsdtAddress] = useState<string>(DEFAULT_USDT_BSC);
 
   const chainLabel = useMemo(() => {
     if (!chainId) return "—";
@@ -140,12 +140,20 @@ export default function CheckoutBox() {
     };
   }, []);
 
+  // ✅ Auto refresh balances when connected & on BSC
+  useEffect(() => {
+    if (!address) return;
+    if (chainId !== TARGET_CHAIN_ID_DEC) return;
+    refreshBalances(DEFAULT_USDT_BSC, DEFAULT_USDT_DECIMALS).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [address, chainId]);
+
   async function connect() {
     setError("");
     setTxHash("");
     setPaymentId("");
-    const eth = (window as any).ethereum;
 
+    const eth = (window as any).ethereum;
     if (!eth) {
       setError("MetaMask not found. Install MetaMask extension and refresh.");
       setStatus("error");
@@ -202,27 +210,34 @@ export default function CheckoutBox() {
     const eth = (window as any).ethereum;
     if (!eth || !address) return;
 
-    const provider = new ethers.BrowserProvider(eth);
-    const bnb = await provider.getBalance(address);
-    setBnBWei(bnb);
+    try {
+      const provider = new ethers.BrowserProvider(eth);
 
-    const tAddr = tokenAddr || usdtAddress;
-    const tDec = typeof tokenDecimals === "number" ? tokenDecimals : usdtDecimals;
+      const bnb = await provider.getBalance(address);
+      setBnBWei(bnb);
 
-    if (tAddr) {
+      const tAddr = tokenAddr || usdtAddress || DEFAULT_USDT_BSC;
+      const tDec = typeof tokenDecimals === "number" ? tokenDecimals : usdtDecimals || DEFAULT_USDT_DECIMALS;
+
+      // Always keep defaults (so UI doesn't go "0" because address empty)
+      setUsdtAddress(tAddr);
+      setUsdtDecimals(tDec);
+
       const erc20 = new ethers.Contract(
         tAddr,
         ["function balanceOf(address) view returns (uint256)"],
         provider
       );
+
       const bal: bigint = await erc20.balanceOf(address);
       setUsdtRaw(bal);
-      setUsdtDecimals(tDec);
-      setUsdtAddress(tAddr);
+    } catch {
+      // If token call fails, don't crash UI; keep BNB but show USDT 0
+      setUsdtRaw(0n);
     }
   }
 
-  // ✅ Full payment flow: create -> transfer -> confirm
+  // ✅ Full flow: create -> transfer -> confirm
   async function payUSDT(plan: "PRO" | "VIP") {
     setError("");
     setTxHash("");
@@ -241,7 +256,6 @@ export default function CheckoutBox() {
     }
 
     try {
-      // 0) switch network to BSC automatically
       await ensureBSC();
 
       const cidHex: string = await eth.request({ method: "eth_chainId" });
@@ -256,14 +270,13 @@ export default function CheckoutBox() {
       const signer = await provider.getSigner();
       const wallet = await signer.getAddress();
 
-      // 1) create payment on backend (creates payment_id in Supabase)
       const res = await fetch(`${API_BASE}/api/checkout/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          wallet, // ✅ backend maps wallet -> users.id
-          plan_code: plan, // "PRO" | "VIP"
-          chain_id: TARGET_CHAIN_ID_DEC, // 56
+          wallet,
+          plan_code: plan,      // backend lowercases
+          chain_id: TARGET_CHAIN_ID_DEC,
         }),
       });
 
@@ -273,24 +286,26 @@ export default function CheckoutBox() {
       }
 
       const data: {
-        payment_id: string;
+        payment_id: string | number;
         chain_id: number;
         token_address: string;
         to_address: string;
-        amount: string; // human: "1" / "9" / "29"
-        decimals: number; // token decimals
+        amount: string;
+        decimals: number;
       } = await res.json();
 
-      setPaymentId(data.payment_id);
-      setUsdtAddress(data.token_address);
-      setUsdtDecimals(data.decimals);
+      const pid = String(data.payment_id);
+      setPaymentId(pid);
 
-      // Update balances and do pre-checks
-      await refreshBalances(data.token_address, data.decimals);
+      // set token info from backend (but balances already work without this)
+      setUsdtAddress(data.token_address || DEFAULT_USDT_BSC);
+      setUsdtDecimals(typeof data.decimals === "number" ? data.decimals : DEFAULT_USDT_DECIMALS);
+
+      await refreshBalances(data.token_address || DEFAULT_USDT_BSC, data.decimals);
 
       const amountRaw = ethers.parseUnits(String(data.amount), data.decimals);
 
-      // Basic pre-checks
+      // Pre-checks
       const bnbBal = await provider.getBalance(wallet);
       if (bnbBal <= 0n) {
         throw new Error("Not enough BNB for gas. Please add a small amount of BNB on BSC.");
@@ -298,7 +313,10 @@ export default function CheckoutBox() {
 
       const usdt = new ethers.Contract(
         data.token_address,
-        ["function balanceOf(address) view returns (uint256)", "function transfer(address to, uint256 amount) returns (bool)"],
+        [
+          "function balanceOf(address) view returns (uint256)",
+          "function transfer(address to, uint256 amount) returns (bool)",
+        ],
         signer
       );
 
@@ -307,21 +325,18 @@ export default function CheckoutBox() {
         throw new Error("Not enough USDT for this payment. Please top up your USDT (BSC) balance.");
       }
 
-      // 2) transfer USDT
       setStatus("paying");
       const tx = await usdt.transfer(data.to_address, amountRaw);
       setTxHash(tx.hash);
 
-      // 3) wait 1 confirmation
       setStatus("confirming");
       await tx.wait(1);
 
-      // 4) confirm on backend (verifies receipt + Transfer event)
       const res2 = await fetch(`${API_BASE}/api/checkout/confirm`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          payment_id: data.payment_id,
+          payment_id: pid,
           tx_hash: tx.hash,
         }),
       });
@@ -330,9 +345,6 @@ export default function CheckoutBox() {
         const text = await res2.text();
         throw new Error(`checkout/confirm failed: ${text}`);
       }
-
-      // Optional: you can read returned api_key/expires and show it
-      // const out = await res2.json();
 
       setStatus("success");
       await refreshBalances(data.token_address, data.decimals);
@@ -373,7 +385,7 @@ export default function CheckoutBox() {
                 ? "Creating payment…"
                 : status === "paying" || status === "confirming"
                   ? "Processing…"
-                  : "Choose PRO ($ / 30d)"}
+                  : "Choose PRO ($1 / 30d)"}
           </button>
 
           <button className="btn" type="button" disabled={!connected || busy} onClick={() => payUSDT("VIP")}>
@@ -383,7 +395,7 @@ export default function CheckoutBox() {
                 ? "Creating payment…"
                 : status === "paying" || status === "confirming"
                   ? "Processing…"
-                  : "Choose VIP ($ / 30d)"}
+                  : "Choose VIP ($29 / 30d)"}
           </button>
         </div>
       </div>
@@ -411,7 +423,7 @@ export default function CheckoutBox() {
         {paymentId ? (
           <>
             {" "}
-            • Payment: <b>{shortAddr(paymentId)}</b>
+            • Payment: <b>{paymentId}</b>
           </>
         ) : null}
         {txHash ? (
@@ -432,7 +444,7 @@ export default function CheckoutBox() {
               USDT: <b>{fmt(usdtRaw, usdtDecimals, 6)}</b>
             </div>
             <div className="mt-2 muted text-xs">
-              If USDT is 0, make sure you are on <b>BSC</b> and USDT token is present.
+              If USDT is 0, click Refresh (and ensure you are on <b>BSC</b>).
             </div>
             <div className="mt-3">
               <button className="btn btnGhost text-sm" type="button" onClick={() => refreshBalances()}>

@@ -631,7 +631,7 @@ def checkout_create(payload: CheckoutCreateIn):
         "tx_hash": placeholder_tx,           # ✅ NOT NULL + unique(chain_id, tx_hash)
         "payer_address": None,
         "receiver_address": receiver,
-        "amount": Decimal(amount),
+        "amount": str(amount),
         "decimals": int(decimals),
         "status": "pending",
     }).execute()
