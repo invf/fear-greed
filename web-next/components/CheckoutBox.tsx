@@ -1,3 +1,4 @@
+// web-next/components/CheckoutBox.tsx
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
@@ -12,16 +13,12 @@ const CHAINS: ChainInfo[] = [
   { id: 1, name: "Ethereum (1)" },
 ];
 
-function shortAddr(a: string) {
-  if (!a) return "—";
-  return `${a.slice(0, 6)}…${a.slice(-4)}`;
-}
-
 type UiStatus =
   | "idle"
   | "connecting"
   | "connected"
   | "switching"
+  | "creating"
   | "paying"
   | "confirming"
   | "success"
@@ -44,52 +41,52 @@ const BSC_PARAMS = {
   blockExplorerUrls: ["https://bscscan.com"],
 };
 
-// Minimal ERC20 ABI (enough for payments + checks)
-const ERC20_ABI = [
-  "function transfer(address to, uint256 amount) returns (bool)",
-  "function decimals() view returns (uint8)",
-  "function balanceOf(address owner) view returns (uint256)",
-];
+function shortAddr(a: string) {
+  if (!a) return "—";
+  return `${a.slice(0, 6)}…${a.slice(-4)}`;
+}
 
-function normalizeWeb3Error(e: any, ctx?: { amount?: string; symbol?: string }) {
-  const rawMsg: string = String(e?.shortMessage || e?.reason || e?.message || "");
+function fmt(n: bigint, decimals = 18, maxFrac = 6) {
+  try {
+    const s = ethers.formatUnits(n, decimals);
+    const [i, f = ""] = s.split(".");
+    return f ? `${i}.${f.slice(0, maxFrac)}` : i;
+  } catch {
+    return "—";
+  }
+}
 
-  // MetaMask reject
-  if (e?.code === 4001 || rawMsg.toLowerCase().includes("user rejected")) {
+function normalizeEthersError(e: any): string {
+  const msg =
+    e?.shortMessage ||
+    e?.reason ||
+    e?.message ||
+    (typeof e === "string" ? e : "") ||
+    "Payment failed";
+
+  const m = String(msg).toLowerCase();
+
+  // User rejected
+  if (e?.code === 4001 || m.includes("user rejected") || m.includes("rejected")) {
     return "Transaction was rejected in MetaMask.";
   }
 
-  // Wrong network / chain issues
-  if (
-    rawMsg.toLowerCase().includes("wrong network") ||
-    rawMsg.toLowerCase().includes("chain") && rawMsg.toLowerCase().includes("switch")
-  ) {
-    return "Please switch MetaMask to BSC (BNB Chain) and try again.";
+  // Insufficient token balance
+  if (m.includes("transfer amount exceeds balance") || m.includes("exceeds balance")) {
+    return "Not enough USDT for this payment. Please top up your USDT (BSC) balance.";
   }
 
-  // Token balance
-  if (rawMsg.includes("transfer amount exceeds balance")) {
-    const a = ctx?.amount ? ` ${ctx.amount}` : "";
-    const s = ctx?.symbol ? ` ${ctx.symbol}` : " USDT";
-    return `Not enough${s} on BSC. Please top up your balance and try again. (Need${a}${s})`;
+  // Insufficient gas
+  if (m.includes("insufficient funds") || m.includes("gas") && m.includes("insufficient")) {
+    return "Not enough BNB for network gas fee. Please add a small amount of BNB on BSC.";
   }
 
-  // Gas / native balance
-  if (
-    rawMsg.toLowerCase().includes("insufficient funds for gas") ||
-    rawMsg.toLowerCase().includes("intrinsic gas too low") ||
-    rawMsg.toLowerCase().includes("gas required exceeds allowance")
-  ) {
-    return "Not enough BNB for gas fees. Please add a small amount of BNB to your wallet.";
+  // Wrong network hints
+  if (m.includes("chain") && m.includes("switch")) {
+    return "Please switch MetaMask to BSC (BNB Chain) to pay with USDT.";
   }
 
-  // Sometimes ethers throws "CALL_EXCEPTION" with revert reason inside
-  if (e?.code === "CALL_EXCEPTION" && rawMsg) {
-    return rawMsg;
-  }
-
-  // fallback
-  return rawMsg || "Payment failed.";
+  return String(msg);
 }
 
 export default function CheckoutBox() {
@@ -101,6 +98,13 @@ export default function CheckoutBox() {
   const [error, setError] = useState<string>("");
 
   const [txHash, setTxHash] = useState<string>("");
+  const [paymentId, setPaymentId] = useState<string>("");
+
+  // Show balances for user guidance
+  const [bnBWei, setBnBWei] = useState<bigint>(0n);
+  const [usdtRaw, setUsdtRaw] = useState<bigint>(0n);
+  const [usdtDecimals, setUsdtDecimals] = useState<number>(18);
+  const [usdtAddress, setUsdtAddress] = useState<string>("");
 
   const chainLabel = useMemo(() => {
     if (!chainId) return "—";
@@ -139,6 +143,7 @@ export default function CheckoutBox() {
   async function connect() {
     setError("");
     setTxHash("");
+    setPaymentId("");
     const eth = (window as any).ethereum;
 
     if (!eth) {
@@ -157,11 +162,10 @@ export default function CheckoutBox() {
       setStatus("connected");
     } catch (e: any) {
       setStatus("error");
-      setError(normalizeWeb3Error(e));
+      setError(normalizeEthersError(e));
     }
   }
 
-  // ✅ Ensure BSC is selected in MetaMask
   async function ensureBSC() {
     const eth = (window as any).ethereum;
     if (!eth) throw new Error("MetaMask not found");
@@ -177,13 +181,11 @@ export default function CheckoutBox() {
         params: [{ chainId: TARGET_CHAIN_ID_HEX }],
       });
     } catch (switchError: any) {
-      // 4902 = chain not added
       if (switchError?.code === 4902) {
         await eth.request({
           method: "wallet_addEthereumChain",
           params: [BSC_PARAMS],
         });
-
         await eth.request({
           method: "wallet_switchEthereumChain",
           params: [{ chainId: TARGET_CHAIN_ID_HEX }],
@@ -191,13 +193,40 @@ export default function CheckoutBox() {
       } else {
         throw switchError;
       }
+    } finally {
+      setStatus("connected");
     }
   }
 
-  // ✅ Payment flow (BSC USDT)
+  async function refreshBalances(tokenAddr?: string, tokenDecimals?: number) {
+    const eth = (window as any).ethereum;
+    if (!eth || !address) return;
+
+    const provider = new ethers.BrowserProvider(eth);
+    const bnb = await provider.getBalance(address);
+    setBnBWei(bnb);
+
+    const tAddr = tokenAddr || usdtAddress;
+    const tDec = typeof tokenDecimals === "number" ? tokenDecimals : usdtDecimals;
+
+    if (tAddr) {
+      const erc20 = new ethers.Contract(
+        tAddr,
+        ["function balanceOf(address) view returns (uint256)"],
+        provider
+      );
+      const bal: bigint = await erc20.balanceOf(address);
+      setUsdtRaw(bal);
+      setUsdtDecimals(tDec);
+      setUsdtAddress(tAddr);
+    }
+  }
+
+  // ✅ Full payment flow: create -> transfer -> confirm
   async function payUSDT(plan: "PRO" | "VIP") {
     setError("");
     setTxHash("");
+    setPaymentId("");
 
     const eth = (window as any).ethereum;
     if (!eth) {
@@ -215,86 +244,86 @@ export default function CheckoutBox() {
       // 0) switch network to BSC automatically
       await ensureBSC();
 
-      // double-check chain after switch
       const cidHex: string = await eth.request({ method: "eth_chainId" });
       const cidDec = parseInt(cidHex, 16);
       if (cidDec !== TARGET_CHAIN_ID_DEC) {
         throw new Error("Please switch MetaMask to BSC (BNB Chain) to pay with USDT.");
       }
 
-      setStatus("paying");
+      setStatus("creating");
 
       const provider = new ethers.BrowserProvider(eth);
       const signer = await provider.getSigner();
       const wallet = await signer.getAddress();
 
-      // 🔴 TEMP user_id (works for MVP)
-      // Later: create user in Supabase and map wallet -> users.id
-      const user_id = wallet;
-
-      // 1) backend provides token, merchant, amount (and optionally decimals/chain_id)
-      const res = await fetch(`${API_BASE}/api/checkout/start`, {
+      // 1) create payment on backend (creates payment_id in Supabase)
+      const res = await fetch(`${API_BASE}/api/checkout/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ plan, user_id, wallet }),
+        body: JSON.stringify({
+          wallet, // ✅ backend maps wallet -> users.id
+          plan_code: plan, // "PRO" | "VIP"
+          chain_id: TARGET_CHAIN_ID_DEC, // 56
+        }),
       });
 
       if (!res.ok) {
         const text = await res.text();
-        throw new Error(`checkout/start failed: ${text}`);
+        throw new Error(`checkout/create failed: ${text}`);
       }
 
       const data: {
+        payment_id: string;
+        chain_id: number;
         token_address: string;
-        merchant_address: string;
-        amount: string; // "9" or "29"
-        decimals?: number;
-        chain_id?: number;
+        to_address: string;
+        amount: string; // human: "1" / "9" / "29"
+        decimals: number; // token decimals
       } = await res.json();
 
-      // Safety: if backend sends chain_id, enforce it
-      if (typeof data.chain_id === "number" && data.chain_id !== TARGET_CHAIN_ID_DEC) {
-        throw new Error(`Wrong network. Please use BSC (56). Backend requested chain ${data.chain_id}.`);
+      setPaymentId(data.payment_id);
+      setUsdtAddress(data.token_address);
+      setUsdtDecimals(data.decimals);
+
+      // Update balances and do pre-checks
+      await refreshBalances(data.token_address, data.decimals);
+
+      const amountRaw = ethers.parseUnits(String(data.amount), data.decimals);
+
+      // Basic pre-checks
+      const bnbBal = await provider.getBalance(wallet);
+      if (bnbBal <= 0n) {
+        throw new Error("Not enough BNB for gas. Please add a small amount of BNB on BSC.");
       }
 
-      // 2) Prepare USDT contract with checks
-      const usdt = new ethers.Contract(data.token_address, ERC20_ABI, signer);
+      const usdt = new ethers.Contract(
+        data.token_address,
+        ["function balanceOf(address) view returns (uint256)", "function transfer(address to, uint256 amount) returns (bool)"],
+        signer
+      );
 
-      // Prefer token decimals from contract (more reliable than “18”)
-      const decimals: number =
-        typeof data.decimals === "number" ? data.decimals : Number(await usdt.decimals());
-
-      const amountWei = ethers.parseUnits(String(data.amount), decimals);
-
-      // ✅ Check token balance FIRST (avoid revert)
-      const tokenBal: bigint = (await usdt.balanceOf(wallet)) as bigint;
-      if (tokenBal < amountWei) {
-        const humanBal = ethers.formatUnits(tokenBal, decimals);
-        throw new Error(
-          `Not enough USDT on BSC. You have ${humanBal} USDT but need ${data.amount} USDT.`
-        );
+      const uBal: bigint = await usdt.balanceOf(wallet);
+      if (uBal < amountRaw) {
+        throw new Error("Not enough USDT for this payment. Please top up your USDT (BSC) balance.");
       }
 
-      // ✅ Check gas balance (BNB) — avoid “insufficient funds for gas”
-      const bnbBal: bigint = await provider.getBalance(wallet);
-      // Minimal threshold just for UX (you can tune this)
-      if (bnbBal === 0n) {
-        throw new Error("Not enough BNB for gas fees. Please add a small amount of BNB to your wallet.");
-      }
-
-      // 3) USDT transfer
-      const tx = await usdt.transfer(data.merchant_address, amountWei);
+      // 2) transfer USDT
+      setStatus("paying");
+      const tx = await usdt.transfer(data.to_address, amountRaw);
       setTxHash(tx.hash);
 
-      // 4) wait 1 confirmation
+      // 3) wait 1 confirmation
       setStatus("confirming");
       await tx.wait(1);
 
-      // 5) confirm to backend (backend verifies tx receipt + Transfer event)
+      // 4) confirm on backend (verifies receipt + Transfer event)
       const res2 = await fetch(`${API_BASE}/api/checkout/confirm`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tx_hash: tx.hash, user_id, plan }),
+        body: JSON.stringify({
+          payment_id: data.payment_id,
+          tx_hash: tx.hash,
+        }),
       });
 
       if (!res2.ok) {
@@ -302,10 +331,14 @@ export default function CheckoutBox() {
         throw new Error(`checkout/confirm failed: ${text}`);
       }
 
+      // Optional: you can read returned api_key/expires and show it
+      // const out = await res2.json();
+
       setStatus("success");
+      await refreshBalances(data.token_address, data.decimals);
     } catch (e: any) {
       setStatus("error");
-      setError(normalizeWeb3Error(e, { amount: plan === "PRO" ? "9" : "29", symbol: "USDT" }));
+      setError(normalizeEthersError(e));
     }
   }
 
@@ -313,6 +346,7 @@ export default function CheckoutBox() {
   const busy =
     status === "connecting" ||
     status === "switching" ||
+    status === "creating" ||
     status === "paying" ||
     status === "confirming";
 
@@ -323,8 +357,7 @@ export default function CheckoutBox() {
           <div className="kicker">Checkout</div>
           <div className="mt-1 text-xl font-black">MetaMask → USDT (BSC) → Activate plan</div>
           <div className="mt-2 muted text-sm">
-            Connect your wallet, choose a plan, and pay USDT on BSC. After confirmation, the backend activates your
-            subscription and generates/activates an API key.
+            Requirements: <b>USDT on BSC</b> for the plan + a small amount of <b>BNB</b> for gas.
           </div>
         </div>
 
@@ -336,17 +369,21 @@ export default function CheckoutBox() {
           <button className="btn" type="button" disabled={!connected || busy} onClick={() => payUSDT("PRO")}>
             {status === "switching"
               ? "Switching network…"
-              : status === "paying" || status === "confirming"
-                ? "Processing…"
-                : "Choose PRO ($9 / 30d)"}
+              : status === "creating"
+                ? "Creating payment…"
+                : status === "paying" || status === "confirming"
+                  ? "Processing…"
+                  : "Choose PRO ($ / 30d)"}
           </button>
 
           <button className="btn" type="button" disabled={!connected || busy} onClick={() => payUSDT("VIP")}>
             {status === "switching"
               ? "Switching network…"
-              : status === "paying" || status === "confirming"
-                ? "Processing…"
-                : "Choose VIP ($29 / 30d)"}
+              : status === "creating"
+                ? "Creating payment…"
+                : status === "paying" || status === "confirming"
+                  ? "Processing…"
+                  : "Choose VIP ($ / 30d)"}
           </button>
         </div>
       </div>
@@ -360,15 +397,23 @@ export default function CheckoutBox() {
               ? "Not connected"
               : status === "switching"
                 ? "Switching to BSC…"
-                : status === "paying"
-                  ? "Sending transaction…"
-                  : status === "confirming"
-                    ? "Confirming on-chain…"
-                    : status === "success"
-                      ? "Activated ✅"
-                      : "Connected"}
+                : status === "creating"
+                  ? "Creating payment…"
+                  : status === "paying"
+                    ? "Sending transaction…"
+                    : status === "confirming"
+                      ? "Confirming on-chain…"
+                      : status === "success"
+                        ? "Activated ✅"
+                        : "Connected"}
         </b>{" "}
         • Network: <b>{chainLabel}</b> • Address: <b>{connected ? shortAddr(address) : "—"}</b>
+        {paymentId ? (
+          <>
+            {" "}
+            • Payment: <b>{shortAddr(paymentId)}</b>
+          </>
+        ) : null}
         {txHash ? (
           <>
             {" "}
@@ -377,15 +422,45 @@ export default function CheckoutBox() {
         ) : null}
       </div>
 
+      {connected ? (
+        <div className="mt-3 grid md:grid-cols-2 gap-3">
+          <div className="card p-4">
+            <div className="kicker">Balances (BSC)</div>
+            <div className="mt-2 text-sm">
+              BNB (gas): <b>{fmt(bnBWei, 18, 6)}</b>
+              <br />
+              USDT: <b>{fmt(usdtRaw, usdtDecimals, 6)}</b>
+            </div>
+            <div className="mt-2 muted text-xs">
+              If USDT is 0, make sure you are on <b>BSC</b> and USDT token is present.
+            </div>
+            <div className="mt-3">
+              <button className="btn btnGhost text-sm" type="button" onClick={() => refreshBalances()}>
+                Refresh balances
+              </button>
+            </div>
+          </div>
+
+          <div className="card p-4">
+            <div className="kicker">Tips</div>
+            <div className="mt-2 muted text-sm leading-relaxed">
+              • You need <b>USDT (BSC)</b> to pay. <br />
+              • You need a bit of <b>BNB</b> for gas. <br />
+              • If MetaMask warns about wrong network, approve the switch to <b>BSC</b>.
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       {error ? (
-        <div className="mt-3" style={{ color: "rgba(255,120,120,0.95)", fontSize: 14, fontWeight: 700 }}>
+        <div className="mt-3" style={{ color: "rgba(255,120,120,0.95)", fontSize: 14, fontWeight: 800 }}>
           {error}
         </div>
       ) : null}
 
       {status === "success" ? (
-        <div className="mt-3" style={{ color: "rgba(14,203,129,0.95)", fontSize: 14, fontWeight: 800 }}>
-          Payment confirmed. Your plan is active.
+        <div className="mt-3" style={{ color: "rgba(14,203,129,0.95)", fontSize: 14, fontWeight: 900 }}>
+          Payment confirmed. Your plan is active. Open Dashboard to see your API key.
         </div>
       ) : null}
     </div>

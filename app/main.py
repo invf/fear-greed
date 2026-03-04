@@ -1,52 +1,68 @@
 # app/main.py
-# pip install -U pandas numpy ta fastapi uvicorn httpx supabase
+# pip install -U pandas numpy ta fastapi uvicorn httpx supabase web3
 import math
 import os
-from typing import Optional
+import secrets
+from decimal import Decimal
+from datetime import datetime, timezone, timedelta
+from typing import Optional, Dict, Any
 
 import httpx
 import numpy as np
 import pandas as pd
-
-from decimal import Decimal
-from datetime import timedelta
-import secrets
-
-from web3 import Web3
-from web3._utils.events import get_event_data
-
 from ta.momentum import RSIIndicator
 
 from fastapi import FastAPI, Query, HTTPException, Response, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 
-from datetime import datetime, timezone
 from supabase import create_client, Client
 
-# =========================
-# PAYMENTS (USDT + MetaMask)
-# =========================
+from web3 import Web3
+from web3._utils.events import get_event_data
+from pydantic import BaseModel, Field
 
-MERCHANT_ADDRESS = "0xe834d1940BC9A516a63d1C1a17BfD6F1deFB04f1"
+# ============================================================
+# APP
+# ============================================================
+app = FastAPI(title="Custom Fear & Greed Index")
 
-BSC_RPC = os.getenv("BSC_RPC_URL")
-w3 = Web3(Web3.HTTPProvider(BSC_RPC))
-
-USDT_ADDRESS = Web3.to_checksum_address(
-    "0x55d398326f99059fF775485246999027B3197955"
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # prod: set your site + extension origin(s)
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-TRANSFER_TOPIC = w3.keccak(text="Transfer(address,address,uint256)").hex()
+# ============================================================
+# SUPABASE
+# ============================================================
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 
+supabase: Optional[Client] = None
+if SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY:
+    supabase = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+
+# ============================================================
+# CONSTS (FNG)
+# ============================================================
+BINANCE_SPOT = "https://api.binance.com"
+BINANCE_FAPI = "https://fapi.binance.com"  # USDT-M Futures
+VALID_TF = {"15m", "1h", "4h", "1d"}
+
+# ============================================================
+# PAYMENTS (BSC USDT) — адаптовано під вашу таблицю payments
+# ============================================================
+# REQUIRED ENVS:
+#   RECEIVE_WALLET="0x..." (туди приймаємо USDT)
+#   RPC_56="https://..." (BSC rpc)
+#   USDT_56="0x55d398..." (BSC USDT contract)
 RECEIVE_WALLET = os.getenv("RECEIVE_WALLET", "")
-RPC_56 = os.getenv("RPC_56", "")         # BSC
-RPC_42161 = os.getenv("RPC_42161", "")   # Arbitrum
+RPC_56 = os.getenv("RPC_56", "")  # BSC
+USDT_56 = os.getenv("USDT_56", "0x55d398326f99059fF775485246999027B3197955")  # default BSC USDT
 
-USDT_56 = os.getenv("USDT_56", "")           # USDT contract on BSC
-USDT_42161 = os.getenv("USDT_42161", "")     # USDT contract on Arbitrum
-
-SUPPORTED_CHAINS = {56, 42161}
+SUPPORTED_CHAINS = {56}
 
 ERC20_TRANSFER_ABI = {
     "anonymous": False,
@@ -65,17 +81,20 @@ TRANSFER_TOPIC = Web3.keccak(text="Transfer(address,address,uint256)").hex()
 def _w3(chain_id: int) -> Web3:
     if chain_id == 56 and RPC_56:
         return Web3(Web3.HTTPProvider(RPC_56))
-    if chain_id == 42161 and RPC_42161:
-        return Web3(Web3.HTTPProvider(RPC_42161))
     raise HTTPException(status_code=400, detail=f"Unsupported chain_id={chain_id} or missing RPC env")
 
 
 def _usdt_address(chain_id: int) -> str:
-    if chain_id == 56 and USDT_56:
+    if chain_id == 56:
         return Web3.to_checksum_address(USDT_56)
-    if chain_id == 42161 and USDT_42161:
-        return Web3.to_checksum_address(USDT_42161)
     raise HTTPException(status_code=400, detail=f"Missing USDT env for chain_id={chain_id}")
+
+
+def _usdt_decimals(chain_id: int) -> int:
+    # BSC “USDT” (0x55d3...) uses 18 decimals on BSC
+    if chain_id == 56:
+        return 18
+    return 6
 
 
 def _receive_wallet() -> str:
@@ -87,57 +106,9 @@ def _receive_wallet() -> str:
 def _gen_api_key() -> str:
     return "fg_" + secrets.token_urlsafe(32)
 
-# =========================
-# APP
-# =========================
-app = FastAPI(title="Custom Fear & Greed Index")
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # prod: set your extension origin(s)
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# =========================
-# SUPABASE
-# =========================
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
-
-supabase: Optional[Client] = None
-if SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY:
-    supabase = create_client(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
-
-
-# =========================
-# CONSTS
-# =========================
-BINANCE_SPOT = "https://api.binance.com"
-BINANCE_FAPI = "https://fapi.binance.com"  # USDT-M Futures
-VALID_TF = {"15m", "1h", "4h", "1d"}
-
-
-# =========================
-# UTILS
-# =========================
 def ts_iso_now() -> str:
     return datetime.now(timezone.utc).isoformat()
-
-
-def percentile(series_or_array, x) -> float:
-    """Percentile: share of values <= x."""
-    arr = np.asarray(series_or_array, dtype=float)
-    if arr.size == 0:
-        return 0.5
-    if isinstance(x, float) and (math.isnan(x) or math.isinf(x)):
-        return 0.5
-    return float(np.mean(arr <= x))
-
-
-def tf_to_oi_period(tf: str) -> str:
-    """Binance OI period options: 5m,15m,30m,1h,2h,4h,6h,12h,1d"""
-    return {"15m": "15m", "1h": "1h", "4h": "4h", "1d": "1d"}[tf]
 
 
 def _sb_data(x):
@@ -149,9 +120,43 @@ def _sb_data(x):
     return x
 
 
-# =========================
-# SUPABASE GATING HELPERS
-# =========================
+# ============================================================
+# USERS helper: map wallet -> users.id
+# IMPORTANT:
+#   This assumes you have column: users.wallet_address (text) UNIQUE
+#   If you don't have it yet — add it, OR change this function to your auth logic.
+# ============================================================
+def get_or_create_user_by_wallet(wallet: str) -> str:
+    if not supabase:
+        raise HTTPException(status_code=500, detail="Supabase not configured")
+
+    if not wallet or not isinstance(wallet, str) or not wallet.startswith("0x"):
+        raise HTTPException(status_code=400, detail="Invalid wallet address")
+
+    # ✅ normalize (avoid duplicates by case)
+    wallet_norm = wallet.strip().lower()
+
+    q = (
+        supabase.table("users")
+        .select("id,wallet_address")
+        .eq("wallet_address", wallet_norm)
+        .limit(1)
+        .execute()
+    )
+    row = _sb_data(q.data)
+    if row and row.get("id"):
+        return row["id"]
+
+    ins = supabase.table("users").insert({"wallet_address": wallet_norm}).execute()
+    new_row = _sb_data(ins.data)
+    if not new_row or not new_row.get("id"):
+        raise HTTPException(status_code=500, detail="Failed to create user for wallet")
+    return new_row["id"]
+
+
+# ============================================================
+# SUPABASE gating helpers (existing)
+# ============================================================
 def validate_api_key_with_supabase(api_key: str) -> dict:
     """
     Calls RPC validate_api_key(p_key text) and returns normalized dict:
@@ -170,7 +175,6 @@ def validate_api_key_with_supabase(api_key: str) -> dict:
     if not data:
         return {"valid": False, "plan": "FREE", "status": "invalid"}
 
-    # Normalize minimal fields if RPC returns partial shape
     if "valid" not in data:
         data["valid"] = True
     if "plan" not in data:
@@ -184,12 +188,8 @@ def consume_pair_access_or_raise(install_id: str, api_key: str, symbol: str) -> 
     """
     Calls RPC consume_pair_access(...) and returns its dict.
     Raises 402 if not ok.
-
-    Expected RPC return example:
-      { ok: true, plan: "FREE", valid: false, limit: 10, used: 3, remaining: 7, day: "2026-02-20", ... }
     """
     if not supabase:
-        # Backend not configured -> allow, but no quota info
         return {
             "ok": True,
             "valid": False,
@@ -210,7 +210,6 @@ def consume_pair_access_or_raise(install_id: str, api_key: str, symbol: str) -> 
     ).execute()
 
     data = _sb_data(res.data) or {}
-
     if not isinstance(data, dict):
         data = {"ok": False, "status": "bad_rpc_payload", "raw": data}
 
@@ -220,11 +219,10 @@ def consume_pair_access_or_raise(install_id: str, api_key: str, symbol: str) -> 
     return data
 
 
-# =========================
-# DATA FETCHERS
-# =========================
+# ============================================================
+# DATA FETCHERS (FNG)
+# ============================================================
 def klines(symbol="SOLUSDT", interval="1d", limit=500) -> pd.DataFrame:
-    """Spot klines (price + volume)."""
     params = {"symbol": symbol, "interval": interval, "limit": min(limit, 1000)}
     with httpx.Client(timeout=20) as client:
         r = client.get(f"{BINANCE_SPOT}/api/v3/klines", params=params)
@@ -245,7 +243,6 @@ def klines(symbol="SOLUSDT", interval="1d", limit=500) -> pd.DataFrame:
 
 
 def get_funding_now(symbol="SOLUSDT") -> float:
-    """Latest funding rate (USDT-M Futures)."""
     with httpx.Client(timeout=15) as client:
         r = client.get(f"{BINANCE_FAPI}/fapi/v1/premiumIndex", params={"symbol": symbol})
         r.raise_for_status()
@@ -265,7 +262,6 @@ def get_funding_hist(symbol="SOLUSDT", limit=500) -> np.ndarray:
 
 
 def get_oi_hist(symbol="SOLUSDT", period="1d", limit=200) -> pd.DataFrame:
-    """Open Interest history (USDT-M Futures)."""
     with httpx.Client(timeout=20) as client:
         r = client.get(
             f"{BINANCE_FAPI}/futures/data/openInterestHist",
@@ -284,11 +280,23 @@ def get_oi_hist(symbol="SOLUSDT", period="1d", limit=200) -> pd.DataFrame:
     return df
 
 
-# =========================
-# SCORES
-# =========================
+def percentile(series_or_array, x) -> float:
+    arr = np.asarray(series_or_array, dtype=float)
+    if arr.size == 0:
+        return 0.5
+    if isinstance(x, float) and (math.isnan(x) or math.isinf(x)):
+        return 0.5
+    return float(np.mean(arr <= x))
+
+
+def tf_to_oi_period(tf: str) -> str:
+    return {"15m": "15m", "1h": "1h", "4h": "4h", "1d": "1d"}[tf]
+
+
+# ============================================================
+# SCORES (FNG)
+# ============================================================
 def compute_base_scores(df: pd.DataFrame) -> dict:
-    """RSI / Momentum / Volatility / Volume anomaly"""
     rsi_series = RSIIndicator(df["c"], window=14).rsi()
     rsi = float(rsi_series.iloc[-1])
     score_rsi = float(np.clip((rsi - 30.0) / 40.0 * 100.0, 0, 100))
@@ -359,9 +367,9 @@ def compute_oi_score(symbol="SOLUSDT", tf="1d") -> dict:
     }
 
 
-# =========================
-# MAIN INDEX
-# =========================
+# ============================================================
+# MAIN INDEX (FNG)
+# ============================================================
 def compute_fng(symbol="SOLUSDT", tf="1d") -> tuple[float, str, dict]:
     df = klines(symbol=symbol, interval=tf, limit=500)
     base = compute_base_scores(df)
@@ -428,70 +436,16 @@ def compute_fng(symbol="SOLUSDT", tf="1d") -> tuple[float, str, dict]:
     return fng, label, components
 
 
-# =========================
-# SVG QUAD GAUGES (optional)
-# =========================
-def make_gauge(cx, cy, r, value, label, tf):
-    angle = 180 - (value / 100) * 180
-    radians = math.radians(angle)
-    x = cx + r * math.cos(radians)
-    y = cy - r * math.sin(radians)
-
-    return f"""
-    <g>
-      <path d="M{cx - r} {cy} A{r} {r} 0 0 1 {cx + r} {cy}"
-            fill="none" stroke="lightgray" stroke-width="12"/>
-      <path d="M{cx - r} {cy} A{r} {r} 0 0 1 {cx + r} {cy}"
-            fill="none" stroke="url(#grad)" stroke-width="12"/>
-      <line x1="{cx}" y1="{cy}" x2="{x}" y2="{y}" stroke="black" stroke-width="5"/>
-      <circle cx="{cx}" cy="{cy}" r="6" fill="black"/>
-      <text x="{cx}" y="{cy - 60}" font-size="38" text-anchor="middle" fill="black">{value:.1f}</text>
-      <text x="{cx}" y="{cy - 140}" font-size="22" text-anchor="middle" fill="black">{label}</text>
-      <text x="{cx}" y="{cy + 40}" font-size="22" fill="gray" text-anchor="middle">{tf}</text>
-    </g>
-    """
-
-
-@app.get("/api/fng/quad")
-async def fng_quad(symbol: str = "BTCUSDT"):
-    tfs = ["15m", "1h", "4h", "1d"]
-    values = {}
-
-    async with httpx.AsyncClient(timeout=10.0) as client:
-        for tf in tfs:
-            try:
-                v, lbl, _ = compute_fng(symbol=symbol, tf=tf)
-                values[tf] = {"value": float(v), "label": lbl}
-            except Exception:
-                values[tf] = {"value": 50.0, "label": "Neutral"}
-
-    svg = f"""
-    <svg width="800" height="800" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="grad">
-          <stop offset="0%" stop-color="red"/>
-          <stop offset="50%" stop-color="yellow"/>
-          <stop offset="100%" stop-color="green"/>
-        </linearGradient>
-      </defs>
-      {make_gauge(250, 250, 120, values["15m"]["value"], values["15m"]["label"], "15m")}
-      {make_gauge(550, 250, 120, values["1h"]["value"], values["1h"]["label"], "1h")}
-      {make_gauge(250, 600, 120, values["4h"]["value"], values["4h"]["label"], "4h")}
-      {make_gauge(550, 600, 120, values["1d"]["value"], values["1d"]["label"], "1d")}
-    </svg>
-    """
-    return Response(content=svg, media_type="image/svg+xml")
-
-
-# =========================
+# ============================================================
 # ROUTES
-# =========================
+# ============================================================
 @app.get("/", response_class=HTMLResponse)
 def root():
     return """
     <h1>Custom Fear & Greed Index</h1>
     <p>Try: <a href="/api/fng?symbol=SOLUSDT&tf=1d">/api/fng?symbol=SOLUSDT&tf=1d</a></p>
-    <p>Validate key: <a href="/docs">/docs</a> then GET /api/validate-key with X-Api-Key</p>
+    <p>Validate key: GET /api/validate-key with X-Api-Key</p>
+    <p>Checkout: POST /api/checkout/create, POST /api/checkout/confirm</p>
     """
 
 
@@ -502,9 +456,6 @@ def health():
 
 @app.get("/api/validate-key")
 def validate_key(request: Request):
-    """
-    Reads X-Api-Key header and validates via Supabase RPC validate_api_key(p_key text)
-    """
     api_key = (request.headers.get("X-Api-Key") or "").strip()
     try:
         data = validate_api_key_with_supabase(api_key)
@@ -524,11 +475,9 @@ def fng(
 
     install_id = (request.headers.get("X-Install-Id") or "").strip()
     api_key = (request.headers.get("X-Api-Key") or "").strip()
-
     if not install_id:
         raise HTTPException(status_code=400, detail="Missing X-Install-Id")
 
-    # ---- GATE + QUOTA META
     try:
         quota = consume_pair_access_or_raise(install_id=install_id, api_key=api_key, symbol=symbol)
     except HTTPException:
@@ -536,7 +485,6 @@ def fng(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-    # ---- Compute
     try:
         value, label, comps = compute_fng(symbol=symbol, tf=tf)
         return {
@@ -553,8 +501,6 @@ def fng(
                 "oi": round(comps["scores"]["oi"], 2),
             },
             "updatedAt": ts_iso_now(),
-
-            # ✅ QUOTA META for extension UI
             "ok": True,
             "status": quota.get("status", "ok"),
             "plan": quota.get("plan", "FREE"),
@@ -582,7 +528,6 @@ def fng_components(
     if not install_id:
         raise HTTPException(status_code=400, detail="Missing X-Install-Id")
 
-    # Gate here too (so components isn't a bypass)
     try:
         quota = consume_pair_access_or_raise(install_id=install_id, api_key=api_key, symbol=symbol)
     except HTTPException:
@@ -601,8 +546,6 @@ def fng_components(
             "scores": comps["scores"],
             "raw": comps["raw"],
             "updatedAt": ts_iso_now(),
-
-            # ✅ QUOTA META
             "ok": True,
             "status": quota.get("status", "ok"),
             "plan": quota.get("plan", "FREE"),
@@ -615,76 +558,29 @@ def fng_components(
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
 
-from pydantic import BaseModel, Field
 
+# ============================================================
+# CHECKOUT API
+# ============================================================
 class CheckoutCreateIn(BaseModel):
-    user_id: str
-    plan_code: str = Field(pattern="^(free|pro|vip|FREE|PRO|VIP)$")
+    wallet: str
+    plan_code: str = Field(pattern="^(pro|vip|PRO|VIP)$")
     chain_id: int
+
 
 class CheckoutCreateOut(BaseModel):
-    payment_id: str
+    payment_id: int  # bigserial
     chain_id: int
     token_address: str
-    to_address: str
+    to_address: str  # receiver_address in DB
     amount: str
     decimals: int
 
 
-@app.post("/api/checkout/create", response_model=CheckoutCreateOut)
-def checkout_create(payload: CheckoutCreateIn):
-    if not supabase:
-        raise HTTPException(status_code=500, detail="Supabase not configured")
-
-    plan_code = payload.plan_code.lower()
-    if plan_code == "free":
-        raise HTTPException(status_code=400, detail="Free plan doesn't require payment")
-
-    if payload.chain_id not in SUPPORTED_CHAINS:
-        raise HTTPException(status_code=400, detail="Unsupported chain")
-
-    # price береться з plans.price_usd
-    plan_row = supabase.table("plans").select("code,price_usd").eq("code", plan_code).limit(1).execute()
-    plan_data = _sb_data(plan_row.data)
-    if not plan_data:
-        raise HTTPException(status_code=404, detail="Plan not found in plans table")
-
-    amount = str(plan_data["price_usd"])
-    decimals = 6  # USDT (store as constant, or store in DB)
-
-    token_addr = _usdt_address(payload.chain_id)
-    to_addr = _receive_wallet()
-
-    # create payment record (pending)
-    ins = supabase.table("payments").insert({
-        "user_id": payload.user_id,
-        "plan_code": plan_code,
-        "chain_id": payload.chain_id,
-        "token_address": token_addr,
-        "to_address": to_addr,
-        "amount": Decimal(amount),
-        "decimals": decimals,
-        "status": "pending",
-        "period_days": 30
-    }).execute()
-
-    row = _sb_data(ins.data)
-    if not row:
-        raise HTTPException(status_code=500, detail="Failed to create payment")
-
-    return CheckoutCreateOut(
-        payment_id=row["id"],
-        chain_id=payload.chain_id,
-        token_address=token_addr,
-        to_address=to_addr,
-        amount=amount,
-        decimals=decimals
-    )
-
-
 class CheckoutConfirmIn(BaseModel):
-    payment_id: str
+    payment_id: int
     tx_hash: str
+
 
 class CheckoutConfirmOut(BaseModel):
     ok: bool
@@ -693,7 +589,75 @@ class CheckoutConfirmOut(BaseModel):
     api_key: str
 
 
-def _verify_usdt_transfer(chain_id: int, tx_hash: str, token_addr: str, to_addr: str, amount_human: Decimal, decimals: int) -> str:
+def _pending_tx_placeholder() -> str:
+    # щоб пройти NOT NULL tx_hash + unique(chain_id, tx_hash)
+    return "pending_" + secrets.token_hex(24)
+
+
+@app.post("/api/checkout/create", response_model=CheckoutCreateOut)
+def checkout_create(payload: CheckoutCreateIn):
+    if not supabase:
+        raise HTTPException(status_code=500, detail="Supabase not configured")
+
+    plan_code = payload.plan_code.lower()
+    if plan_code not in ("pro", "vip"):
+        raise HTTPException(status_code=400, detail="Invalid plan_code")
+
+    if payload.chain_id not in SUPPORTED_CHAINS:
+        raise HTTPException(status_code=400, detail="Unsupported chain_id")
+
+    # 1) user by wallet
+    user_id = get_or_create_user_by_wallet(payload.wallet)
+
+    # 2) get plan price from plans.price_usd
+    plan_row = supabase.table("plans").select("code,price_usd").eq("code", plan_code).limit(1).execute()
+    plan_data = _sb_data(plan_row.data)
+    if not plan_data:
+        raise HTTPException(status_code=404, detail="Plan not found in plans table")
+
+    amount = str(plan_data["price_usd"])
+    token_addr = _usdt_address(payload.chain_id)
+    receiver = _receive_wallet()
+    decimals = _usdt_decimals(payload.chain_id)
+
+    placeholder_tx = _pending_tx_placeholder()
+
+    # 3) insert pending payment into your table schema
+    ins = supabase.table("payments").insert({
+        "user_id": user_id,
+        "plan_code": plan_code,
+        "chain_id": payload.chain_id,
+        "token_address": token_addr,
+        "tx_hash": placeholder_tx,           # ✅ NOT NULL + unique(chain_id, tx_hash)
+        "payer_address": None,
+        "receiver_address": receiver,
+        "amount": Decimal(amount),
+        "decimals": int(decimals),
+        "status": "pending",
+    }).execute()
+
+    row = _sb_data(ins.data)
+    if not row or not row.get("id"):
+        raise HTTPException(status_code=500, detail="Failed to create payment")
+
+    return CheckoutCreateOut(
+        payment_id=int(row["id"]),
+        chain_id=payload.chain_id,
+        token_address=token_addr,
+        to_address=receiver,
+        amount=amount,
+        decimals=int(decimals),
+    )
+
+
+def _verify_usdt_transfer(
+    chain_id: int,
+    tx_hash: str,
+    token_addr: str,
+    to_addr: str,
+    amount_human: Decimal,
+    decimals: int
+) -> str:
     web3 = _w3(chain_id)
 
     receipt = web3.eth.get_transaction_receipt(tx_hash)
@@ -705,7 +669,6 @@ def _verify_usdt_transfer(chain_id: int, tx_hash: str, token_addr: str, to_addr:
 
     token_addr = Web3.to_checksum_address(token_addr)
     to_addr = Web3.to_checksum_address(to_addr)
-
     expected_value = int(amount_human * (10 ** decimals))
 
     for log in receipt["logs"]:
@@ -734,66 +697,100 @@ def checkout_confirm(payload: CheckoutConfirmIn):
     if not tx_hash.startswith("0x"):
         raise HTTPException(status_code=400, detail="Invalid tx_hash")
 
-    # load payment
+    # 1) load payment
     p_res = supabase.table("payments").select("*").eq("id", payload.payment_id).limit(1).execute()
     pay = _sb_data(p_res.data)
     if not pay:
         raise HTTPException(status_code=404, detail="payment_id not found")
 
-    if pay["status"] == "confirmed":
+    status = str(pay.get("status", "")).lower()
+    if status == "confirmed":
         # already confirmed -> return current state
         user_id = pay["user_id"]
-        sub = _sb_data(supabase.table("subscriptions").select("plan,expires_at").eq("user_id", user_id).limit(1).execute().data) or {}
-        key = _sb_data(supabase.table("api_keys").select("api_key").eq("user_id", user_id).eq("revoked", False).eq("is_active", True).order("created_at", desc=True).limit(1).execute().data) or {}
-        return CheckoutConfirmOut(ok=True, plan=str(sub.get("plan","free")).upper(), expires_at=str(sub.get("expires_at","")), api_key=str(key.get("api_key","")))
+        sub = _sb_data(
+            supabase.table("subscriptions").select("plan,expires_at").eq("user_id", user_id).limit(1).execute().data
+        ) or {}
+        key = _sb_data(
+            supabase.table("api_keys")
+            .select("api_key")
+            .eq("user_id", user_id)
+            .eq("revoked", False)
+            .eq("is_active", True)
+            .order("created_at", desc=True)
+            .limit(1)
+            .execute().data
+        ) or {}
+        return CheckoutConfirmOut(
+            ok=True,
+            plan=str(sub.get("plan", "free")).upper(),
+            expires_at=str(sub.get("expires_at", "")),
+            api_key=str(key.get("api_key", "")),
+        )
 
     chain_id = int(pay["chain_id"])
-    token_addr = pay["token_address"]
-    to_addr = pay["to_address"]
+    token_addr = str(pay["token_address"])
+    receiver = str(pay["receiver_address"])
     amount = Decimal(str(pay["amount"]))
-    decimals = int(pay.get("decimals", 6))
+    decimals = int(pay.get("decimals", _usdt_decimals(chain_id)))
     plan_code = str(pay["plan_code"]).lower()
     user_id = pay["user_id"]
-    period_days = int(pay.get("period_days", 30))
 
-    payer = _verify_usdt_transfer(chain_id, tx_hash, token_addr, to_addr, amount, decimals)
+    # 2) verify on-chain Transfer(to=receiver, amount)
+    payer = _verify_usdt_transfer(chain_id, tx_hash, token_addr, receiver, amount, decimals)
 
-    # mark payment confirmed
+    # 3) mark payment confirmed + granted window
+    now = datetime.now(timezone.utc)
+    granted_from = now
+    granted_to = now + timedelta(days=30)
+
+    # IMPORTANT: tx_hash in DB currently is placeholder; we replace it with real tx_hash
+    # Your table has unique(chain_id, tx_hash), so if same tx already confirmed elsewhere -> update will fail,
+    # which is correct behavior.
     supabase.table("payments").update({
         "status": "confirmed",
         "tx_hash": tx_hash,
-        "from_address": payer,
-        "confirmed_at": ts_iso_now()
+        "payer_address": payer,
+        "confirmed_at": ts_iso_now(),
+        "granted_from": granted_from.isoformat(),
+        "granted_to": granted_to.isoformat(),
     }).eq("id", payload.payment_id).execute()
 
-    # extend subscription (30 days)
+    # 4) extend subscription (unique user_id)
     sub_res = supabase.table("subscriptions").select("expires_at").eq("user_id", user_id).limit(1).execute()
     sub = _sb_data(sub_res.data)
 
-    now = datetime.now(timezone.utc)
     base = now
     if sub and sub.get("expires_at"):
         try:
-            cur_exp = datetime.fromisoformat(sub["expires_at"].replace("Z","+00:00"))
+            cur_exp = datetime.fromisoformat(str(sub["expires_at"]).replace("Z", "+00:00"))
             if cur_exp > base:
                 base = cur_exp
         except Exception:
             pass
 
-    new_expires = base + timedelta(days=period_days)
+    new_expires = base + timedelta(days=30)
 
-    # upsert subscription (unique user_id)
     supabase.table("subscriptions").upsert({
         "user_id": user_id,
         "plan": plan_code,
         "status": "active",
-        "expires_at": new_expires.isoformat()
+        "expires_at": new_expires.isoformat(),
     }, on_conflict="user_id").execute()
 
-    # ensure API key exists
-    k_res = supabase.table("api_keys").select("api_key").eq("user_id", user_id).eq("revoked", False).eq("is_active", True).order("created_at", desc=True).limit(1).execute()
+    # 5) ensure API key exists
+    k_res = (
+        supabase.table("api_keys")
+        .select("api_key")
+        .eq("user_id", user_id)
+        .eq("revoked", False)
+        .eq("is_active", True)
+        .order("created_at", desc=True)
+        .limit(1)
+        .execute()
+    )
     keyrow = _sb_data(k_res.data)
-    if keyrow:
+
+    if keyrow and keyrow.get("api_key"):
         api_key = keyrow["api_key"]
     else:
         api_key = _gen_api_key()
@@ -803,7 +800,7 @@ def checkout_confirm(payload: CheckoutConfirmIn):
             "revoked": False,
             "is_active": True,
             "label": "main",
-            "created_at": ts_iso_now()
+            "created_at": ts_iso_now(),
         }).execute()
 
     return CheckoutConfirmOut(
@@ -812,84 +809,3 @@ def checkout_confirm(payload: CheckoutConfirmIn):
         expires_at=new_expires.isoformat(),
         api_key=api_key
     )
-@app.post("/api/checkout/start")
-def checkout_start(payload: dict):
-    plan = payload.get("plan")
-    user_id = payload.get("user_id")
-    wallet = payload.get("wallet")
-
-    if plan not in ["PRO", "VIP"]:
-        raise HTTPException(status_code=400, detail="Invalid plan")
-
-    amount = "1" if plan == "PRO" else "29"
-
-    return {
-        "plan": plan,
-        "chain_id": 56,
-        "token_address": USDT_ADDRESS,
-        "merchant_address": MERCHANT_ADDRESS,
-        "amount": amount
-    }
-@app.post("/api/checkout/confirm")
-def checkout_confirm(payload: dict):
-    tx_hash = payload.get("tx_hash")
-    user_id = payload.get("user_id")
-    plan = payload.get("plan")
-
-    receipt = w3.eth.get_transaction_receipt(tx_hash)
-
-    if receipt.status != 1:
-        raise HTTPException(status_code=400, detail="Transaction failed")
-
-    found = False
-    payer = None
-    amount_raw = None
-
-    for log in receipt.logs:
-        if log["address"].lower() == USDT_ADDRESS.lower() and log["topics"][0].hex() == TRANSFER_TOPIC:
-            from_addr = "0x" + log["topics"][1].hex()[-40:]
-            to_addr = "0x" + log["topics"][2].hex()[-40:]
-            value = int(log["data"], 16)
-
-            if Web3.to_checksum_address(to_addr) == MERCHANT_ADDRESS:
-                found = True
-                payer = Web3.to_checksum_address(from_addr)
-                amount_raw = str(value)
-
-    if not found:
-        raise HTTPException(status_code=400, detail="Payment not found")
-
-    # 🔹 Запис платежу
-    supabase.table("payments").insert({
-        "user_id": user_id,
-        "plan": plan,
-        "chain_id": 56,
-        "token_address": USDT_ADDRESS,
-        "merchant_address": MERCHANT_ADDRESS,
-        "payer_address": payer,
-        "amount_raw": amount_raw,
-        "tx_hash": tx_hash,
-        "status": "confirmed"
-    }).execute()
-
-    # 🔹 Активація підписки
-    expires = datetime.now(timezone.utc) + timedelta(days=30)
-
-    supabase.table("subscriptions").upsert({
-        "user_id": user_id,
-        "plan": plan,
-        "status": "active",
-        "expires_at": expires.isoformat()
-    }).execute()
-
-    # 🔹 Генерація API key якщо немає
-    key = secrets.token_hex(32)
-
-    supabase.table("api_keys").insert({
-        "user_id": user_id,
-        "api_key": key,
-        "is_active": True,
-        "revoked": False
-    }).execute()
-
-    return {"success": True, "api_key": key}
