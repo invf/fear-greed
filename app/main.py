@@ -821,7 +821,7 @@ def checkout_start(payload: dict):
     if plan not in ["PRO", "VIP"]:
         raise HTTPException(status_code=400, detail="Invalid plan")
 
-    amount = "9" if plan == "PRO" else "29"
+    amount = "1" if plan == "PRO" else "29"
 
     return {
         "plan": plan,
