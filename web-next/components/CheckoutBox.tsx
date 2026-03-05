@@ -96,6 +96,41 @@ type ConfirmOut = {
   api_key: string;
 };
 
+function formatExpireDate(iso: string) {
+  if (!iso) return "—";
+
+  try {
+    const d = new Date(iso);
+
+    return d.toLocaleString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  } catch {
+    return iso;
+  }
+}
+
+function calcDaysLeft(iso: string) {
+  if (!iso) return 0;
+
+  try {
+    const ms = new Date(iso).getTime() - Date.now();
+    return Math.max(0, Math.floor(ms / 86400000));
+  } catch {
+    return 0;
+  }
+}
+
+function daysColor(days: number) {
+  if (days <= 1) return "#ff4d4f";
+  if (days <= 7) return "#faad14";
+  return "#3fb950";
+}
+
 function computeDaysLeft(expiresAtIso: string): number | null {
   try {
     if (!expiresAtIso) return null;
@@ -510,13 +545,17 @@ export default function CheckoutBox() {
           <div className="mt-2 text-sm">
             Plan: <b>{planOut || "—"}</b>
             <br />
-            Expires: <b>{expiresAt || "—"}</b>
-            {typeof daysLeft === "number" ? (
-              <>
-                <br />
-                Days left: <b>{daysLeft}</b>
-              </>
-            ) : null}
+            Expires: <b>{formatExpireDate(expiresAt)}</b>
+            <br />
+            <span
+              style={{
+                color: daysColor(calcDaysLeft(expiresAt)),
+                fontWeight: 700,
+              }}
+            >
+              Days left: {calcDaysLeft(expiresAt)}
+            </span>
+
           </div>
 
           {willExpireSoon ? (

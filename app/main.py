@@ -1,11 +1,13 @@
 # app/main.py
 # pip install -U pandas numpy ta fastapi uvicorn httpx supabase web3 ta
+
 import math
 import os
 import secrets
+import time
 from decimal import Decimal
 from datetime import datetime, timezone, timedelta
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Tuple
 
 import httpx
 import numpy as np
@@ -22,6 +24,7 @@ from web3 import Web3
 from web3._utils.events import get_event_data
 from pydantic import BaseModel, Field
 
+
 # ============================================================
 # APP
 # ============================================================
@@ -32,6 +35,18 @@ app.add_middleware(
     allow_origins=["*"],  # prod: set your site + extension origin(s)
     allow_methods=["*"],
     allow_headers=["*"],
+)
+
+# ============================================================
+# HTTP CLIENT (GLOBAL)  ✅ IMPORTANT
+# ============================================================
+HTTP_TIMEOUT = httpx.Timeout(20.0, connect=10.0)
+HTTP_LIMITS = httpx.Limits(max_connections=25, max_keepalive_connections=15)
+HTTP_CLIENT = httpx.Client(
+    timeout=HTTP_TIMEOUT,
+    limits=HTTP_LIMITS,
+    headers={"User-Agent": "fear-greed/1.0"},
+    follow_redirects=True,
 )
 
 # ============================================================
@@ -54,10 +69,6 @@ VALID_TF = {"15m", "1h", "4h", "1d"}
 # ============================================================
 # PAYMENTS (BSC USDT)
 # ============================================================
-# REQUIRED ENVS:
-#   RECEIVE_WALLET="0x..." (туди приймаємо USDT)
-#   RPC_56="https://..." (BSC rpc)
-#   USDT_56="0x55d398..." (BSC USDT contract)
 RECEIVE_WALLET = os.getenv("RECEIVE_WALLET", "")
 RPC_56 = os.getenv("RPC_56", "")  # BSC
 USDT_56 = os.getenv("USDT_56", "0x55d398326f99059fF775485246999027B3197955")  # default BSC USDT
@@ -91,7 +102,6 @@ def _usdt_address(chain_id: int) -> str:
 
 
 def _usdt_decimals(chain_id: int) -> int:
-    # BSC “USDT” (0x55d3...) uses 18 decimals on BSC
     if chain_id == 56:
         return 18
     return 6
@@ -112,7 +122,6 @@ def ts_iso_now() -> str:
 
 
 def _sb_data(x):
-    """Supabase python client sometimes returns list or dict."""
     if x is None:
         return None
     if isinstance(x, list):
@@ -121,7 +130,34 @@ def _sb_data(x):
 
 
 # ============================================================
-# SUBSCRIPTIONS helpers (expiry -> effective plan)
+# RETRY HELPERS (Supabase/Network)
+# ============================================================
+def _with_retry(fn, tries: int = 3, base_delay: float = 0.25):
+    last = None
+    for i in range(tries):
+        try:
+            return fn()
+        except (httpx.ReadError, httpx.ConnectError, httpx.TimeoutException) as e:
+            last = e
+            time.sleep(base_delay * (i + 1))
+    raise last
+
+
+def _supabase_call(fn, tries: int = 3):
+    if not supabase:
+        raise HTTPException(status_code=500, detail="Supabase not configured")
+    try:
+        return _with_retry(fn, tries=tries, base_delay=0.35)
+    except (httpx.ReadError, httpx.ConnectError, httpx.TimeoutException) as e:
+        # IMPORTANT: return 503, not 500 (so extension doesn't "crash")
+        raise HTTPException(
+            status_code=503,
+            detail={"ok": False, "error": "supabase_unavailable", "message": str(e)},
+        )
+
+
+# ============================================================
+# SUBSCRIPTIONS helpers (expiry -> effective plan) + CACHE
 # ============================================================
 def _parse_iso_dt(x: Any) -> Optional[datetime]:
     if not x:
@@ -130,15 +166,23 @@ def _parse_iso_dt(x: Any) -> Optional[datetime]:
         s = str(x)
         if s.endswith("Z"):
             s = s.replace("Z", "+00:00")
-        return datetime.fromisoformat(s)
+        dt = datetime.fromisoformat(s)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt
     except Exception:
         return None
 
 
+# caches (in-memory per Render instance)
+_APIKEY_TO_UID: Dict[str, Tuple[float, Optional[str]]] = {}
+_UID_TO_SUBMETA: Dict[str, Tuple[float, Dict[str, Any]]] = {}
+
+CACHE_TTL_UID = 60   # seconds
+CACHE_TTL_SUB = 30   # seconds
+
+
 def resolve_user_id_from_api_key(api_key: str) -> Optional[str]:
-    """
-    Find user_id by api_key (active & not revoked).
-    """
     if not supabase:
         return None
 
@@ -146,28 +190,30 @@ def resolve_user_id_from_api_key(api_key: str) -> Optional[str]:
     if not k:
         return None
 
-    res = (
-        supabase.table("api_keys")
-        .select("user_id")
-        .eq("api_key", k)
-        .eq("revoked", False)
-        .eq("is_active", True)
-        .limit(1)
-        .execute()
-    )
+    now_ts = time.time()
+    hit = _APIKEY_TO_UID.get(k)
+    if hit and (now_ts - hit[0]) < CACHE_TTL_UID:
+        return hit[1]
+
+    def _do():
+        return (
+            supabase.table("api_keys")
+            .select("user_id")
+            .eq("api_key", k)
+            .eq("revoked", False)
+            .eq("is_active", True)
+            .limit(1)
+            .execute()
+        )
+
+    res = _supabase_call(_do)
     row = _sb_data(res.data)
-    if not row:
-        return None
-    return row.get("user_id")
+    uid = row.get("user_id") if row else None
+    _APIKEY_TO_UID[k] = (now_ts, uid)
+    return uid
 
 
 def get_subscription_meta(user_id: Optional[str]) -> Dict[str, Any]:
-    """
-    Returns:
-      {
-        plan_db, status, expires_at, active, days_left, will_expire_soon
-      }
-    """
     if not supabase or not user_id:
         return {
             "plan_db": "FREE",
@@ -178,16 +224,25 @@ def get_subscription_meta(user_id: Optional[str]) -> Dict[str, Any]:
             "will_expire_soon": False,
         }
 
-    res = (
-        supabase.table("subscriptions")
-        .select("plan,status,expires_at")
-        .eq("user_id", user_id)
-        .limit(1)
-        .execute()
-    )
+    now_ts = time.time()
+    hit = _UID_TO_SUBMETA.get(user_id)
+    if hit and (now_ts - hit[0]) < CACHE_TTL_SUB:
+        return hit[1]
+
+    def _do():
+        return (
+            supabase.table("subscriptions")
+            .select("plan,status,expires_at")
+            .eq("user_id", user_id)
+            .limit(1)
+            .execute()
+        )
+
+    res = _supabase_call(_do)
     sub = _sb_data(res.data)
+
     if not sub:
-        return {
+        meta = {
             "plan_db": "FREE",
             "status": "none",
             "expires_at": None,
@@ -195,9 +250,11 @@ def get_subscription_meta(user_id: Optional[str]) -> Dict[str, Any]:
             "days_left": None,
             "will_expire_soon": False,
         }
+        _UID_TO_SUBMETA[user_id] = (now_ts, meta)
+        return meta
 
-    plan_db = str(sub.get("plan") or "FREE")  # in DB: FREE/PRO/VIP
-    status = str(sub.get("status") or "active")
+    plan_db = str(sub.get("plan") or "FREE").upper()
+    status = str(sub.get("status") or "active").lower()
     exp_dt = _parse_iso_dt(sub.get("expires_at"))
 
     now = datetime.now(timezone.utc)
@@ -207,11 +264,10 @@ def get_subscription_meta(user_id: Optional[str]) -> Dict[str, Any]:
     will_expire_soon = False
     if exp_dt is not None:
         seconds_left = (exp_dt - now).total_seconds()
-        # ceil days
-        days_left = int((seconds_left + 86399) // 86400)
-        will_expire_soon = (days_left is not None) and (0 < days_left <= 3)
+        days_left = int((seconds_left + 86399) // 86400)  # ceil days
+        will_expire_soon = (0 < days_left <= 3)
 
-    return {
+    meta = {
         "plan_db": plan_db,
         "status": status,
         "expires_at": exp_dt.isoformat() if exp_dt else None,
@@ -220,11 +276,11 @@ def get_subscription_meta(user_id: Optional[str]) -> Dict[str, Any]:
         "will_expire_soon": bool(will_expire_soon),
     }
 
+    _UID_TO_SUBMETA[user_id] = (now_ts, meta)
+    return meta
+
 
 def effective_plan_from_meta(meta: Dict[str, Any]) -> str:
-    """
-    If subscription is not active -> FREE
-    """
     if meta.get("active"):
         return str(meta.get("plan_db") or "FREE").upper()
     return "FREE"
@@ -242,18 +298,24 @@ def get_or_create_user_by_wallet(wallet: str) -> str:
 
     wallet_norm = wallet.strip().lower()
 
-    q = (
-        supabase.table("users")
-        .select("id,wallet_address")
-        .eq("wallet_address", wallet_norm)
-        .limit(1)
-        .execute()
-    )
+    def _sel():
+        return (
+            supabase.table("users")
+            .select("id,wallet_address")
+            .eq("wallet_address", wallet_norm)
+            .limit(1)
+            .execute()
+        )
+
+    q = _supabase_call(_sel)
     row = _sb_data(q.data)
     if row and row.get("id"):
         return row["id"]
 
-    ins = supabase.table("users").insert({"wallet_address": wallet_norm}).execute()
+    def _ins():
+        return supabase.table("users").insert({"wallet_address": wallet_norm}).execute()
+
+    ins = _supabase_call(_ins)
     new_row = _sb_data(ins.data)
     if not new_row or not new_row.get("id"):
         raise HTTPException(status_code=500, detail="Failed to create user for wallet")
@@ -261,40 +323,9 @@ def get_or_create_user_by_wallet(wallet: str) -> str:
 
 
 # ============================================================
-# SUPABASE gating helpers (existing)
+# SUPABASE gating helpers
 # ============================================================
-def validate_api_key_with_supabase(api_key: str) -> dict:
-    """
-    Calls RPC validate_api_key(p_key text) and returns normalized dict:
-      { valid: bool, plan: "FREE"/"PRO"/"VIP"/..., status: "...", ... }
-    """
-    if not supabase:
-        return {"valid": False, "plan": "FREE", "status": "supabase_not_configured"}
-
-    api_key = (api_key or "").strip()
-    if not api_key:
-        return {"valid": False, "plan": "FREE", "status": "missing"}
-
-    res = supabase.rpc("validate_api_key", {"p_key": api_key}).execute()
-    data = _sb_data(res.data)
-
-    if not data:
-        return {"valid": False, "plan": "FREE", "status": "invalid"}
-
-    if "valid" not in data:
-        data["valid"] = True
-    if "plan" not in data:
-        data["plan"] = "PRO"
-    if "status" not in data:
-        data["status"] = "ok"
-    return data
-
-
 def consume_pair_access_or_raise(install_id: str, api_key: str, symbol: str) -> dict:
-    """
-    Calls RPC consume_pair_access(...) and returns its dict.
-    Raises 402 if not ok.
-    """
     if not supabase:
         return {
             "ok": True,
@@ -306,15 +337,17 @@ def consume_pair_access_or_raise(install_id: str, api_key: str, symbol: str) -> 
             "status": "supabase_not_configured",
         }
 
-    res = supabase.rpc(
-        "consume_pair_access",
-        {
-            "p_install_id": (install_id or "").strip(),
-            "p_api_key": (api_key or "").strip(),
-            "p_symbol": (symbol or "").strip(),
-        },
-    ).execute()
+    def _do():
+        return supabase.rpc(
+            "consume_pair_access",
+            {
+                "p_install_id": (install_id or "").strip(),
+                "p_api_key": (api_key or "").strip(),
+                "p_symbol": (symbol or "").strip(),
+            },
+        ).execute()
 
+    res = _supabase_call(_do)
     data = _sb_data(res.data) or {}
     if not isinstance(data, dict):
         data = {"ok": False, "status": "bad_rpc_payload", "raw": data}
@@ -326,14 +359,13 @@ def consume_pair_access_or_raise(install_id: str, api_key: str, symbol: str) -> 
 
 
 # ============================================================
-# DATA FETCHERS (FNG)
+# DATA FETCHERS (FNG)  ✅ uses global HTTP_CLIENT
 # ============================================================
 def klines(symbol="SOLUSDT", interval="1d", limit=500) -> pd.DataFrame:
     params = {"symbol": symbol, "interval": interval, "limit": min(limit, 1000)}
-    with httpx.Client(timeout=20) as client:
-        r = client.get(f"{BINANCE_SPOT}/api/v3/klines", params=params)
-        r.raise_for_status()
-        rows = r.json()
+    r = HTTP_CLIENT.get(f"{BINANCE_SPOT}/api/v3/klines", params=params)
+    r.raise_for_status()
+    rows = r.json()
 
     df = pd.DataFrame(
         rows,
@@ -349,32 +381,29 @@ def klines(symbol="SOLUSDT", interval="1d", limit=500) -> pd.DataFrame:
 
 
 def get_funding_now(symbol="SOLUSDT") -> float:
-    with httpx.Client(timeout=15) as client:
-        r = client.get(f"{BINANCE_FAPI}/fapi/v1/premiumIndex", params={"symbol": symbol})
-        r.raise_for_status()
-        data = r.json()
+    r = HTTP_CLIENT.get(f"{BINANCE_FAPI}/fapi/v1/premiumIndex", params={"symbol": symbol})
+    r.raise_for_status()
+    data = r.json()
     return float(data.get("lastFundingRate", 0.0))
 
 
 def get_funding_hist(symbol="SOLUSDT", limit=500) -> np.ndarray:
-    with httpx.Client(timeout=20) as client:
-        r = client.get(
-            f"{BINANCE_FAPI}/fapi/v1/fundingRate",
-            params={"symbol": symbol, "limit": min(limit, 1000)},
-        )
-        r.raise_for_status()
-        arr = r.json()
+    r = HTTP_CLIENT.get(
+        f"{BINANCE_FAPI}/fapi/v1/fundingRate",
+        params={"symbol": symbol, "limit": min(limit, 1000)},
+    )
+    r.raise_for_status()
+    arr = r.json()
     return np.array([float(x["fundingRate"]) for x in arr], dtype=float)
 
 
 def get_oi_hist(symbol="SOLUSDT", period="1d", limit=200) -> pd.DataFrame:
-    with httpx.Client(timeout=20) as client:
-        r = client.get(
-            f"{BINANCE_FAPI}/futures/data/openInterestHist",
-            params={"symbol": symbol, "period": period, "limit": min(limit, 500)},
-        )
-        r.raise_for_status()
-        arr = r.json()
+    r = HTTP_CLIENT.get(
+        f"{BINANCE_FAPI}/futures/data/openInterestHist",
+        params={"symbol": symbol, "period": period, "limit": min(limit, 500)},
+    )
+    r.raise_for_status()
+    arr = r.json()
 
     if isinstance(arr, dict) and "code" in arr:
         raise RuntimeError(f"Binance OI error: {arr}")
@@ -562,12 +591,6 @@ def health():
 
 @app.get("/api/validate-key")
 def validate_key(request: Request):
-    """
-    Returns effective plan based on subscription expiry:
-      - valid: api_key exists (active & not revoked)
-      - plan: FREE if expired
-      - expires_at/days_left/will_expire_soon: from subscriptions
-    """
     api_key = (request.headers.get("X-Api-Key") or "").strip()
     if not api_key:
         return {
@@ -619,7 +642,7 @@ def fng(
     if not install_id:
         raise HTTPException(status_code=400, detail="Missing X-Install-Id")
 
-    # Determine effective plan by expiry
+    # Determine effective plan by expiry (cached + retry-protected)
     user_id = resolve_user_id_from_api_key(api_key) if api_key else None
     meta = get_subscription_meta(user_id)
     plan_effective = effective_plan_from_meta(meta)
@@ -627,44 +650,35 @@ def fng(
     # If expired -> treat as FREE by giving empty api_key to quota RPC
     api_key_for_quota = api_key if plan_effective != "FREE" else ""
 
-    try:
-        quota = consume_pair_access_or_raise(install_id=install_id, api_key=api_key_for_quota, symbol=symbol)
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    quota = consume_pair_access_or_raise(install_id=install_id, api_key=api_key_for_quota, symbol=symbol)
 
-    try:
-        value, label, comps = compute_fng(symbol=symbol, tf=tf)
-        return {
-            "coin": symbol,
-            "tf": tf,
-            "value": round(value, 1),
-            "label": label,
-            "components": {
-                "rsi": round(comps["scores"]["rsi"], 2),
-                "mom": round(comps["scores"]["mom"], 2),
-                "vol": round(comps["scores"]["vol"], 2),
-                "volm": round(comps["scores"]["volm"], 2),
-                "funding": round(comps["scores"]["funding"], 2),
-                "oi": round(comps["scores"]["oi"], 2),
-            },
-            "updatedAt": ts_iso_now(),
-            "ok": True,
-            "status": quota.get("status", "ok"),
-            "plan": plan_effective,  # ✅ effective plan
-            "valid": bool(quota.get("valid", False)) if plan_effective != "FREE" else False,
-            "limit": quota.get("limit", None),
-            "used": quota.get("used", None),
-            "remaining": quota.get("remaining", None),
-            "day": quota.get("day", None),
-            # ✅ expiry meta for UI
-            "expires_at": meta.get("expires_at"),
-            "days_left": meta.get("days_left"),
-            "will_expire_soon": meta.get("will_expire_soon"),
-        }
-    except Exception as e:
-        return JSONResponse({"error": str(e)}, status_code=500)
+    value, label, comps = compute_fng(symbol=symbol, tf=tf)
+    return {
+        "coin": symbol,
+        "tf": tf,
+        "value": round(value, 1),
+        "label": label,
+        "components": {
+            "rsi": round(comps["scores"]["rsi"], 2),
+            "mom": round(comps["scores"]["mom"], 2),
+            "vol": round(comps["scores"]["vol"], 2),
+            "volm": round(comps["scores"]["volm"], 2),
+            "funding": round(comps["scores"]["funding"], 2),
+            "oi": round(comps["scores"]["oi"], 2),
+        },
+        "updatedAt": ts_iso_now(),
+        "ok": True,
+        "status": quota.get("status", "ok"),
+        "plan": plan_effective,
+        "valid": bool(quota.get("valid", False)) if plan_effective != "FREE" else False,
+        "limit": quota.get("limit", None),
+        "used": quota.get("used", None),
+        "remaining": quota.get("remaining", None),
+        "day": quota.get("day", None),
+        "expires_at": meta.get("expires_at"),
+        "days_left": meta.get("days_left"),
+        "will_expire_soon": meta.get("will_expire_soon"),
+    }
 
 
 @app.get("/api/fng-components")
@@ -681,49 +695,39 @@ def fng_components(
     if not install_id:
         raise HTTPException(status_code=400, detail="Missing X-Install-Id")
 
-    # Determine effective plan by expiry
     user_id = resolve_user_id_from_api_key(api_key) if api_key else None
     meta = get_subscription_meta(user_id)
     plan_effective = effective_plan_from_meta(meta)
     api_key_for_quota = api_key if plan_effective != "FREE" else ""
 
-    try:
-        quota = consume_pair_access_or_raise(install_id=install_id, api_key=api_key_for_quota, symbol=symbol)
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    quota = consume_pair_access_or_raise(install_id=install_id, api_key=api_key_for_quota, symbol=symbol)
 
-    try:
-        value, label, comps = compute_fng(symbol=symbol, tf=tf)
-        return {
-            "coin": symbol,
-            "tf": tf,
-            "value": round(value, 1),
-            "label": label,
-            "weights": comps["weights"],
-            "scores": comps["scores"],
-            "raw": comps["raw"],
-            "updatedAt": ts_iso_now(),
-            "ok": True,
-            "status": quota.get("status", "ok"),
-            "plan": plan_effective,  # ✅ effective plan
-            "valid": bool(quota.get("valid", False)) if plan_effective != "FREE" else False,
-            "limit": quota.get("limit", None),
-            "used": quota.get("used", None),
-            "remaining": quota.get("remaining", None),
-            "day": quota.get("day", None),
-            # ✅ expiry meta for UI
-            "expires_at": meta.get("expires_at"),
-            "days_left": meta.get("days_left"),
-            "will_expire_soon": meta.get("will_expire_soon"),
-        }
-    except Exception as e:
-        return JSONResponse({"error": str(e)}, status_code=500)
+    value, label, comps = compute_fng(symbol=symbol, tf=tf)
+    return {
+        "coin": symbol,
+        "tf": tf,
+        "value": round(value, 1),
+        "label": label,
+        "weights": comps["weights"],
+        "scores": comps["scores"],
+        "raw": comps["raw"],
+        "updatedAt": ts_iso_now(),
+        "ok": True,
+        "status": quota.get("status", "ok"),
+        "plan": plan_effective,
+        "valid": bool(quota.get("valid", False)) if plan_effective != "FREE" else False,
+        "limit": quota.get("limit", None),
+        "used": quota.get("used", None),
+        "remaining": quota.get("remaining", None),
+        "day": quota.get("day", None),
+        "expires_at": meta.get("expires_at"),
+        "days_left": meta.get("days_left"),
+        "will_expire_soon": meta.get("will_expire_soon"),
+    }
 
 
 # ============================================================
-# CHECKOUT API
+# CHECKOUT API (твій код — без змін по логіці)
 # ============================================================
 class CheckoutCreateIn(BaseModel):
     wallet: str
@@ -732,10 +736,10 @@ class CheckoutCreateIn(BaseModel):
 
 
 class CheckoutCreateOut(BaseModel):
-    payment_id: int  # bigserial
+    payment_id: int
     chain_id: int
     token_address: str
-    to_address: str  # receiver_address in DB
+    to_address: str
     amount: str
     decimals: int
 
@@ -753,7 +757,6 @@ class CheckoutConfirmOut(BaseModel):
 
 
 def _pending_tx_placeholder() -> str:
-    # щоб пройти NOT NULL tx_hash + unique(chain_id, tx_hash)
     return "pending_" + secrets.token_hex(24)
 
 
@@ -769,22 +772,15 @@ def checkout_create(payload: CheckoutCreateIn):
     if payload.chain_id not in SUPPORTED_CHAINS:
         raise HTTPException(status_code=400, detail="Unsupported chain_id")
 
-    # 1) user by wallet
     user_id = get_or_create_user_by_wallet(payload.wallet)
 
-    # 2) get plan price from plans.price_usd
-    plan_row = (
-        supabase.table("plans")
-        .select("code,price_usd")
-        .eq("code", plan_code)
-        .limit(1)
-        .execute()
+    plan_row = _supabase_call(
+        lambda: supabase.table("plans").select("code,price_usd").eq("code", plan_code).limit(1).execute()
     )
     plan_data = _sb_data(plan_row.data)
     if not plan_data:
         raise HTTPException(status_code=404, detail="Plan not found in plans table")
 
-    # IMPORTANT: keep amount as string for Supabase JSON
     amount = str(plan_data["price_usd"])
     token_addr = _usdt_address(payload.chain_id)
     receiver = _receive_wallet()
@@ -792,19 +788,20 @@ def checkout_create(payload: CheckoutCreateIn):
 
     placeholder_tx = _pending_tx_placeholder()
 
-    # 3) insert pending payment
-    ins = supabase.table("payments").insert({
-        "user_id": user_id,
-        "plan_code": plan_code,
-        "chain_id": payload.chain_id,
-        "token_address": token_addr,
-        "tx_hash": placeholder_tx,
-        "payer_address": None,
-        "receiver_address": receiver,
-        "amount": amount,               # ✅ string (no Decimal JSON issue)
-        "decimals": int(decimals),
-        "status": "pending",
-    }).execute()
+    ins = _supabase_call(
+        lambda: supabase.table("payments").insert({
+            "user_id": user_id,
+            "plan_code": plan_code,
+            "chain_id": payload.chain_id,
+            "token_address": token_addr,
+            "tx_hash": placeholder_tx,
+            "payer_address": None,
+            "receiver_address": receiver,
+            "amount": amount,
+            "decimals": int(decimals),
+            "status": "pending",
+        }).execute()
+    )
 
     row = _sb_data(ins.data)
     if not row or not row.get("id"):
@@ -853,7 +850,7 @@ def _verify_usdt_transfer(
         value = int(decoded["args"]["value"])
 
         if to == to_addr and value == expected_value:
-            return frm  # payer wallet
+            return frm
 
     raise HTTPException(status_code=400, detail="No matching USDT Transfer(to,amount) found in tx logs")
 
@@ -867,29 +864,16 @@ def checkout_confirm(payload: CheckoutConfirmIn):
     if not tx_hash.startswith("0x"):
         raise HTTPException(status_code=400, detail="Invalid tx_hash")
 
-    # 1) load payment
-    p_res = supabase.table("payments").select("*").eq("id", payload.payment_id).limit(1).execute()
+    p_res = _supabase_call(lambda: supabase.table("payments").select("*").eq("id", payload.payment_id).limit(1).execute())
     pay = _sb_data(p_res.data)
     if not pay:
         raise HTTPException(status_code=404, detail="payment_id not found")
 
     status = str(pay.get("status", "")).lower()
     if status == "confirmed":
-        # already confirmed -> return current state
         user_id = pay["user_id"]
-        sub = _sb_data(
-            supabase.table("subscriptions").select("plan,expires_at").eq("user_id", user_id).limit(1).execute().data
-        ) or {}
-        key = _sb_data(
-            supabase.table("api_keys")
-            .select("api_key")
-            .eq("user_id", user_id)
-            .eq("revoked", False)
-            .eq("is_active", True)
-            .order("created_at", desc=True)
-            .limit(1)
-            .execute().data
-        ) or {}
+        sub = _sb_data(_supabase_call(lambda: supabase.table("subscriptions").select("plan,expires_at").eq("user_id", user_id).limit(1).execute()).data) or {}
+        key = _sb_data(_supabase_call(lambda: supabase.table("api_keys").select("api_key").eq("user_id", user_id).eq("revoked", False).eq("is_active", True).order("created_at", desc=True).limit(1).execute()).data) or {}
         return CheckoutConfirmOut(
             ok=True,
             plan=str(sub.get("plan", "FREE")).upper(),
@@ -905,73 +889,61 @@ def checkout_confirm(payload: CheckoutConfirmIn):
     plan_code = str(pay["plan_code"]).lower()
     user_id = pay["user_id"]
 
-    # 2) verify on-chain Transfer(to=receiver, amount)
     payer = _verify_usdt_transfer(chain_id, tx_hash, token_addr, receiver, amount, decimals)
 
-    # 3) mark payment confirmed + granted window
     now = datetime.now(timezone.utc)
     granted_from = now
     granted_to = now + timedelta(days=30)
 
-    supabase.table("payments").update({
+    _supabase_call(lambda: supabase.table("payments").update({
         "status": "confirmed",
         "tx_hash": tx_hash,
         "payer_address": payer,
         "confirmed_at": ts_iso_now(),
         "granted_from": granted_from.isoformat(),
         "granted_to": granted_to.isoformat(),
-    }).eq("id", payload.payment_id).execute()
+    }).eq("id", payload.payment_id).execute())
 
-    # 4) extend subscription (unique user_id)
-    sub_res = supabase.table("subscriptions").select("expires_at").eq("user_id", user_id).limit(1).execute()
+    sub_res = _supabase_call(lambda: supabase.table("subscriptions").select("expires_at").eq("user_id", user_id).limit(1).execute())
     sub = _sb_data(sub_res.data)
 
     base = now
     if sub and sub.get("expires_at"):
-        try:
-            cur_exp = _parse_iso_dt(sub["expires_at"])
-            if cur_exp and cur_exp > base:
-                base = cur_exp
-        except Exception:
-            pass
+        cur_exp = _parse_iso_dt(sub["expires_at"])
+        if cur_exp and cur_exp > base:
+            base = cur_exp
 
     new_expires = base + timedelta(days=30)
 
-    supabase.table("subscriptions").upsert({
+    _supabase_call(lambda: supabase.table("subscriptions").upsert({
         "user_id": user_id,
-        "plan": plan_code.upper(),     # ✅ FREE/PRO/VIP to satisfy chk + FK
+        "plan": plan_code.upper(),
         "status": "active",
         "expires_at": new_expires.isoformat(),
         "wallet_address": payer.lower(),
         "chain_id": chain_id,
         "last_payment_tx": tx_hash,
-    }, on_conflict="user_id").execute()
+    }, on_conflict="user_id").execute())
 
-    # 5) ensure API key exists
-    k_res = (
-        supabase.table("api_keys")
-        .select("api_key")
-        .eq("user_id", user_id)
-        .eq("revoked", False)
-        .eq("is_active", True)
-        .order("created_at", desc=True)
-        .limit(1)
-        .execute()
-    )
+    k_res = _supabase_call(lambda: supabase.table("api_keys").select("api_key").eq("user_id", user_id).eq("revoked", False).eq("is_active", True).order("created_at", desc=True).limit(1).execute())
     keyrow = _sb_data(k_res.data)
 
     if keyrow and keyrow.get("api_key"):
         api_key = keyrow["api_key"]
     else:
         api_key = _gen_api_key()
-        supabase.table("api_keys").insert({
+        _supabase_call(lambda: supabase.table("api_keys").insert({
             "user_id": user_id,
             "api_key": api_key,
             "revoked": False,
             "is_active": True,
             "label": "main",
             "created_at": ts_iso_now(),
-        }).execute()
+        }).execute())
+
+    # clear caches (so UI sees new plan instantly)
+    _APIKEY_TO_UID.pop(api_key, None)
+    _UID_TO_SUBMETA.pop(user_id, None)
 
     return CheckoutConfirmOut(
         ok=True,
