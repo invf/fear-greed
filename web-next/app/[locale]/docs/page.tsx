@@ -89,9 +89,7 @@ export default async function DocsPage() {
           <Link className="btn" href="/pricing">
             {t("hero.pricing")}
           </Link>
-          <Link className="btn btnGhost" href="/dashboard">
-            {t("hero.dashboard")}
-          </Link>
+
         </div>
       </section>
 

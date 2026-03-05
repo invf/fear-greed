@@ -89,6 +89,27 @@ function normalizeEthersError(e: any): string {
   return String(msg);
 }
 
+type ConfirmOut = {
+  ok: boolean;
+  plan: string;
+  expires_at: string;
+  api_key: string;
+};
+
+function computeDaysLeft(expiresAtIso: string): number | null {
+  try {
+    if (!expiresAtIso) return null;
+    const exp = new Date(expiresAtIso).getTime();
+    if (!Number.isFinite(exp)) return null;
+    const now = Date.now();
+    const diffMs = exp - now;
+    // ceil days
+    return Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  } catch {
+    return null;
+  }
+}
+
 export default function CheckoutBox() {
   const [hasMM, setHasMM] = useState(false);
   const [address, setAddress] = useState<string>("");
@@ -106,10 +127,30 @@ export default function CheckoutBox() {
   const [usdtDecimals, setUsdtDecimals] = useState<number>(DEFAULT_USDT_DECIMALS);
   const [usdtAddress, setUsdtAddress] = useState<string>(DEFAULT_USDT_BSC);
 
+  // Result to show under buttons
+  const [planOut, setPlanOut] = useState<string>("");
+  const [expiresAt, setExpiresAt] = useState<string>("");
+  const [apiKey, setApiKey] = useState<string>("");
+
+  const daysLeft = useMemo(() => computeDaysLeft(expiresAt), [expiresAt]);
+  const willExpireSoon = typeof daysLeft === "number" && daysLeft > 0 && daysLeft <= 3;
+
   const chainLabel = useMemo(() => {
     if (!chainId) return "—";
     return CHAINS.find((c) => c.id === chainId)?.name ?? `Chain ${chainId}`;
   }, [chainId]);
+
+  // Restore last result
+  useEffect(() => {
+    try {
+      const k = localStorage.getItem("fg_api_key") || "";
+      const p = localStorage.getItem("fg_plan") || "";
+      const ex = localStorage.getItem("fg_expires_at") || "";
+      if (k) setApiKey(k);
+      if (p) setPlanOut(p);
+      if (ex) setExpiresAt(ex);
+    } catch {}
+  }, []);
 
   useEffect(() => {
     const eth = (window as any).ethereum;
@@ -140,7 +181,7 @@ export default function CheckoutBox() {
     };
   }, []);
 
-  // ✅ Auto refresh balances when connected & on BSC
+  // Auto refresh balances when connected & on BSC
   useEffect(() => {
     if (!address) return;
     if (chainId !== TARGET_CHAIN_ID_DEC) return;
@@ -217,9 +258,11 @@ export default function CheckoutBox() {
       setBnBWei(bnb);
 
       const tAddr = tokenAddr || usdtAddress || DEFAULT_USDT_BSC;
-      const tDec = typeof tokenDecimals === "number" ? tokenDecimals : usdtDecimals || DEFAULT_USDT_DECIMALS;
+      const tDec =
+        typeof tokenDecimals === "number"
+          ? tokenDecimals
+          : usdtDecimals || DEFAULT_USDT_DECIMALS;
 
-      // Always keep defaults (so UI doesn't go "0" because address empty)
       setUsdtAddress(tAddr);
       setUsdtDecimals(tDec);
 
@@ -232,16 +275,19 @@ export default function CheckoutBox() {
       const bal: bigint = await erc20.balanceOf(address);
       setUsdtRaw(bal);
     } catch {
-      // If token call fails, don't crash UI; keep BNB but show USDT 0
       setUsdtRaw(0n);
     }
   }
 
-  // ✅ Full flow: create -> transfer -> confirm
   async function payUSDT(plan: "PRO" | "VIP") {
     setError("");
     setTxHash("");
     setPaymentId("");
+
+    // Clear previous result
+    setPlanOut("");
+    setExpiresAt("");
+    setApiKey("");
 
     const eth = (window as any).ethereum;
     if (!eth) {
@@ -270,12 +316,13 @@ export default function CheckoutBox() {
       const signer = await provider.getSigner();
       const wallet = await signer.getAddress();
 
+      // 1) Create payment on backend
       const res = await fetch(`${API_BASE}/api/checkout/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           wallet,
-          plan_code: plan,      // backend lowercases
+          plan_code: plan,
           chain_id: TARGET_CHAIN_ID_DEC,
         }),
       });
@@ -297,13 +344,15 @@ export default function CheckoutBox() {
       const pid = String(data.payment_id);
       setPaymentId(pid);
 
-      // set token info from backend (but balances already work without this)
-      setUsdtAddress(data.token_address || DEFAULT_USDT_BSC);
-      setUsdtDecimals(typeof data.decimals === "number" ? data.decimals : DEFAULT_USDT_DECIMALS);
+      const tokenAddr = data.token_address || DEFAULT_USDT_BSC;
+      const tokenDec = typeof data.decimals === "number" ? data.decimals : DEFAULT_USDT_DECIMALS;
 
-      await refreshBalances(data.token_address || DEFAULT_USDT_BSC, data.decimals);
+      setUsdtAddress(tokenAddr);
+      setUsdtDecimals(tokenDec);
 
-      const amountRaw = ethers.parseUnits(String(data.amount), data.decimals);
+      await refreshBalances(tokenAddr, tokenDec);
+
+      const amountRaw = ethers.parseUnits(String(data.amount), tokenDec);
 
       // Pre-checks
       const bnbBal = await provider.getBalance(wallet);
@@ -312,7 +361,7 @@ export default function CheckoutBox() {
       }
 
       const usdt = new ethers.Contract(
-        data.token_address,
+        tokenAddr,
         [
           "function balanceOf(address) view returns (uint256)",
           "function transfer(address to, uint256 amount) returns (bool)",
@@ -325,18 +374,21 @@ export default function CheckoutBox() {
         throw new Error("Not enough USDT for this payment. Please top up your USDT (BSC) balance.");
       }
 
+      // 2) Transfer
       setStatus("paying");
       const tx = await usdt.transfer(data.to_address, amountRaw);
       setTxHash(tx.hash);
 
+      // 3) Wait 1 conf
       setStatus("confirming");
       await tx.wait(1);
 
+      // 4) Confirm backend -> returns api_key + plan + expires
       const res2 = await fetch(`${API_BASE}/api/checkout/confirm`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          payment_id: pid,
+          payment_id: Number(pid),
           tx_hash: tx.hash,
         }),
       });
@@ -346,8 +398,25 @@ export default function CheckoutBox() {
         throw new Error(`checkout/confirm failed: ${text}`);
       }
 
+      const out: ConfirmOut = await res2.json();
+
+      if (!out?.ok || !out?.api_key) {
+        throw new Error("Payment confirmed, but API key was not returned.");
+      }
+
+      setPlanOut(out.plan || "");
+      setExpiresAt(out.expires_at || "");
+      setApiKey(out.api_key || "");
+
+      // Persist
+      try {
+        localStorage.setItem("fg_api_key", out.api_key || "");
+        localStorage.setItem("fg_plan", out.plan || "");
+        localStorage.setItem("fg_expires_at", out.expires_at || "");
+      } catch {}
+
       setStatus("success");
-      await refreshBalances(data.token_address, data.decimals);
+      await refreshBalances(tokenAddr, tokenDec);
     } catch (e: any) {
       setStatus("error");
       setError(normalizeEthersError(e));
@@ -434,6 +503,71 @@ export default function CheckoutBox() {
         ) : null}
       </div>
 
+      {/* Result under buttons */}
+      {(apiKey || planOut) ? (
+        <div className="mt-4 card p-4">
+          <div className="kicker">Your Subscription</div>
+          <div className="mt-2 text-sm">
+            Plan: <b>{planOut || "—"}</b>
+            <br />
+            Expires: <b>{expiresAt || "—"}</b>
+            {typeof daysLeft === "number" ? (
+              <>
+                <br />
+                Days left: <b>{daysLeft}</b>
+              </>
+            ) : null}
+          </div>
+
+          {willExpireSoon ? (
+            <div className="mt-3" style={{ color: "rgba(255,200,0,0.95)", fontSize: 13, fontWeight: 900 }}>
+              ⚠️ Your plan will expire soon. Please renew to avoid switching to FREE.
+            </div>
+          ) : null}
+
+          {apiKey ? (
+            <div className="mt-3">
+              <div className="kicker">API Key</div>
+              <div className="mt-2 flex items-center gap-2 flex-wrap">
+                <code className="px-3 py-2 rounded bg-black/20 text-sm break-all">{apiKey}</code>
+                <button
+                  className="btn btnGhost text-sm"
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(apiKey);
+                    } catch {}
+                  }}
+                >
+                  Copy
+                </button>
+
+                <button
+                  className="btn btnGhost text-sm"
+                  type="button"
+                  onClick={() => {
+                    try {
+                      localStorage.removeItem("fg_api_key");
+                      localStorage.removeItem("fg_plan");
+                      localStorage.removeItem("fg_expires_at");
+                    } catch {}
+                    setApiKey("");
+                    setPlanOut("");
+                    setExpiresAt("");
+                  }}
+                >
+                  Clear
+                </button>
+              </div>
+
+              <div className="mt-2 muted text-xs">
+                Tip: this key is saved in your browser (localStorage) so it stays after refresh.
+              </div>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
       {connected ? (
         <div className="mt-3 grid md:grid-cols-2 gap-3">
           <div className="card p-4">
@@ -467,12 +601,6 @@ export default function CheckoutBox() {
       {error ? (
         <div className="mt-3" style={{ color: "rgba(255,120,120,0.95)", fontSize: 14, fontWeight: 800 }}>
           {error}
-        </div>
-      ) : null}
-
-      {status === "success" ? (
-        <div className="mt-3" style={{ color: "rgba(14,203,129,0.95)", fontSize: 14, fontWeight: 900 }}>
-          Payment confirmed. Your plan is active. Open Dashboard to see your API key.
         </div>
       ) : null}
     </div>

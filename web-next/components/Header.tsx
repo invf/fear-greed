@@ -31,7 +31,6 @@ export default function Header() {
   const nav = [
     { href: "/", key: "nav.home" },
     { href: "/pricing", key: "nav.pricing" },
-    { href: "/dashboard", key: "nav.dashboard" },
     { href: "/docs", key: "nav.docs" },
   ] as const;
 
