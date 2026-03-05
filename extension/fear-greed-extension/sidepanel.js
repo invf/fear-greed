@@ -29,7 +29,7 @@ const AUTO_REFRESH_DEFAULT = true;
 const DEFAULT_INTERVAL_SEC = 30;
 
 // Bounds
-const MIN_INTERVAL_SEC = 5;
+const MIN_INTERVAL_SEC = 15;
 const MAX_INTERVAL_SEC = 300;
 
 // Auto-refresh tuning

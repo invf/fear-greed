@@ -20,7 +20,7 @@
   "autoRefreshHint": { "message": "切换交易对或每 N 秒自动刷新。" },
 
   "refreshInterval": { "message": "刷新间隔（秒）" },
-  "refreshIntervalHint": { "message": "每 N 秒更新一次（5–300）。" },
+  "refreshIntervalHint": { "message": "每 N 秒更新一次（15–300）。" },
 
   "waiting": { "message": "正在等待市场数据..." },
 

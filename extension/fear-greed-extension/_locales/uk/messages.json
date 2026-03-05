@@ -20,7 +20,7 @@
   "autoRefreshHint": { "message": "Оновлювати при зміні пари / кожні N секунд." },
 
   "refreshInterval": { "message": "Інтервал оновлення (сек)" },
-  "refreshIntervalHint": { "message": "Оновлення кожні N секунд (5–300)." },
+  "refreshIntervalHint": { "message": "Оновлення кожні N секунд (15–300)." },
 
   "waiting": { "message": "Очікування ринкових даних..." },
 

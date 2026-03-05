@@ -34,7 +34,7 @@
   "apiBaseHint": { "message": "Readonly for now." },
 
   "autoRefreshHint": { "message": "Auto refresh on pair change / every N seconds." },
-  "refreshIntervalHint": { "message": "Updates every N seconds (5–300)." },
+  "refreshIntervalHint": { "message": "Updates every N seconds (15–300)." },
 
   "waiting": { "message": "Waiting for market data..." },
 

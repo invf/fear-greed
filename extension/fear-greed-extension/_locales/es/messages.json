@@ -20,7 +20,7 @@
   "autoRefreshHint": { "message": "Actualiza al cambiar el par / cada N segundos." },
 
   "refreshInterval": { "message": "Intervalo de actualización (seg)" },
-  "refreshIntervalHint": { "message": "Actualiza cada N segundos (5–300)." },
+  "refreshIntervalHint": { "message": "Actualiza cada N segundos (15–300)." },
 
   "waiting": { "message": "Esperando datos de mercado..." },
 

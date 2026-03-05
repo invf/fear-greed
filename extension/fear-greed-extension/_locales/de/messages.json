@@ -20,7 +20,7 @@
   "autoRefreshHint": { "message": "Aktualisiert bei Pair-Wechsel / alle N Sekunden." },
 
   "refreshInterval": { "message": "Aktualisierungsintervall (Sek.)" },
-  "refreshIntervalHint": { "message": "Updates alle N Sekunden (5–300)." },
+  "refreshIntervalHint": { "message": "Updates alle N Sekunden (15–300)." },
 
   "waiting": { "message": "Warte auf Marktdaten..." },
 

@@ -5,6 +5,8 @@ import math
 import os
 import secrets
 import time
+import threading
+from typing import Tuple
 from decimal import Decimal
 from datetime import datetime, timezone, timedelta
 from typing import Optional, Dict, Any, Tuple
@@ -65,6 +67,36 @@ if SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY:
 BINANCE_SPOT = "https://api.binance.com"
 BINANCE_FAPI = "https://fapi.binance.com"  # USDT-M Futures
 VALID_TF = {"15m", "1h", "4h", "1d"}
+
+# ============================================================
+# SIMPLE IN-MEMORY TTL CACHE (per worker)
+# ============================================================
+# NOTE: This cache lives per-process (per gunicorn worker).
+# It's still extremely effective because each worker will stop recomputing the same symbol/tf many times per second.
+FNG_CACHE_TTL_SEC = int(os.getenv("FNG_CACHE_TTL_SEC", "30"))
+
+_fng_cache_lock = threading.Lock()
+_fng_cache: dict[Tuple[str, str], dict] = {}
+_fng_cache_exp: dict[Tuple[str, str], float] = {}
+
+
+def _cache_get(key: Tuple[str, str]) -> Optional[dict]:
+    now_ts = datetime.now(timezone.utc).timestamp()
+    with _fng_cache_lock:
+        exp = _fng_cache_exp.get(key)
+        if not exp or exp < now_ts:
+            # expired or missing
+            _fng_cache.pop(key, None)
+            _fng_cache_exp.pop(key, None)
+            return None
+        return _fng_cache.get(key)
+
+
+def _cache_set(key: Tuple[str, str], value: dict, ttl: int = FNG_CACHE_TTL_SEC) -> None:
+    now_ts = datetime.now(timezone.utc).timestamp()
+    with _fng_cache_lock:
+        _fng_cache[key] = value
+        _fng_cache_exp[key] = now_ts + max(1, int(ttl))
 
 # ============================================================
 # PAYMENTS (BSC USDT)
@@ -642,7 +674,7 @@ def fng(
     if not install_id:
         raise HTTPException(status_code=400, detail="Missing X-Install-Id")
 
-    # Determine effective plan by expiry (cached + retry-protected)
+    # Determine effective plan by expiry
     user_id = resolve_user_id_from_api_key(api_key) if api_key else None
     meta = get_subscription_meta(user_id)
     plan_effective = effective_plan_from_meta(meta)
@@ -650,35 +682,82 @@ def fng(
     # If expired -> treat as FREE by giving empty api_key to quota RPC
     api_key_for_quota = api_key if plan_effective != "FREE" else ""
 
-    quota = consume_pair_access_or_raise(install_id=install_id, api_key=api_key_for_quota, symbol=symbol)
+    try:
+        quota = consume_pair_access_or_raise(install_id=install_id, api_key=api_key_for_quota, symbol=symbol)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-    value, label, comps = compute_fng(symbol=symbol, tf=tf)
-    return {
-        "coin": symbol,
-        "tf": tf,
-        "value": round(value, 1),
-        "label": label,
-        "components": {
-            "rsi": round(comps["scores"]["rsi"], 2),
-            "mom": round(comps["scores"]["mom"], 2),
-            "vol": round(comps["scores"]["vol"], 2),
-            "volm": round(comps["scores"]["volm"], 2),
-            "funding": round(comps["scores"]["funding"], 2),
-            "oi": round(comps["scores"]["oi"], 2),
-        },
-        "updatedAt": ts_iso_now(),
-        "ok": True,
-        "status": quota.get("status", "ok"),
-        "plan": plan_effective,
-        "valid": bool(quota.get("valid", False)) if plan_effective != "FREE" else False,
-        "limit": quota.get("limit", None),
-        "used": quota.get("used", None),
-        "remaining": quota.get("remaining", None),
-        "day": quota.get("day", None),
-        "expires_at": meta.get("expires_at"),
-        "days_left": meta.get("days_left"),
-        "will_expire_soon": meta.get("will_expire_soon"),
-    }
+    # ✅ CACHE key only depends on symbol+tf (compute part)
+    cache_key = (symbol.upper().strip(), tf.strip())
+
+    cached = _cache_get(cache_key)
+    if cached:
+        # merge plan/quota meta (per-user) + cached computed data
+        payload = {
+            **cached,
+            "ok": True,
+            "status": quota.get("status", "ok"),
+            "plan": plan_effective,
+            "valid": bool(quota.get("valid", False)) if plan_effective != "FREE" else False,
+            "limit": quota.get("limit", None),
+            "used": quota.get("used", None),
+            "remaining": quota.get("remaining", None),
+            "day": quota.get("day", None),
+            "expires_at": meta.get("expires_at"),
+            "days_left": meta.get("days_left"),
+            "will_expire_soon": meta.get("will_expire_soon"),
+        }
+        return JSONResponse(
+            payload,
+            headers={"Cache-Control": f"public, max-age={FNG_CACHE_TTL_SEC}"},
+        )
+
+    # Not cached -> compute
+    try:
+        value, label, comps = compute_fng(symbol=symbol, tf=tf)
+
+        computed_payload = {
+            "coin": symbol,
+            "tf": tf,
+            "value": round(value, 1),
+            "label": label,
+            "components": {
+                "rsi": round(comps["scores"]["rsi"], 2),
+                "mom": round(comps["scores"]["mom"], 2),
+                "vol": round(comps["scores"]["vol"], 2),
+                "volm": round(comps["scores"]["volm"], 2),
+                "funding": round(comps["scores"]["funding"], 2),
+                "oi": round(comps["scores"]["oi"], 2),
+            },
+            "updatedAt": ts_iso_now(),
+        }
+
+        # cache only the computed part
+        _cache_set(cache_key, computed_payload)
+
+        payload = {
+            **computed_payload,
+            "ok": True,
+            "status": quota.get("status", "ok"),
+            "plan": plan_effective,
+            "valid": bool(quota.get("valid", False)) if plan_effective != "FREE" else False,
+            "limit": quota.get("limit", None),
+            "used": quota.get("used", None),
+            "remaining": quota.get("remaining", None),
+            "day": quota.get("day", None),
+            "expires_at": meta.get("expires_at"),
+            "days_left": meta.get("days_left"),
+            "will_expire_soon": meta.get("will_expire_soon"),
+        }
+
+        return JSONResponse(
+            payload,
+            headers={"Cache-Control": f"public, max-age={FNG_CACHE_TTL_SEC}"},
+        )
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
 
 
 @app.get("/api/fng-components")
@@ -700,30 +779,70 @@ def fng_components(
     plan_effective = effective_plan_from_meta(meta)
     api_key_for_quota = api_key if plan_effective != "FREE" else ""
 
-    quota = consume_pair_access_or_raise(install_id=install_id, api_key=api_key_for_quota, symbol=symbol)
+    try:
+        quota = consume_pair_access_or_raise(install_id=install_id, api_key=api_key_for_quota, symbol=symbol)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
-    value, label, comps = compute_fng(symbol=symbol, tf=tf)
-    return {
-        "coin": symbol,
-        "tf": tf,
-        "value": round(value, 1),
-        "label": label,
-        "weights": comps["weights"],
-        "scores": comps["scores"],
-        "raw": comps["raw"],
-        "updatedAt": ts_iso_now(),
-        "ok": True,
-        "status": quota.get("status", "ok"),
-        "plan": plan_effective,
-        "valid": bool(quota.get("valid", False)) if plan_effective != "FREE" else False,
-        "limit": quota.get("limit", None),
-        "used": quota.get("used", None),
-        "remaining": quota.get("remaining", None),
-        "day": quota.get("day", None),
-        "expires_at": meta.get("expires_at"),
-        "days_left": meta.get("days_left"),
-        "will_expire_soon": meta.get("will_expire_soon"),
-    }
+    cache_key = (f"{symbol.upper().strip()}__components", tf.strip())
+    cached = _cache_get(cache_key)
+    if cached:
+        payload = {
+            **cached,
+            "ok": True,
+            "status": quota.get("status", "ok"),
+            "plan": plan_effective,
+            "valid": bool(quota.get("valid", False)) if plan_effective != "FREE" else False,
+            "limit": quota.get("limit", None),
+            "used": quota.get("used", None),
+            "remaining": quota.get("remaining", None),
+            "day": quota.get("day", None),
+            "expires_at": meta.get("expires_at"),
+            "days_left": meta.get("days_left"),
+            "will_expire_soon": meta.get("will_expire_soon"),
+        }
+        return JSONResponse(
+            payload,
+            headers={"Cache-Control": f"public, max-age={FNG_CACHE_TTL_SEC}"},
+        )
+
+    try:
+        value, label, comps = compute_fng(symbol=symbol, tf=tf)
+        computed_payload = {
+            "coin": symbol,
+            "tf": tf,
+            "value": round(value, 1),
+            "label": label,
+            "weights": comps["weights"],
+            "scores": comps["scores"],
+            "raw": comps["raw"],
+            "updatedAt": ts_iso_now(),
+        }
+        _cache_set(cache_key, computed_payload)
+
+        payload = {
+            **computed_payload,
+            "ok": True,
+            "status": quota.get("status", "ok"),
+            "plan": plan_effective,
+            "valid": bool(quota.get("valid", False)) if plan_effective != "FREE" else False,
+            "limit": quota.get("limit", None),
+            "used": quota.get("used", None),
+            "remaining": quota.get("remaining", None),
+            "day": quota.get("day", None),
+            "expires_at": meta.get("expires_at"),
+            "days_left": meta.get("days_left"),
+            "will_expire_soon": meta.get("will_expire_soon"),
+        }
+
+        return JSONResponse(
+            payload,
+            headers={"Cache-Control": f"public, max-age={FNG_CACHE_TTL_SEC}"},
+        )
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
 
 
 # ============================================================
