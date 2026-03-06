@@ -9,7 +9,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 
 const SITE_URL =
-  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "https://fear-greed-one.vercel.app";
+  process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "https://sentipulse.app";
 
 const ALL_LOCALES = ["uk", "en", "es", "de", "ru", "zh-CN", "zh-TW"] as const;
 type LocaleKey = (typeof ALL_LOCALES)[number];
