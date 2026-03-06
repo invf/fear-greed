@@ -11,7 +11,7 @@ import Footer from "@/components/Footer";
 const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || "https://fear-greed-one.vercel.app";
 
-const ALL_LOCALES = ["uk", "en", "es", "de", "ru", "zh_CN", "zh_TW"] as const;
+const ALL_LOCALES = ["uk", "en", "es", "de", "ru", "zh-CN", "zh-TW"] as const;
 type LocaleKey = (typeof ALL_LOCALES)[number];
 
 function safeLocale(input: string): LocaleKey {
