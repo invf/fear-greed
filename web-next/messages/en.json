@@ -16,7 +16,8 @@
   "footer": {
     "copyright": "Fear & Greed — Web + Extension",
     "privacy": "Privacy & Terms",
-    "support": "Support"
+    "support": "Support",
+    "about": "About"
   },
   "home": {
     "kicker": "Fear & Greed Index",
@@ -226,5 +227,19 @@
       "faq2": "API key invalid — paste the key again and press Check key.",
       "faq3": "Quota exceeded — wait for the daily reset or upgrade your plan.",
       "faq4": "Extension panel not opening — reload the page and click the extension icon."
+    },
+  "about": {
+      "title": "About SentiPulse",
+      "intro": "SentiPulse is a crypto sentiment indicator designed for traders who want to quickly understand market mood directly on their charts.",
+      "whatTitle": "What SentiPulse does",
+      "whatText": "The SentiPulse extension detects the active trading pair and displays a Fear & Greed sentiment indicator together with a simplified risk score. The goal is to provide a clear visual signal of market sentiment without interrupting the trading workflow.",
+      "featuresTitle": "Main features",
+      "feature1": "Automatic trading pair detection",
+      "feature2": "Fear & Greed sentiment indicator",
+      "feature3": "Simple risk score visualization",
+      "feature4": "Lightweight Chrome side panel interface",
+      "platformsTitle": "Supported platforms",
+      "disclaimerTitle": "Financial disclaimer",
+      "disclaimerText": "SentiPulse provides market sentiment indicators for informational purposes only. The service does not provide financial advice, trading recommendations or investment guidance. Users are responsible for their own trading decisions."
     }
 }
