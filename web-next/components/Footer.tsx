@@ -14,6 +14,9 @@ export default async function Footer() {
           <Link href={`/${locale}/privacy`} className="hover:underline">
             {t("privacy")}
           </Link>
+          <Link href={`/${locale}/support`} className="hover:underline">
+            {t("support")}
+          </Link>
         </div>
       </div>
     </footer>
