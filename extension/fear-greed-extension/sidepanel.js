@@ -43,8 +43,8 @@ const PLAN_TTL_MS = 6 * 60 * 60 * 1000; // 6h
 const QUOTA_TTL_MS = 3500; // do not refetch quota more often than this for same symbol
 
 // Toast (limit exceeded)
-const PRICING_URL = "https://fear-greed.to/pricing";
-const GET_API_KEY_URL = "https://fear-greed.to/get-api-key";
+const PRICING_URL = "https://www.sentipulse.app/en/pricing";
+const GET_API_KEY_URL = "https://www.sentipulse.app/en/pricing#checkout";
 const TOAST_COOLDOWN_MS = 60 * 1000; // 1 min
 
 // =========================

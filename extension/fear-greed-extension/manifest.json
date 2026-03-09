@@ -1,17 +1,19 @@
 {
   "manifest_version": 3,
-  "name": "__MSG_extName__",
-  "description": "__MSG_extDesc__",
+  "name": "SentiPulse — Crypto Fear & Greed Indicator",
+  "description": "Crypto Fear & Greed sentiment indicator for Binance, OKX and Bybit charts.",
   "version": "0.2.0",
+  "homepage_url": "https://sentipulse.app",
   "default_locale": "en",
   "icons": { "16":"icon16.png", "48":"icon48.png", "128":"icon128.png" },
-  "permissions": ["tabs", "sidePanel", "storage"],
+  "permissions": ["sidePanel", "storage"],
   "host_permissions": [
     "https://fear-greed-24pr.onrender.com/*",
     "https://*.binance.com/*",
-    "https://*.tradingview.com/*"
+    "https://*.okx.com/*",
+    "https://*.bybit.com/*"
   ],
   "background": { "service_worker": "service_worker.js" },
   "side_panel": { "default_path": "sidepanel.html" },
-  "action": { "default_title": "__MSG_extName__" }
+  "action": { "default_title": "SentiPulse — Crypto Fear & Greed Indicator" }
 }
