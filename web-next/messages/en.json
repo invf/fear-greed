@@ -15,7 +15,8 @@
   },
   "footer": {
     "copyright": "Fear & Greed — Web + Extension",
-    "privacy": "Privacy & Terms"
+    "privacy": "Privacy & Terms",
+    "support": "Support"
   },
   "home": {
     "kicker": "Fear & Greed Index",
@@ -215,5 +216,15 @@
       "changesText": "We may update this document when necessary. Updated versions will be published on this page. Continued use of the service constitutes acceptance of the updated terms.",
       "contactTitle": "Contact",
       "contactText": "If you have questions regarding this policy, please contact:"
+    },
+  "support": {
+      "title": "Support",
+      "subtitle": "If you need help with the SentiPulse extension, please contact us or check the documentation.",
+      "contactTitle": "Contact",
+      "faqTitle": "Common issues",
+      "faq1": "The extension does not show data — make sure you are on a supported exchange page.",
+      "faq2": "API key invalid — paste the key again and press Check key.",
+      "faq3": "Quota exceeded — wait for the daily reset or upgrade your plan.",
+      "faq4": "Extension panel not opening — reload the page and click the extension icon."
     }
 }
