@@ -246,5 +246,63 @@
 
     "disclaimerTitle": "Finanzieller Hinweis",
     "disclaimerText": "SentiPulse stellt Marktstimmungs-Indikatoren nur zu Informationszwecken bereit. Es handelt sich nicht um Finanz- oder Anlageberatung."
+  },
+  "privacy": {
+    "title": "Datenschutzrichtlinie & Nutzungsbedingungen",
+    "updated": "Zuletzt aktualisiert: 2026",
+
+    "overviewTitle": "Übersicht",
+    "overviewText1": "Diese Seite beschreibt die Datenschutzrichtlinie und die Nutzungsbedingungen für den SentiPulse-Service.",
+    "overviewText2": "SentiPulse stellt einen Krypto-Sentiment-Indikator, eine Chrome-Erweiterung sowie eine API bereit, um Fear & Greed Analysen auf unterstützten Trading-Plattformen anzuzeigen.",
+
+    "collectTitle": "Welche Informationen wir sammeln",
+
+    "apiKeyTitle": "API-Schlüssel",
+    "apiKeyText": "Nutzer erhalten nach Abschluss eines Abonnements einen API-Schlüssel. Dieser wird verwendet, um Anfragen zu authentifizieren, Nutzungslimits zu bestimmen und den Tarifplan zu identifizieren. Der API-Schlüssel wird lokal im Browser des Nutzers gespeichert.",
+
+    "installIdTitle": "Installations-Identifier",
+    "installIdText": "Die Erweiterung kann eine zufällige Installations-ID generieren, die zum Schutz vor Missbrauch, zur Verwaltung von Kontingenten und zur Systemstabilität verwendet wird. Diese ID enthält keine persönlichen Daten.",
+
+    "websiteDataTitle": "Technische Website-Daten",
+    "websiteDataText": "Beim Besuch der Website können grundlegende technische Informationen erfasst werden, z. B. Browsertyp, Gerätetyp und besuchte Seiten. Diese Daten werden ausschließlich zur Verbesserung des Dienstes verwendet.",
+
+    "notCollectTitle": "Daten, die wir nicht sammeln",
+    "notCollect1": "Login-Daten von Börsenkonten",
+    "notCollect2": "Handels-Guthaben",
+    "notCollect3": "Order-Historie",
+    "notCollect4": "Private Wallet-Schlüssel",
+    "notCollect5": "Persönliche Finanzinformationen",
+
+    "useTitle": "Wie wir Daten verwenden",
+    "use1": "Bereitstellung von Sentiment-Indikatoren",
+    "use2": "Validierung von API-Schlüsseln",
+    "use3": "Verwaltung von Abonnement-Plänen",
+    "use4": "Durchsetzung von Nutzungslimits",
+    "use5": "Schutz des Dienstes vor Missbrauch",
+
+    "thirdPartyTitle": "Websites von Drittanbietern",
+    "thirdPartyText": "Die Erweiterung kann auf Plattformen von Drittanbietern wie Binance, Bybit, OKX und TradingView betrieben werden. SentiPulse ist nicht mit diesen Diensten verbunden. Jede Plattform hat ihre eigenen Nutzungsbedingungen und Datenschutzrichtlinien.",
+
+    "disclaimerTitle": "Finanzieller Haftungsausschluss",
+    "disclaimerText1": "SentiPulse stellt Sentiment-Indikatoren ausschließlich zu Informationszwecken bereit.",
+    "disclaimerText2": "Nichts auf dieser Website oder innerhalb der Erweiterung stellt Finanz-, Investitions- oder Trading-Beratung dar. Nutzer sind allein für ihre Handelsentscheidungen verantwortlich.",
+
+    "termsTitle": "Nutzungsbedingungen",
+    "terms1": "Einige Funktionen erfordern ein kostenpflichtiges Abonnement.",
+    "terms2": "Tarife können Nutzungsbeschränkungen oder Kontingente enthalten.",
+    "terms3": "Nutzer dürfen API-Schlüssel nicht öffentlich teilen oder versuchen, Nutzungslimits zu umgehen.",
+    "terms4": "Ein Verstoß gegen diese Regeln kann zur Sperrung des API-Schlüssels führen.",
+
+    "securityTitle": "Sicherheit",
+    "securityText": "Wir setzen angemessene Maßnahmen ein, um unsere Systeme zu schützen. Dennoch kann kein Internetdienst absolute Sicherheit garantieren. Nutzer sind dafür verantwortlich, ihren API-Schlüssel geheim zu halten.",
+
+    "liabilityTitle": "Haftungsbeschränkung",
+    "liabilityText": "SentiPulse haftet nicht für Handelsverluste, finanzielle Schäden, Serviceunterbrechungen oder Ungenauigkeiten in den Daten. Der Dienst wird „wie gesehen“ ohne Garantien bereitgestellt.",
+
+    "changesTitle": "Änderungen an diesem Dokument",
+    "changesText": "Wir können dieses Dokument bei Bedarf aktualisieren. Aktualisierte Versionen werden auf dieser Seite veröffentlicht. Die weitere Nutzung des Dienstes gilt als Zustimmung zu den aktualisierten Bedingungen.",
+
+    "contactTitle": "Kontakt",
+    "contactText": "Wenn Sie Fragen zu dieser Richtlinie haben, kontaktieren Sie uns bitte:"
   }
 }
