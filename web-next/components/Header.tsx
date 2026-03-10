@@ -15,8 +15,8 @@ const LOCALE_LABELS: Record<LocaleKey, string> = {
   es: "Español",
   de: "Deutsch",
   ru: "Русский",
-  zh-CN: "简体中文",
-  zh-TW: "繁體中文",
+  "zh-CN": "简体中文",
+  "zh-TW": "繁體中文",
 };
 
 function stripLocalePrefix(pathname: string) {
