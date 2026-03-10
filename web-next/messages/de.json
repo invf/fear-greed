@@ -215,6 +215,77 @@
         "title": "Key in Settings einfügen",
         "text": "Öffne Erweiterungs-Settings → Schlüssel einfügen → Check key klicken. Plan und Kontingent werden automatisch aktualisiert."
       }
+    },
+    "cards": {
+      "extension": {
+        "kicker": "Erweiterung",
+        "title": "Wo gebe ich den Schlüssel ein?",
+        "text": "Öffne das Sidepanel → Einstellungen → API-Key → Check key. Wenn der Schlüssel gültig ist, siehst du Plan und Kontingent (z. B. PRO • 3/50)."
+      },
+
+      "website": {
+        "kicker": "Website",
+        "title": "Wo bekomme ich den Schlüssel?",
+        "text": "Auf der Website erscheint dein Schlüssel im",
+        "text2": "Bereich Preise:"
+      }
+    },
+
+    "trouble": {
+      "kicker": "Fehlerbehebung",
+      "title": "Wenn etwas nicht funktioniert",
+
+      "p1": {
+        "kicker": "Problem",
+        "title": "Ich sehe „—“ statt Daten",
+        "text": "Stelle sicher, dass du auf unterstützten Seiten bist (Binance / Bybit / OKX / TradingView). Wechsle das Handelspaar und klicke Refresh. Prüfe Internet oder VPN."
+      },
+
+      "p2": {
+        "kicker": "Problem",
+        "title": "Check key zeigt invalid / unauthorized",
+        "text": "Füge den Schlüssel ohne zusätzliche Leerzeichen ein. Klicke Clear → erneut einfügen → Check key. Wenn der Schlüssel widerrufen wurde, erstelle einen neuen im Dashboard."
+      },
+
+      "p3": {
+        "kicker": "Problem",
+        "title": "Limit erreicht / Kontingent überschritten",
+        "text": "Dein tägliches Kontingent ist verbraucht. Warte auf das Reset oder upgrade deinen Plan auf"
+      },
+
+      "p4": {
+        "kicker": "Problem",
+        "title": "Plan-Badge zeigt falschen Plan",
+        "text": "Klicke Check key zur erneuten Validierung. Aktualisiere die Seite und ändere das Symbol, um das Kontingent zu aktualisieren."
+      }
+    },
+
+    "example": {
+      "kicker": "Beispiel",
+      "title": "Wie eine gültige Antwort aussieht",
+      "subtitle": "Nur ein Beispiel — das tatsächliche Format hängt vom Backend ab."
+    },
+
+    "security": {
+      "s1": {
+        "kicker": "Sicherheit",
+        "title": "Ist es sicher, den Schlüssel einzufügen?",
+        "text": "Ja. Der Schlüssel wird nur für API-Zugriff und Kontingentkontrolle verwendet. Teile ihn nicht mit Drittanbieter-Websites. Bei Bedarf kannst du ihn widerrufen und einen neuen erstellen."
+      },
+
+      "s2": {
+        "kicker": "Datenschutz",
+        "title": "Welche Daten speichern wir?",
+        "text": "Minimal: Install ID zum Schutz vor Missbrauch + dein API-Key im browser sync storage. Wir speichern keine Börsendaten."
+      }
+    },
+
+    "cta": {
+      "kicker": "Weiter",
+      "title": "Bereit für ein Upgrade?",
+      "subtitle": "Wechsle zu PRO oder VIP, bezahle über MetaMask und erhalte deinen Schlüssel für die Erweiterung.",
+      "goCheckout": "Zum Checkout",
+      "install": "Erweiterung installieren"
     }
   },
 
