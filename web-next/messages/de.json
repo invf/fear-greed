@@ -1,12 +1,140 @@
 {
-  "nav.home": "Start",
-  "nav.pricing": "Preise",
-  "nav.dashboard": "Dashboard",
-  "nav.docs": "Docs",
-  "nav.pay": "Bezahlen (MetaMask)",
-  "nav.install": "Installieren",
-  "nav.language": "Sprache",
+  "brand": { "title": "Fear&Greed", "sub": "Krypto-Panel" },
 
-  "brand.title": "Fear&Greed",
-  "brand.sub": "Crypto Panel"
+  "meta": {
+    "title": "Fear & Greed • Krypto-Panel",
+    "description": "Eine Chrome-Erweiterung im Binance-Stil, die das aktuelle Handelspaar erkennt, Fear & Greed über mehrere Zeitrahmen anzeigt und einen klaren Risk-Score berechnet — direkt dort, wo du handelst. Funktioniert mit Binance, OKX, Bybit und TradingView."
+  },
+
+  "nav": {
+    "home": "Startseite",
+    "pricing": "Preise",
+    "dashboard": "Dashboard",
+    "docs": "Dokumentation",
+    "pay": "Bezahlen",
+    "install": "Erweiterung installieren",
+    "language": "Sprache"
+  },
+
+  "footer": {
+    "copyright": "Fear & Greed — Web + Erweiterung",
+    "privacy": "Datenschutz & Bedingungen",
+    "support": "Support",
+    "about": "Über uns"
+  },
+
+  "home": {
+    "kicker": "Fear & Greed Index",
+    "title": "Kinematisches Krypto-Sentiment,",
+    "titleAccent": "direkt in deinem Chart",
+    "subtitle": "Eine professionelle Chrome-Erweiterung für Krypto-Trader. Erkennt automatisch das aktive Handelspaar, zeigt Fear & Greed über mehrere Zeitrahmen und berechnet einen klaren Risk-Score direkt im Chart.",
+
+    "ctaPricing": "Preise ansehen",
+    "ctaDocs": "Dokumentation lesen",
+
+    "trustLineStrong": "Für Trader entwickelt.",
+    "trustLine": "Schnell, minimalistisch und entwickelt für Binance, OKX und Bybit.",
+    "videoCaption": "Live-Vorschau des Erweiterungs-Sidepanels",
+
+    "howItWorksKicker": "So funktioniert es",
+    "howItWorksTitle": "In 2 Minuten starten",
+    "howItWorksSub": "Installiere die Erweiterung, erhalte deinen API-Key und füge ihn in den Einstellungen ein. Plan und Kontingent werden automatisch aktualisiert.",
+
+    "step1Kicker": "Schritt 1",
+    "step1Title": "Erweiterung installieren",
+    "step1Text": "Öffne Binance, OKX oder Bybit und starte die Erweiterung. Das Handelspaar wird automatisch aus der URL erkannt.",
+
+    "step2Kicker": "Schritt 2",
+    "step2Title": "API-Key erhalten",
+    "step2Text": "Wähle einen Plan auf der Preisseite. Nach der Zahlung erscheint dein Schlüssel im Dashboard.",
+
+    "step3Kicker": "Schritt 3",
+    "step3Title": "Einfügen & prüfen",
+    "step3Text": "Öffne die Einstellungen der Erweiterung, füge den Schlüssel ein und klicke auf Check key. Dein Plan und dein Tageslimit werden angezeigt."
+  },
+
+  "pricing": {
+    "hero": {
+      "kicker": "Preise",
+      "title": "Einfache Pläne,",
+      "titleAccent": "klare Limits",
+      "subtitle": "Die Erweiterung ist die Benutzeroberfläche des Produkts. Die Website verwaltet Preise, Zahlungen und API-Keys. Bezahle mit MetaMask und erhalte sofort deinen Schlüssel.",
+      "viewPlans": "Pläne ansehen",
+      "faq": "FAQ",
+      "backHome": "Zur Startseite"
+    },
+
+    "plansSection": {
+      "kicker": "Pläne",
+      "title": "Wähle den passenden Plan",
+      "subtitle": "Upgrade oder Downgrade jederzeit möglich. Das Kontingent wird täglich zurückgesetzt."
+    },
+
+    "badge": {
+      "web3": "WEB3",
+      "metamask": "MetaMask-Bezahlung",
+      "beta": "BETA",
+      "demo": "Sicherer Demo-Modus"
+    },
+
+    "stepLabel": "Schritt",
+
+    "plans": {
+      "free": {
+        "name": "Kostenlos",
+        "price": "$0",
+        "sub": "Starter",
+        "p1": "10 Paare / Tag",
+        "p2": "Basiszugang",
+        "p3": "Perfekt zum Testen",
+        "cta": "Erweiterung installieren"
+      },
+
+      "pro": {
+        "name": "Pro",
+        "price": "$4.99 / 30 Tage",
+        "sub": "Am beliebtesten",
+        "p1": "40 Paare / Tag",
+        "p2": "Stabiler Zugriff",
+        "p3": "Ideal für aktive Trader",
+        "cta": "Mit MetaMask bezahlen"
+      },
+
+      "vip": {
+        "name": "VIP",
+        "price": "$14.99 / 30 Tage",
+        "sub": "Unbegrenzt",
+        "p1": "Unbegrenzte Paare / Tag",
+        "p2": "Prioritäts-API",
+        "p3": "Für intensive Nutzung",
+        "cta": "Mit MetaMask bezahlen"
+      }
+    }
+  },
+
+  "support": {
+    "title": "Support",
+    "subtitle": "Wenn du Hilfe mit der SentiPulse-Erweiterung brauchst, kontaktiere uns oder lies die Dokumentation.",
+    "contactTitle": "Kontakt",
+    "faqTitle": "Häufige Probleme",
+    "faq1": "Die Erweiterung zeigt keine Daten — stelle sicher, dass du auf einer unterstützten Börsenseite bist.",
+    "faq2": "API-Key ungültig — füge den Schlüssel erneut ein und klicke auf Check key.",
+    "faq3": "Limit erreicht — warte auf das tägliche Reset oder upgrade deinen Plan.",
+    "faq4": "Panel öffnet sich nicht — lade die Seite neu und klicke auf das Erweiterungssymbol."
+  },
+
+  "about": {
+    "title": "Über SentiPulse",
+    "intro": "SentiPulse ist ein Krypto-Sentiment-Indikator für Trader, die die Marktstimmung schnell direkt im Chart verstehen möchten.",
+    "whatTitle": "Was SentiPulse macht",
+    "whatText": "Die SentiPulse-Erweiterung erkennt automatisch das aktive Handelspaar und zeigt einen Fear-&-Greed-Indikator sowie einen vereinfachten Risiko-Score.",
+    "featuresTitle": "Hauptfunktionen",
+    "feature1": "Automatische Paarerkennung",
+    "feature2": "Fear-&-Greed-Indikator",
+    "feature3": "Einfache Risikoanzeige",
+    "feature4": "Leichtes Chrome-Sidepanel",
+    "platformsTitle": "Unterstützte Plattformen",
+    "disclaimerTitle": "Finanzieller Hinweis",
+    "disclaimerText": "SentiPulse liefert Marktstimmungsindikatoren nur zu Informationszwecken. Der Dienst stellt keine Finanzberatung oder Handels­empfehlungen dar."
+  }
 }

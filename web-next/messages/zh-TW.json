@@ -1,12 +1,53 @@
 {
-  "nav.home": "首頁",
-  "nav.pricing": "價格",
-  "nav.dashboard": "控制台",
-  "nav.docs": "文件",
-  "nav.pay": "使用 MetaMask 付款",
-  "nav.install": "安裝",
-  "nav.language": "語言",
+  "brand": { "title": "Fear&Greed", "sub": "加密面板" },
 
-  "brand.title": "Fear&Greed",
-  "brand.sub": "Crypto Panel"
+  "meta": {
+    "title": "Fear & Greed • 加密面板",
+    "description": "一款類似 Binance 風格的 Chrome 擴充功能，可自動識別當前交易對，在多個時間週期顯示 Fear & Greed 指標，並計算清晰的 Risk 分數 — 直接在你的交易圖表中使用。支援 Binance、OKX、Bybit 和 TradingView。"
+  },
+
+  "nav": {
+    "home": "首頁",
+    "pricing": "價格",
+    "dashboard": "儀表板",
+    "docs": "文件",
+    "pay": "支付",
+    "install": "安裝擴充功能",
+    "language": "語言"
+  },
+
+  "footer": {
+    "copyright": "Fear & Greed — 網站 + 擴充功能",
+    "privacy": "隱私與條款",
+    "support": "支援",
+    "about": "關於"
+  },
+
+  "home": {
+    "kicker": "Fear & Greed 指數",
+    "title": "電影級加密市場情緒，",
+    "titleAccent": "就在你的圖表中",
+    "subtitle": "專為加密交易者設計的 Chrome 擴充功能。自動識別當前交易對，在不同時間週期顯示 Fear & Greed 指標，並提供清晰的風險分數。",
+
+    "ctaPricing": "查看價格",
+    "ctaDocs": "閱讀文件",
+
+    "trustLineStrong": "為交易者打造。",
+    "trustLine": "快速、簡潔，並為 Binance、OKX 和 Bybit 設計。",
+    "videoCaption": "擴充功能側邊欄即時預覽"
+  },
+
+  "support": {
+    "title": "支援",
+    "subtitle": "如果你需要幫助，請聯絡我們或查看文件。",
+    "contactTitle": "聯絡",
+    "faqTitle": "常見問題"
+  },
+
+  "about": {
+    "title": "關於 SentiPulse",
+    "intro": "SentiPulse 是一個加密市場情緒指標，幫助交易者快速理解市場情緒。",
+    "disclaimerTitle": "金融聲明",
+    "disclaimerText": "SentiPulse 僅提供市場情緒資訊，不構成投資建議。"
+  }
 }

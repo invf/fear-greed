@@ -1,12 +1,131 @@
 {
-  "nav.home": "首页",
-  "nav.pricing": "价格",
-  "nav.dashboard": "控制台",
-  "nav.docs": "文档",
-  "nav.pay": "使用 MetaMask 支付",
-  "nav.install": "安装",
-  "nav.language": "语言",
+  "brand": { "title": "Fear&Greed", "sub": "加密面板" },
 
-  "brand.title": "Fear&Greed",
-  "brand.sub": "Crypto Panel"
+  "meta": {
+    "title": "Fear & Greed • 加密面板",
+    "description": "一款类似 Binance 风格的 Chrome 扩展，可自动识别当前交易对，在多个时间周期显示 Fear & Greed 指标，并计算清晰的 Risk 评分 — 直接在你的交易图表中使用。支持 Binance、OKX、Bybit 和 TradingView。"
+  },
+
+  "nav": {
+    "home": "首页",
+    "pricing": "价格",
+    "dashboard": "仪表盘",
+    "docs": "文档",
+    "pay": "支付",
+    "install": "安装扩展",
+    "language": "语言"
+  },
+
+  "footer": {
+    "copyright": "Fear & Greed — 网站 + 扩展",
+    "privacy": "隐私与条款",
+    "support": "支持",
+    "about": "关于"
+  },
+
+  "home": {
+    "kicker": "Fear & Greed 指数",
+    "title": "电影级加密市场情绪，",
+    "titleAccent": "就在你的图表中",
+    "subtitle": "专为加密交易者设计的 Chrome 扩展。自动识别当前交易对，在不同时间周期显示 Fear & Greed 指标，并在图表中提供清晰的风险评分。",
+
+    "ctaPricing": "查看价格",
+    "ctaDocs": "阅读文档",
+
+    "trustLineStrong": "为交易者打造。",
+    "trustLine": "快速、简洁，并专为 Binance、OKX 和 Bybit 设计。",
+    "videoCaption": "扩展侧边栏实时预览",
+
+    "howItWorksKicker": "如何使用",
+    "howItWorksTitle": "2 分钟开始使用",
+    "howItWorksSub": "安装扩展，获取 API Key，然后粘贴到设置中。配额和计划状态会自动更新。",
+
+    "step1Kicker": "步骤 1",
+    "step1Title": "安装扩展",
+    "step1Text": "打开 Binance、OKX 或 Bybit 并启动扩展。交易对会自动从 URL 检测。",
+
+    "step2Kicker": "步骤 2",
+    "step2Title": "获取 API Key",
+    "step2Text": "在 Pricing 页面选择计划。支付后 API Key 会出现在 Dashboard 中。",
+
+    "step3Kicker": "步骤 3",
+    "step3Title": "粘贴并验证",
+    "step3Text": "打开扩展设置，粘贴 API Key 并点击 Check key。你的计划和每日配额将显示。"
+  },
+
+  "pricing": {
+    "hero": {
+      "kicker": "价格",
+      "title": "简单的计划，",
+      "titleAccent": "清晰的配额",
+      "subtitle": "扩展是产品界面。网站用于管理价格、支付和 API Key。使用 MetaMask 支付即可立即获得密钥。",
+      "viewPlans": "查看计划",
+      "faq": "常见问题",
+      "backHome": "返回首页"
+    },
+
+    "plansSection": {
+      "kicker": "计划",
+      "title": "选择适合你的交易计划",
+      "subtitle": "随时升级或降级。每日配额会自动重置。"
+    },
+
+    "plans": {
+      "free": {
+        "name": "免费",
+        "price": "$0",
+        "sub": "入门",
+        "p1": "10 个交易对 / 天",
+        "p2": "基础访问",
+        "p3": "适合体验",
+        "cta": "安装扩展"
+      },
+
+      "pro": {
+        "name": "Pro",
+        "price": "$4.99 / 30 天",
+        "sub": "最受欢迎",
+        "p1": "40 个交易对 / 天",
+        "p2": "稳定访问",
+        "p3": "适合活跃交易者",
+        "cta": "使用 MetaMask 支付"
+      },
+
+      "vip": {
+        "name": "VIP",
+        "price": "$14.99 / 30 天",
+        "sub": "无限",
+        "p1": "无限交易对 / 天",
+        "p2": "优先 API",
+        "p3": "适合高频使用",
+        "cta": "使用 MetaMask 支付"
+      }
+    }
+  },
+
+  "support": {
+    "title": "支持",
+    "subtitle": "如果你需要帮助，请联系我们或查看文档。",
+    "contactTitle": "联系",
+    "faqTitle": "常见问题",
+    "faq1": "扩展没有显示数据 — 请确认你在支持的交易所页面。",
+    "faq2": "API Key 无效 — 重新粘贴并点击 Check key。",
+    "faq3": "配额已用完 — 等待每日重置或升级计划。",
+    "faq4": "扩展面板未打开 — 刷新页面并点击扩展图标。"
+  },
+
+  "about": {
+    "title": "关于 SentiPulse",
+    "intro": "SentiPulse 是一个加密市场情绪指标，帮助交易者在图表中快速理解市场情绪。",
+    "whatTitle": "SentiPulse 的功能",
+    "whatText": "扩展可以自动识别当前交易对，并显示 Fear & Greed 指标以及简化的风险评分。",
+    "featuresTitle": "主要功能",
+    "feature1": "自动识别交易对",
+    "feature2": "Fear & Greed 情绪指标",
+    "feature3": "简化风险评分",
+    "feature4": "轻量级 Chrome 侧边栏",
+    "platformsTitle": "支持平台",
+    "disclaimerTitle": "金融免责声明",
+    "disclaimerText": "SentiPulse 仅提供市场情绪指标用于信息参考，不构成投资建议。"
+  }
 }

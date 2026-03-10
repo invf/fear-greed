@@ -1,12 +1,144 @@
 {
-  "nav.home": "Inicio",
-  "nav.pricing": "Precios",
-  "nav.dashboard": "Panel",
-  "nav.docs": "Docs",
-  "nav.pay": "Pagar (MetaMask)",
-  "nav.install": "Instalar",
-  "nav.language": "Idioma",
+  "brand": { "title": "Fear&Greed", "sub": "Panel Cripto" },
 
-  "brand.title": "Fear&Greed",
-  "brand.sub": "Crypto Panel"
+  "meta": {
+    "title": "Fear & Greed • Panel Cripto",
+    "description": "Una extensión de Chrome estilo Binance que detecta el par actual, muestra Fear & Greed en distintos marcos de tiempo y calcula un Risk score claro — directamente donde operas. Funciona en Binance, OKX, Bybit y TradingView."
+  },
+
+  "nav": {
+    "home": "Inicio",
+    "pricing": "Precios",
+    "dashboard": "Panel",
+    "docs": "Documentación",
+    "pay": "Pagar",
+    "install": "Instalar extensión",
+    "language": "Idioma"
+  },
+
+  "footer": {
+    "copyright": "Fear & Greed — Web + Extensión",
+    "privacy": "Privacidad y Términos",
+    "support": "Soporte",
+    "about": "Acerca de"
+  },
+
+  "home": {
+    "kicker": "Índice Fear & Greed",
+    "title": "Sentimiento cripto cinematográfico,",
+    "titleAccent": "dentro de tu gráfico",
+    "subtitle": "Una extensión profesional de Chrome para traders de criptomonedas. Detecta instantáneamente el par activo, visualiza Fear & Greed en diferentes marcos de tiempo y obtén un Risk score claro directamente en tu gráfico.",
+
+    "ctaPricing": "Ver precios",
+    "ctaDocs": "Leer documentación",
+
+    "trustLineStrong": "Creado para traders.",
+    "trustLine": "Rápido, minimalista y diseñado para Binance, OKX y Bybit.",
+    "videoCaption": "Vista previa en vivo del panel lateral de la extensión",
+
+    "howItWorksKicker": "Cómo funciona",
+    "howItWorksTitle": "Empieza en 2 minutos",
+    "howItWorksSub": "Instala la extensión, obtén tu API key y pégala en Configuración. El plan y la cuota se actualizan automáticamente.",
+
+    "step1Kicker": "Paso 1",
+    "step1Title": "Instalar la extensión",
+    "step1Text": "Abre Binance, OKX o Bybit y ejecuta la extensión. El par se detecta automáticamente desde la URL.",
+
+    "step2Kicker": "Paso 2",
+    "step2Title": "Obtener una API key",
+    "step2Text": "Elige un plan en la página de Precios. Después del pago tu clave aparecerá en el Panel y podrás usarla inmediatamente.",
+
+    "step3Kicker": "Paso 3",
+    "step3Title": "Pegar y validar",
+    "step3Text": "Ve a Configuración en la extensión, pega la clave y presiona Check key. Tu plan y cuota diaria aparecerán."
+  },
+
+  "pricing": {
+    "hero": {
+      "kicker": "Precios",
+      "title": "Planes simples,",
+      "titleAccent": "cuotas claras",
+      "subtitle": "La extensión es la interfaz del producto. El sitio web gestiona precios, pagos y API keys. Paga con MetaMask y obtén tu clave al instante.",
+      "viewPlans": "Ver planes",
+      "faq": "FAQ",
+      "backHome": "Volver al inicio"
+    },
+
+    "plansSection": {
+      "kicker": "Planes",
+      "title": "Elige lo que se adapte a tu trading",
+      "subtitle": "Puedes cambiar de plan en cualquier momento. La cuota se reinicia cada día."
+    },
+
+    "badge": {
+      "web3": "WEB3",
+      "metamask": "Pago con MetaMask",
+      "beta": "BETA",
+      "demo": "Modo demo seguro"
+    },
+
+    "stepLabel": "Paso",
+
+    "checkout": {
+      "kicker": "Pago",
+      "title": "Paga con MetaMask",
+      "subtitle": "Hoy: interfaz y flujo. Próximo paso: contrato inteligente real o verificación backend."
+    },
+
+    "plans": {
+      "free": {
+        "name": "Gratis",
+        "price": "$0",
+        "sub": "Inicial",
+        "p1": "10 pares / día",
+        "p2": "Acceso básico",
+        "p3": "Perfecto para probar",
+        "cta": "Instalar extensión"
+      },
+      "pro": {
+        "name": "Pro",
+        "price": "$4.99 / 30 días",
+        "sub": "Más popular",
+        "p1": "40 pares / día",
+        "p2": "Acceso estable",
+        "p3": "Ideal para traders activos",
+        "cta": "Pagar con MetaMask"
+      },
+      "vip": {
+        "name": "VIP",
+        "price": "$14.99 / 30 días",
+        "sub": "Ilimitado",
+        "p1": "Pares ilimitados / día",
+        "p2": "API prioritaria",
+        "p3": "Uso intensivo",
+        "cta": "Pagar con MetaMask"
+      }
+    }
+  },
+
+  "support": {
+    "title": "Soporte",
+    "subtitle": "Si necesitas ayuda con la extensión SentiPulse, contáctanos o consulta la documentación.",
+    "contactTitle": "Contacto",
+    "faqTitle": "Problemas comunes",
+    "faq1": "La extensión no muestra datos — asegúrate de estar en una página de exchange compatible.",
+    "faq2": "API key inválida — vuelve a pegar la clave y presiona Check key.",
+    "faq3": "Cuota excedida — espera al reinicio diario o actualiza tu plan.",
+    "faq4": "El panel no se abre — recarga la página y haz clic en el icono de la extensión."
+  },
+
+  "about": {
+    "title": "Acerca de SentiPulse",
+    "intro": "SentiPulse es un indicador de sentimiento cripto diseñado para traders que desean comprender rápidamente el estado del mercado directamente en sus gráficos.",
+    "whatTitle": "Qué hace SentiPulse",
+    "whatText": "La extensión SentiPulse detecta el par de trading activo y muestra un indicador Fear & Greed junto con un puntaje de riesgo simplificado.",
+    "featuresTitle": "Características principales",
+    "feature1": "Detección automática del par",
+    "feature2": "Indicador de sentimiento Fear & Greed",
+    "feature3": "Visualización simple del riesgo",
+    "feature4": "Panel lateral ligero en Chrome",
+    "platformsTitle": "Plataformas compatibles",
+    "disclaimerTitle": "Aviso financiero",
+    "disclaimerText": "SentiPulse proporciona indicadores de sentimiento solo con fines informativos. El servicio no ofrece asesoramiento financiero ni recomendaciones de inversión."
+  }
 }
