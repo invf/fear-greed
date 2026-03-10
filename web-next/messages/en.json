@@ -107,7 +107,7 @@
       },
       "pro": {
         "name": "Pro",
-        "price": "$9 / 30 days",
+        "price": "$4.99 / 30 days",
         "sub": "Most popular",
         "p1": "40 pairs / day",
         "p2": "Stable access",
@@ -116,7 +116,7 @@
       },
       "vip": {
         "name": "VIP",
-        "price": "$29 / 30 days",
+        "price": "$14.99 / 30 days",
         "sub": "Unlimited",
         "p1": "Unlimited pairs / day",
         "p2": "Priority API",
