@@ -316,5 +316,63 @@
     "platformsTitle": "支援平台",
     "disclaimerTitle": "金融聲明",
     "disclaimerText": "僅供資訊用途。"
+  },
+  "privacy": {
+    "title": "隱私政策與使用條款",
+    "updated": "最後更新：2026",
+
+    "overviewTitle": "概述",
+    "overviewText1": "此頁面說明 SentiPulse 服務的隱私政策與使用條款。",
+    "overviewText2": "SentiPulse 提供加密市場情緒指標、Chrome 擴充功能以及 API，用於在支援的交易平台中顯示 Fear & Greed 分析。",
+
+    "collectTitle": "我們收集的資訊",
+
+    "apiKeyTitle": "API 金鑰",
+    "apiKeyText": "使用者在訂閱方案後會獲得一個 API 金鑰。該金鑰用於驗證請求、確定配額限制並識別訂閱方案。API 金鑰僅儲存在使用者的瀏覽器本地。",
+
+    "installIdTitle": "安裝識別碼",
+    "installIdText": "擴充功能可能會生成隨機的安裝識別碼，用於防止濫用、管理配額及維持系統穩定性。該識別碼不包含任何個人資訊。",
+
+    "websiteDataTitle": "網站技術資料",
+    "websiteDataText": "當訪問網站時，可能會收集基本技術資訊，例如瀏覽器類型、裝置類型及訪問頁面。這些資料僅用於改善服務。",
+
+    "notCollectTitle": "我們不收集的資料",
+    "notCollect1": "交易所登入憑證",
+    "notCollect2": "交易餘額",
+    "notCollect3": "訂單歷史",
+    "notCollect4": "錢包私鑰",
+    "notCollect5": "個人財務資訊",
+
+    "useTitle": "我們如何使用資料",
+    "use1": "提供市場情緒指標",
+    "use2": "驗證 API 金鑰",
+    "use3": "管理訂閱方案",
+    "use4": "執行配額限制",
+    "use5": "保護服務免於濫用",
+
+    "thirdPartyTitle": "第三方網站",
+    "thirdPartyText": "此擴充功能可能在第三方平台上運作，例如 Binance、Bybit、OKX 和 TradingView。SentiPulse 與這些服務沒有任何隸屬關係。每個平台都有其自己的條款與隱私政策。",
+
+    "disclaimerTitle": "金融免責聲明",
+    "disclaimerText1": "SentiPulse 提供的市場情緒指標僅供資訊用途。",
+    "disclaimerText2": "本網站或擴充功能中的任何內容均不構成金融建議、投資建議或交易建議。使用者需自行對其交易決策負責。",
+
+    "termsTitle": "使用條款",
+    "terms1": "部分功能需要付費訂閱方案。",
+    "terms2": "方案可能包含使用限制或配額。",
+    "terms3": "使用者不得公開分享 API 金鑰或嘗試繞過配額限制。",
+    "terms4": "違反這些規則可能導致 API 金鑰被停用。",
+
+    "securityTitle": "安全性",
+    "securityText": "我們採取合理措施保護系統安全。然而，任何網際網路服務都無法保證絕對安全。使用者需自行負責保護其 API 金鑰。",
+
+    "liabilityTitle": "責任限制",
+    "liabilityText": "SentiPulse 不對交易損失、財務損害、服務中斷或資料不準確負責。本服務以「現狀」提供，且不提供任何保證。",
+
+    "changesTitle": "文件變更",
+    "changesText": "我們可能在必要時更新此文件。更新版本將發布在此頁面上。繼續使用服務即表示接受更新後的條款。",
+
+    "contactTitle": "聯絡",
+    "contactText": "如果您對此政策有任何疑問，請聯絡我們："
   }
 }
