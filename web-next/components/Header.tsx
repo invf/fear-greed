@@ -7,7 +7,7 @@ import { useLocale, useTranslations } from "next-intl";
 const CHROME_STORE_URL =
   process.env.NEXT_PUBLIC_CHROME_STORE_URL || "https://chromewebstore.google.com/";
 
-type LocaleKey = "uk" | "en" | "es" | "de" | "ru" | "zh_CN" | "zh_TW";
+type LocaleKey = "uk" | "en" | "es" | "de" | "ru" | "zh-CN" | "zh-TW";
 
 const LOCALE_LABELS: Record<LocaleKey, string> = {
   uk: "Українська",
@@ -20,7 +20,7 @@ const LOCALE_LABELS: Record<LocaleKey, string> = {
 };
 
 function stripLocalePrefix(pathname: string) {
-  return (pathname || "/").replace(/^\/(uk|en|es|de|ru|zh_CN|zh_TW)(?=\/|$)/, "") || "/";
+  return (pathname || "/").replace(/^\/(uk|en|es|de|ru|zh-CN|zh-TW)(?=\/|$)/, "") || "/";
 }
 
 export default function Header() {
