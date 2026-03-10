@@ -155,7 +155,7 @@
     "trouble": {
       "kicker": "Troubleshooting",
       "title": "If something doesn’t work",
-      "p1": { "kicker": "Problem", "title": "I see “—” instead of data", "text": "Make sure you are on supported pages (Binance/Bybit/OKX/TradingView). Change symbol and click Refresh. Check internet/VPN." },
+      "p1": { "kicker": "Problem", "title": "I see “—” instead of data", "text": "Make sure you are on supported pages (Binance/Bybit/OKX). Change symbol and click Refresh. Check internet/VPN." },
       "p2": { "kicker": "Problem", "title": "Check key says invalid / unauthorized", "text": "Paste key without extra spaces. Press Clear → paste again → Check key. If revoked, generate a new key in Dashboard." },
       "p3": { "kicker": "Problem", "title": "Limit reached / quota exceeded", "text": "Daily quota is exhausted. Wait for reset or upgrade your plan on" },
       "p4": { "kicker": "Problem", "title": "Plan badge shows wrong plan", "text": "Press Check key to force validation. Refresh and change symbol to update quota." }

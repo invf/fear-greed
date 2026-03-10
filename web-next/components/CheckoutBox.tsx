@@ -489,7 +489,7 @@ export default function CheckoutBox() {
                 ? "Creating payment…"
                 : status === "paying" || status === "confirming"
                   ? "Processing…"
-                  : "Choose PRO ($1 / 30d)"}
+                  : "Choose PRO ($4.99 / 30d)"}
           </button>
 
           <button className="btn" type="button" disabled={!connected || busy} onClick={() => payUSDT("VIP")}>
@@ -499,7 +499,7 @@ export default function CheckoutBox() {
                 ? "Creating payment…"
                 : status === "paying" || status === "confirming"
                   ? "Processing…"
-                  : "Choose VIP ($29 / 30d)"}
+                  : "Choose VIP ($14.99 / 30d)"}
           </button>
         </div>
       </div>
