@@ -1,131 +1,244 @@
 {
   "brand": { "title": "Fear&Greed", "sub": "加密面板" },
-
   "meta": {
     "title": "Fear & Greed • 加密面板",
-    "description": "一款类似 Binance 风格的 Chrome 扩展，可自动识别当前交易对，在多个时间周期显示 Fear & Greed 指标，并计算清晰的 Risk 评分 — 直接在你的交易图表中使用。支持 Binance、OKX、Bybit 和 TradingView。"
+    "description": "一款类似 Binance 风格的 Chrome 扩展侧边栏，可检测当前交易对，在不同时间周期显示 Fear & Greed，并计算清晰的风险评分——就在你交易的地方。支持 Binance、OKX、Bybit 和 TradingView。"
   },
-
   "nav": {
     "home": "首页",
     "pricing": "价格",
-    "dashboard": "仪表盘",
+    "dashboard": "控制台",
     "docs": "文档",
     "pay": "支付",
     "install": "安装扩展",
     "language": "语言"
   },
-
   "footer": {
     "copyright": "Fear & Greed — 网站 + 扩展",
     "privacy": "隐私与条款",
     "support": "支持",
     "about": "关于"
   },
-
   "home": {
     "kicker": "Fear & Greed 指数",
-    "title": "电影级加密市场情绪，",
+    "title": "电影级加密情绪，",
     "titleAccent": "就在你的图表中",
-    "subtitle": "专为加密交易者设计的 Chrome 扩展。自动识别当前交易对，在不同时间周期显示 Fear & Greed 指标，并在图表中提供清晰的风险评分。",
-
+    "subtitle": "一款面向加密交易者的专业 Chrome 扩展。即时识别当前交易对，在多个时间周期显示 Fear & Greed，并直接在图表中提供清晰的风险评分。",
     "ctaPricing": "查看价格",
     "ctaDocs": "阅读文档",
-
-    "trustLineStrong": "为交易者打造。",
-    "trustLine": "快速、简洁，并专为 Binance、OKX 和 Bybit 设计。",
+    "trustLineStrong": "专为交易者打造。",
+    "trustLine": "快速、简洁，专为 Binance、OKX 和 Bybit 构建。",
     "videoCaption": "扩展侧边栏实时预览",
-
-    "howItWorksKicker": "如何使用",
+    "howItWorksKicker": "工作方式",
     "howItWorksTitle": "2 分钟开始使用",
-    "howItWorksSub": "安装扩展，获取 API Key，然后粘贴到设置中。配额和计划状态会自动更新。",
-
+    "howItWorksSub": "安装扩展，获取 API key，并将其粘贴到设置中。配额和计划状态会自动更新。",
     "step1Kicker": "步骤 1",
     "step1Title": "安装扩展",
-    "step1Text": "打开 Binance、OKX 或 Bybit 并启动扩展。交易对会自动从 URL 检测。",
-
+    "step1Text": "打开 Binance、OKX 或 Bybit 并启动扩展。交易对会自动从 URL 中识别。",
     "step2Kicker": "步骤 2",
-    "step2Title": "获取 API Key",
-    "step2Text": "在 Pricing 页面选择计划。支付后 API Key 会出现在 Dashboard 中。",
-
+    "step2Title": "获取 API key",
+    "step2Text": "在 Pricing 页面选择一个计划。结账后，你的 key 会出现在 Dashboard 中并可立即使用。",
     "step3Kicker": "步骤 3",
     "step3Title": "粘贴并验证",
-    "step3Text": "打开扩展设置，粘贴 API Key 并点击 Check key。你的计划和每日配额将显示。"
+    "step3Text": "进入扩展中的 Settings，粘贴 key 并点击 Check key。你的计划徽章和每日配额将显示出来。"
   },
-
   "pricing": {
     "hero": {
       "kicker": "价格",
-      "title": "简单的计划，",
-      "titleAccent": "清晰的配额",
-      "subtitle": "扩展是产品界面。网站用于管理价格、支付和 API Key。使用 MetaMask 支付即可立即获得密钥。",
+      "title": "简单计划，",
+      "titleAccent": "清晰配额",
+      "subtitle": "扩展是产品界面。网站负责价格、支付和 API key 管理。通过 MetaMask 支付并立即获取你的 key。",
       "viewPlans": "查看计划",
       "faq": "常见问题",
       "backHome": "返回首页"
     },
-
     "plansSection": {
       "kicker": "计划",
-      "title": "选择适合你的交易计划",
-      "subtitle": "随时升级或降级。每日配额会自动重置。"
+      "title": "选择适合你的交易方案",
+      "subtitle": "可随时升级/降级。配额每天重置。"
     },
-
+    "badge": {
+      "web3": "WEB3",
+      "metamask": "MetaMask 结账",
+      "beta": "测试版",
+      "demo": "安全演示模式"
+    },
+    "stepLabel": "步骤",
+    "checkout": {
+      "kicker": "结账",
+      "title": "使用 MetaMask 支付",
+      "subtitle": "当前：界面与流程。下一步：真实智能合约 / 后端验证。"
+    },
+    "steps": {
+      "s1": { "title": "连接钱包", "text": "用户连接 MetaMask。我们显示网络和地址。" },
+      "s2": { "title": "发送支付", "text": "用户为 PRO/VIP 支付。我们显示待处理/已确认状态。" },
+      "s3": { "title": "获取 API key", "text": "确认后，Dashboard 会显示 API key。" }
+    },
+    "demo": {
+      "kicker": "演示",
+      "title": "MetaMask 连接（UI）",
+      "text": "我们以后可以通过 wagmi + viem 添加真实的 MetaMask 集成。目前是简洁的布局和按钮。",
+      "btnConnect": "连接 MetaMask",
+      "btnPro": "选择 PRO",
+      "btnVip": "选择 VIP",
+      "statusLabel": "状态：",
+      "statusValue": "未连接",
+      "networkLabel": "网络：",
+      "addressLabel": "地址："
+    },
+    "faq": {
+      "kicker": "常见问题",
+      "title": "问题",
+      "q1": { "q": "如果我有扩展，还需要网站吗？", "a": "是的——扩展是产品界面。网站负责价格、支付和 key 管理。" },
+      "q2": { "q": "为什么使用 MetaMask？", "a": "快速的加密支付，无需银行卡处理。以后我们也可以添加银行卡支付。" },
+      "q3": { "q": "如何获取 API key？", "a": "支付后，Dashboard 会显示你的 key。然后将其粘贴到扩展 Settings 中。" },
+      "q4": { "q": "我可以取消或更改计划吗？", "a": "可以。我们会实现升级/降级，并在 Dashboard 中显示当前配额/计划状态。" }
+    },
     "plans": {
       "free": {
-        "name": "免费",
+        "name": "Free",
         "price": "$0",
         "sub": "入门",
         "p1": "10 个交易对 / 天",
         "p2": "基础访问",
-        "p3": "适合体验",
+        "p3": "非常适合试用",
         "cta": "安装扩展"
       },
-
       "pro": {
         "name": "Pro",
         "price": "$4.99 / 30 天",
         "sub": "最受欢迎",
         "p1": "40 个交易对 / 天",
         "p2": "稳定访问",
-        "p3": "适合活跃交易者",
+        "p3": "最适合活跃交易者",
         "cta": "使用 MetaMask 支付"
       },
-
       "vip": {
         "name": "VIP",
         "price": "$14.99 / 30 天",
-        "sub": "无限",
+        "sub": "无限制",
         "p1": "无限交易对 / 天",
         "p2": "优先 API",
-        "p3": "适合高频使用",
+        "p3": "适合高强度使用",
         "cta": "使用 MetaMask 支付"
       }
     }
   },
+  "docs": {
+    "hero": {
+      "kicker": "文档",
+      "title": "如何使用",
+      "titleAccent": "Fear & Greed 扩展",
+      "subtitle": "你需要的一切：安装扩展、获取 API key，并排查常见问题。",
+      "install": "安装扩展",
+      "pricing": "价格",
+      "dashboard": "控制台"
+    },
+    "quick": {
+      "kicker": "快速开始",
+      "title": "2–3 分钟开始使用",
+      "subtitle": "推荐流程：安装 → 获取 key → 粘贴到 Settings。"
+    },
+    "badge": { "tip": "提示", "tipText": "使用 Binance / TradingView" },
+    "stepLabel": "步骤",
+    "links": { "pricing": "价格", "dashboard": "控制台" },
+    "steps": {
+      "s1": { "title": "安装扩展", "text": "从 Chrome Web Store 安装。打开 Binance/TradingView 并使用侧边栏。" },
+      "s2": { "title": "获取 API key", "text": "在以下页面选择计划", "text2": "你的 key 将出现在" },
+      "s3": { "title": "在 Settings 中粘贴 key", "text": "打开扩展 Settings → 粘贴 key → 点击 Check key。计划和配额会自动更新。" }
+    },
+    "cards": {
+      "extension": { "kicker": "扩展", "title": "我在哪里输入 key？", "text": "打开侧边栏 → Settings → API key → Check key。如果有效，你会看到计划和配额（例如，PRO • 3/50）。" },
+      "website": { "kicker": "网站", "title": "我在哪里获取 key？", "text": "在网站上，你的 key 会出现在", "text2": "Pricing 页面：" }
+    },
+    "trouble": {
+      "kicker": "故障排查",
+      "title": "如果某些内容无法正常工作",
+      "p1": { "kicker": "问题", "title": "我看到的是“—”而不是数据", "text": "请确认你位于支持的页面（Binance/Bybit/OKX）。切换交易对并点击 Refresh。检查网络/VPN。" },
+      "p2": { "kicker": "问题", "title": "Check key 显示 invalid / unauthorized", "text": "粘贴 key 时不要包含多余空格。点击 Clear → 重新粘贴 → Check key。如果已撤销，请在 Dashboard 中生成新 key。" },
+      "p3": { "kicker": "问题", "title": "达到限制 / 配额超出", "text": "每日配额已用完。等待重置，或在以下页面升级你的计划" },
+      "p4": { "kicker": "问题", "title": "计划徽章显示错误", "text": "点击 Check key 强制验证。刷新并切换交易对以更新配额。" }
+    },
+    "example": { "kicker": "示例", "title": "有效响应示例", "subtitle": "仅为示例——实际格式取决于后端。" },
+    "security": {
+      "s1": { "kicker": "安全", "title": "粘贴 key 安全吗？", "text": "是的。该 key 仅用于 API 访问和配额控制。不要与第三方网站共享。如有需要，可撤销并生成新 key。" },
+      "s2": { "kicker": "隐私", "title": "我们存储哪些数据？", "text": "最少数据：用于防欺诈的 Install ID + 存储在 browser sync storage 中的 API key。我们不存储交易所数据。" }
+    },
+    "cta": {
+      "kicker": "下一步",
+      "title": "准备升级了吗？",
+      "subtitle": "升级到 PRO/VIP，通过 MetaMask 支付，并获取扩展用 key。",
+      "goCheckout": "前往结账",
+      "install": "安装扩展"
+    }
 
+  },
+  "privacy": {
+    "title": "隐私政策与使用条款",
+    "updated": "最后更新：2026",
+    "overviewTitle": "概述",
+    "overviewText1": "本页面说明了 SentiPulse 服务的隐私政策和使用条款。",
+    "overviewText2": "SentiPulse 提供加密情绪指标、Chrome 扩展以及用于在支持的交易平台中提供 Fear & Greed 分析的 API。",
+    "collectTitle": "我们收集的信息",
+    "apiKeyTitle": "API key",
+    "apiKeyText": "用户订阅计划后会获得 API key。API key 用于认证请求、确定配额限制和识别订阅计划。API key 保存在用户浏览器本地。",
+    "installIdTitle": "安装标识符",
+    "installIdText": "扩展可能会生成一个随机安装标识符，用于防滥用保护、配额管理和系统稳定性。该标识符不包含个人信息。",
+    "websiteDataTitle": "网站技术数据",
+    "websiteDataText": "访问网站时，可能会收集基础技术信息，例如浏览器类型、设备类型和访问的页面。这些信息仅用于改进服务。",
+    "notCollectTitle": "我们不收集的数据",
+    "notCollect1": "交易所登录凭证",
+    "notCollect2": "交易余额",
+    "notCollect3": "订单历史",
+    "notCollect4": "钱包私钥",
+    "notCollect5": "个人财务信息",
+    "useTitle": "我们如何使用数据",
+    "use1": "提供情绪指标",
+    "use2": "验证 API key",
+    "use3": "管理订阅计划",
+    "use4": "执行配额限制",
+    "use5": "保护服务免受滥用",
+    "thirdPartyTitle": "第三方网站",
+    "thirdPartyText": "扩展可能在 Binance、Bybit、OKX 和 TradingView 等第三方平台上运行。SentiPulse 与这些服务无关联。每个平台都有自己的条款和隐私政策。",
+    "disclaimerTitle": "金融免责声明",
+    "disclaimerText1": "SentiPulse 提供的情绪指标仅供信息参考。",
+    "disclaimerText2": "本网站或扩展中的任何内容均不构成金融建议、投资建议或交易建议。用户应自行对其交易决策负责。",
+    "termsTitle": "使用条款",
+    "terms1": "某些功能需要订阅计划。",
+    "terms2": "计划可能包含使用限制或配额。",
+    "terms3": "用户不得公开分享 API key，也不得尝试绕过配额限制。",
+    "terms4": "违反这些规则可能导致 API key 被暂停。",
+    "securityTitle": "安全",
+    "securityText": "我们采取合理措施保护系统安全。然而，没有任何互联网服务可以保证绝对安全。用户有责任妥善保管其 API key。",
+    "liabilityTitle": "责任限制",
+    "liabilityText": "SentiPulse 不对交易损失、财务损害、服务中断或数据不准确承担责任。服务按“原样”提供，不附带任何保证。",
+    "changesTitle": "本文件的变更",
+    "changesText": "我们可能会在必要时更新本文件。更新版本将发布在本页面上。继续使用本服务即表示接受更新后的条款。",
+    "contactTitle": "联系",
+    "contactText": "如果你对本政策有任何疑问，请联系我们："
+  },
   "support": {
     "title": "支持",
-    "subtitle": "如果你需要帮助，请联系我们或查看文档。",
+    "subtitle": "如果你需要 SentiPulse 扩展方面的帮助，请联系我们或查看文档。",
     "contactTitle": "联系",
     "faqTitle": "常见问题",
-    "faq1": "扩展没有显示数据 — 请确认你在支持的交易所页面。",
-    "faq2": "API Key 无效 — 重新粘贴并点击 Check key。",
-    "faq3": "配额已用完 — 等待每日重置或升级计划。",
-    "faq4": "扩展面板未打开 — 刷新页面并点击扩展图标。"
+    "faq1": "扩展未显示数据 —— 请确认你位于受支持的交易所页面。",
+    "faq2": "API key 无效 —— 重新粘贴 key 并点击 Check key。",
+    "faq3": "配额已超出 —— 等待每日重置或升级你的计划。",
+    "faq4": "扩展面板无法打开 —— 刷新页面并点击扩展图标。"
   },
-
   "about": {
     "title": "关于 SentiPulse",
-    "intro": "SentiPulse 是一个加密市场情绪指标，帮助交易者在图表中快速理解市场情绪。",
-    "whatTitle": "SentiPulse 的功能",
-    "whatText": "扩展可以自动识别当前交易对，并显示 Fear & Greed 指标以及简化的风险评分。",
+    "intro": "SentiPulse 是一款面向交易者的加密市场情绪指标，帮助你直接在图表中快速理解市场情绪。",
+    "whatTitle": "SentiPulse 的作用",
+    "whatText": "SentiPulse 扩展会检测当前交易对，并显示 Fear & Greed 指标以及简化的风险评分。其目标是在不打断交易流程的情况下，提供清晰的市场情绪可视化信号。",
     "featuresTitle": "主要功能",
-    "feature1": "自动识别交易对",
+    "feature1": "自动检测交易对",
     "feature2": "Fear & Greed 情绪指标",
-    "feature3": "简化风险评分",
-    "feature4": "轻量级 Chrome 侧边栏",
-    "platformsTitle": "支持平台",
+    "feature3": "简化风险评分可视化",
+    "feature4": "轻量级 Chrome 侧边栏界面",
+    "platformsTitle": "支持的平台",
     "disclaimerTitle": "金融免责声明",
-    "disclaimerText": "SentiPulse 仅提供市场情绪指标用于信息参考，不构成投资建议。"
+    "disclaimerText": "SentiPulse 提供的市场情绪指标仅供信息参考。该服务不提供金融建议、交易建议或投资指导。用户应自行对其交易决策负责。"
   }
 }

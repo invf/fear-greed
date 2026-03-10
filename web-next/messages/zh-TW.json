@@ -3,21 +3,21 @@
 
   "meta": {
     "title": "Fear & Greed • 加密面板",
-    "description": "一款類似 Binance 風格的 Chrome 擴充功能，可自動識別當前交易對，在多個時間週期顯示 Fear & Greed 指標，並計算清晰的 Risk 分數 — 直接在你的交易圖表中使用。支援 Binance、OKX、Bybit 和 TradingView。"
+    "description": "一個類似 Binance 風格的 Chrome 擴充側邊欄，可偵測目前交易對，在不同時間週期顯示 Fear & Greed，並計算清晰的風險評分 —— 就在你交易的圖表上。支援 Binance、OKX、Bybit 和 TradingView。"
   },
 
   "nav": {
     "home": "首頁",
     "pricing": "價格",
-    "dashboard": "儀表板",
+    "dashboard": "控制台",
     "docs": "文件",
-    "pay": "支付",
-    "install": "安裝擴充功能",
+    "pay": "付款",
+    "install": "安裝擴充",
     "language": "語言"
   },
 
   "footer": {
-    "copyright": "Fear & Greed — 網站 + 擴充功能",
+    "copyright": "Fear & Greed — 網站 + 擴充",
     "privacy": "隱私與條款",
     "support": "支援",
     "about": "關於"
@@ -27,27 +27,294 @@
     "kicker": "Fear & Greed 指數",
     "title": "電影級加密市場情緒，",
     "titleAccent": "就在你的圖表中",
-    "subtitle": "專為加密交易者設計的 Chrome 擴充功能。自動識別當前交易對，在不同時間週期顯示 Fear & Greed 指標，並提供清晰的風險分數。",
+
+    "subtitle": "為加密交易者打造的專業 Chrome 擴充。即時識別當前交易對，在不同時間框架顯示 Fear & Greed，並在圖表上呈現清晰的風險評分。",
 
     "ctaPricing": "查看價格",
     "ctaDocs": "閱讀文件",
 
     "trustLineStrong": "為交易者打造。",
-    "trustLine": "快速、簡潔，並為 Binance、OKX 和 Bybit 設計。",
-    "videoCaption": "擴充功能側邊欄即時預覽"
+    "trustLine": "快速、極簡，專為 Binance、OKX 與 Bybit 設計。",
+    "videoCaption": "擴充側邊欄即時預覽",
+
+    "howItWorksKicker": "運作方式",
+    "howItWorksTitle": "2 分鐘開始",
+    "howItWorksSub": "安裝擴充、取得 API key，並貼到設定中。配額與方案狀態會自動更新。",
+
+    "step1Kicker": "步驟 1",
+    "step1Title": "安裝擴充",
+    "step1Text": "打開 Binance、OKX 或 Bybit 並啟動擴充。交易對會從 URL 自動識別。",
+
+    "step2Kicker": "步驟 2",
+    "step2Title": "取得 API key",
+    "step2Text": "在 Pricing 頁面選擇方案。付款後你的 key 會出現在 Dashboard 並可立即使用。",
+
+    "step3Kicker": "步驟 3",
+    "step3Title": "貼上並驗證",
+    "step3Text": "進入擴充 Settings，貼上 key 並按 Check key。你的方案與每日配額會顯示。"
+  },
+
+  "pricing": {
+    "hero": {
+      "kicker": "價格",
+      "title": "簡單方案，",
+      "titleAccent": "清晰配額",
+      "subtitle": "擴充是產品 UI。網站負責價格、付款與 API key 管理。透過 MetaMask 付款即可立即取得 key。",
+      "viewPlans": "查看方案",
+      "faq": "常見問題",
+      "backHome": "返回首頁"
+    },
+
+    "plansSection": {
+      "kicker": "方案",
+      "title": "選擇適合你的交易方案",
+      "subtitle": "可隨時升級或降級。每日配額自動重置。"
+    },
+
+    "badge": {
+      "web3": "WEB3",
+      "metamask": "MetaMask 付款",
+      "beta": "測試版",
+      "demo": "安全示範模式"
+    },
+
+    "stepLabel": "步驟",
+
+    "checkout": {
+      "kicker": "結帳",
+      "title": "使用 MetaMask 付款",
+      "subtitle": "目前：UI 與流程。下一步：真正的智能合約 / 後端驗證。"
+    },
+
+    "steps": {
+      "s1": {
+        "title": "連接錢包",
+        "text": "使用者連接 MetaMask。我們顯示網路與地址。"
+      },
+      "s2": {
+        "title": "發送付款",
+        "text": "使用者為 PRO 或 VIP 付款。我們顯示待確認或已確認狀態。"
+      },
+      "s3": {
+        "title": "取得 API key",
+        "text": "確認後 Dashboard 會顯示 API key。"
+      }
+    },
+
+    "demo": {
+      "kicker": "示範",
+      "title": "MetaMask 連線（UI）",
+      "text": "未來可透過 wagmi + viem 加入真正的 MetaMask 整合。目前是示範 UI。",
+      "btnConnect": "連接 MetaMask",
+      "btnPro": "選擇 PRO",
+      "btnVip": "選擇 VIP",
+      "statusLabel": "狀態：",
+      "statusValue": "未連線",
+      "networkLabel": "網路：",
+      "addressLabel": "地址："
+    },
+
+    "faq": {
+      "kicker": "常見問題",
+      "title": "問題",
+
+      "q1": {
+        "q": "如果我有擴充，還需要網站嗎？",
+        "a": "是的 —— 擴充是產品 UI。網站負責價格、付款與 key 管理。"
+      },
+
+      "q2": {
+        "q": "為什麼使用 MetaMask？",
+        "a": "快速的加密支付，不需要信用卡處理。未來也可以加入信用卡付款。"
+      },
+
+      "q3": {
+        "q": "如何取得 API key？",
+        "a": "付款後 Dashboard 會顯示 key，然後將其貼到擴充 Settings。"
+      },
+
+      "q4": {
+        "q": "可以更改方案嗎？",
+        "a": "可以。我們會實作升級/降級並顯示目前方案與配額。"
+      }
+    },
+
+    "plans": {
+      "free": {
+        "name": "Free",
+        "price": "$0",
+        "sub": "入門",
+        "p1": "10 個交易對 / 天",
+        "p2": "基本功能",
+        "p3": "適合測試",
+        "cta": "安裝擴充"
+      },
+
+      "pro": {
+        "name": "Pro",
+        "price": "$4.99 / 30 天",
+        "sub": "最受歡迎",
+        "p1": "40 個交易對 / 天",
+        "p2": "穩定存取",
+        "p3": "適合活躍交易者",
+        "cta": "使用 MetaMask 付款"
+      },
+
+      "vip": {
+        "name": "VIP",
+        "price": "$14.99 / 30 天",
+        "sub": "無限制",
+        "p1": "不限交易對 / 天",
+        "p2": "優先 API",
+        "p3": "適合高頻使用",
+        "cta": "使用 MetaMask 付款"
+      }
+    }
+  },
+
+  "docs": {
+    "hero": {
+      "kicker": "文件",
+      "title": "如何使用",
+      "titleAccent": "Fear & Greed 擴充",
+      "subtitle": "你需要的一切：安裝擴充、取得 API key、解決常見問題。",
+      "install": "安裝擴充",
+      "pricing": "價格",
+      "dashboard": "控制台"
+    },
+
+    "quick": {
+      "kicker": "快速開始",
+      "title": "2–3 分鐘開始",
+      "subtitle": "建議流程：安裝 → 取得 key → 貼到 Settings。"
+    },
+
+    "badge": {
+      "tip": "提示",
+      "tipText": "使用 Binance / TradingView"
+    },
+
+    "stepLabel": "步驟",
+
+    "links": {
+      "pricing": "價格",
+      "dashboard": "控制台"
+    },
+
+    "steps": {
+      "s1": {
+        "title": "安裝擴充",
+        "text": "從 Chrome Web Store 安裝。開啟 Binance 或 TradingView 並使用側邊欄。"
+      },
+
+      "s2": {
+        "title": "取得 API key",
+        "text": "在此頁選擇方案",
+        "text2": "你的 key 將出現在"
+      },
+
+      "s3": {
+        "title": "在 Settings 中貼上 key",
+        "text": "開啟擴充 Settings → 貼上 key → 點擊 Check key。方案與配額會自動更新。"
+      }
+    },
+
+    "cards": {
+      "extension": {
+        "kicker": "擴充",
+        "title": "在哪裡輸入 key？",
+        "text": "開啟側邊欄 → Settings → API key → Check key。若有效會顯示方案與配額。"
+      },
+
+      "website": {
+        "kicker": "網站",
+        "title": "在哪裡取得 key？",
+        "text": "在網站上你的 key 會出現在",
+        "text2": "Pricing 頁面："
+      }
+    },
+
+    "trouble": {
+      "kicker": "疑難排解",
+      "title": "如果某些功能無法運作",
+
+      "p1": {
+        "kicker": "問題",
+        "title": "顯示 “—” 而不是數據",
+        "text": "確認你在支援的頁面。更換交易對並按 Refresh。"
+      },
+
+      "p2": {
+        "kicker": "問題",
+        "title": "Check key 顯示 invalid / unauthorized",
+        "text": "貼上 key 時不要包含空格。"
+      },
+
+      "p3": {
+        "kicker": "問題",
+        "title": "已達配額限制",
+        "text": "每日配額已用完。等待重置或升級方案。"
+      },
+
+      "p4": {
+        "kicker": "問題",
+        "title": "方案顯示錯誤",
+        "text": "按 Check key 重新驗證。"
+      }
+    },
+
+    "example": {
+      "kicker": "範例",
+      "title": "有效回應示例",
+      "subtitle": "僅為示例 — 實際格式取決於後端。"
+    },
+
+    "security": {
+      "s1": {
+        "kicker": "安全",
+        "title": "貼上 key 安全嗎？",
+        "text": "是的。key 只用於 API 存取與配額控制。"
+      },
+
+      "s2": {
+        "kicker": "隱私",
+        "title": "我們儲存哪些資料？",
+        "text": "最少資料：Install ID 與 API key。"
+      }
+    },
+
+    "cta": {
+      "kicker": "下一步",
+      "title": "準備升級？",
+      "subtitle": "升級 PRO 或 VIP 並取得 key。",
+      "goCheckout": "前往付款",
+      "install": "安裝擴充"
+    }
   },
 
   "support": {
     "title": "支援",
-    "subtitle": "如果你需要幫助，請聯絡我們或查看文件。",
+    "subtitle": "如果需要 SentiPulse 擴充的幫助，請聯絡我們或查看文件。",
     "contactTitle": "聯絡",
-    "faqTitle": "常見問題"
+    "faqTitle": "常見問題",
+    "faq1": "擴充沒有顯示資料 — 確認在支援的交易所頁面。",
+    "faq2": "API key 無效 — 重新貼上並按 Check key。",
+    "faq3": "配額超過 — 等待每日重置或升級方案。",
+    "faq4": "擴充面板無法開啟 — 重新整理頁面並點擊圖示。"
   },
 
   "about": {
     "title": "關於 SentiPulse",
-    "intro": "SentiPulse 是一個加密市場情緒指標，幫助交易者快速理解市場情緒。",
+    "intro": "SentiPulse 是為交易者設計的加密市場情緒指標。",
+    "whatTitle": "SentiPulse 功能",
+    "whatText": "偵測交易對並顯示 Fear & Greed。",
+    "featuresTitle": "主要功能",
+    "feature1": "自動偵測交易對",
+    "feature2": "Fear & Greed 指標",
+    "feature3": "簡單風險評分",
+    "feature4": "Chrome 側邊欄",
+    "platformsTitle": "支援平台",
     "disclaimerTitle": "金融聲明",
-    "disclaimerText": "SentiPulse 僅提供市場情緒資訊，不構成投資建議。"
+    "disclaimerText": "僅供資訊用途。"
   }
 }

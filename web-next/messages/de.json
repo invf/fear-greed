@@ -3,7 +3,7 @@
 
   "meta": {
     "title": "Fear & Greed • Krypto-Panel",
-    "description": "Eine Chrome-Erweiterung im Binance-Stil, die das aktuelle Handelspaar erkennt, Fear & Greed über mehrere Zeitrahmen anzeigt und einen klaren Risk-Score berechnet — direkt dort, wo du handelst. Funktioniert mit Binance, OKX, Bybit und TradingView."
+    "description": "Eine Chrome-Erweiterung im Binance-Stil, die das aktuelle Handelspaar erkennt, Fear & Greed über verschiedene Zeitrahmen anzeigt und einen klaren Risiko-Score direkt in deinem Chart berechnet. Funktioniert auf Binance, OKX und Bybit."
   },
 
   "nav": {
@@ -20,37 +20,38 @@
     "copyright": "Fear & Greed — Web + Erweiterung",
     "privacy": "Datenschutz & Bedingungen",
     "support": "Support",
-    "about": "Über uns"
+    "about": "Über"
   },
 
   "home": {
     "kicker": "Fear & Greed Index",
     "title": "Kinematisches Krypto-Sentiment,",
     "titleAccent": "direkt in deinem Chart",
-    "subtitle": "Eine professionelle Chrome-Erweiterung für Krypto-Trader. Erkennt automatisch das aktive Handelspaar, zeigt Fear & Greed über mehrere Zeitrahmen und berechnet einen klaren Risk-Score direkt im Chart.",
+
+    "subtitle": "Eine professionelle Chrome-Erweiterung für Krypto-Trader. Erkennt sofort das aktive Handelspaar, visualisiert Fear & Greed über verschiedene Zeitrahmen und zeigt einen klaren Risiko-Score direkt im Chart.",
 
     "ctaPricing": "Preise ansehen",
     "ctaDocs": "Dokumentation lesen",
 
     "trustLineStrong": "Für Trader entwickelt.",
-    "trustLine": "Schnell, minimalistisch und entwickelt für Binance, OKX und Bybit.",
+    "trustLine": "Schnell, minimalistisch und optimiert für Binance, OKX und Bybit.",
     "videoCaption": "Live-Vorschau des Erweiterungs-Sidepanels",
 
     "howItWorksKicker": "So funktioniert es",
     "howItWorksTitle": "In 2 Minuten starten",
-    "howItWorksSub": "Installiere die Erweiterung, erhalte deinen API-Key und füge ihn in den Einstellungen ein. Plan und Kontingent werden automatisch aktualisiert.",
+    "howItWorksSub": "Installiere die Erweiterung, erhalte deinen API-Schlüssel und füge ihn in den Einstellungen ein. Kontingent und Planstatus werden automatisch aktualisiert.",
 
     "step1Kicker": "Schritt 1",
     "step1Title": "Erweiterung installieren",
     "step1Text": "Öffne Binance, OKX oder Bybit und starte die Erweiterung. Das Handelspaar wird automatisch aus der URL erkannt.",
 
     "step2Kicker": "Schritt 2",
-    "step2Title": "API-Key erhalten",
-    "step2Text": "Wähle einen Plan auf der Preisseite. Nach der Zahlung erscheint dein Schlüssel im Dashboard.",
+    "step2Title": "API-Schlüssel erhalten",
+    "step2Text": "Wähle einen Plan auf der Seite Preise. Nach der Zahlung erscheint dein Schlüssel im Dashboard und kann sofort verwendet werden.",
 
     "step3Kicker": "Schritt 3",
     "step3Title": "Einfügen & prüfen",
-    "step3Text": "Öffne die Einstellungen der Erweiterung, füge den Schlüssel ein und klicke auf Check key. Dein Plan und dein Tageslimit werden angezeigt."
+    "step3Text": "Gehe zu den Einstellungen der Erweiterung, füge den Schlüssel ein und klicke auf Check key. Dein Plan und dein tägliches Kontingent werden angezeigt."
   },
 
   "pricing": {
@@ -58,7 +59,7 @@
       "kicker": "Preise",
       "title": "Einfache Pläne,",
       "titleAccent": "klare Limits",
-      "subtitle": "Die Erweiterung ist die Benutzeroberfläche des Produkts. Die Website verwaltet Preise, Zahlungen und API-Keys. Bezahle mit MetaMask und erhalte sofort deinen Schlüssel.",
+      "subtitle": "Die Erweiterung ist die Produkt-UI. Die Website kümmert sich um Preise, Zahlungen und API-Key-Verwaltung. Bezahle mit MetaMask und erhalte sofort deinen Schlüssel.",
       "viewPlans": "Pläne ansehen",
       "faq": "FAQ",
       "backHome": "Zur Startseite"
@@ -67,21 +68,80 @@
     "plansSection": {
       "kicker": "Pläne",
       "title": "Wähle den passenden Plan",
-      "subtitle": "Upgrade oder Downgrade jederzeit möglich. Das Kontingent wird täglich zurückgesetzt."
+      "subtitle": "Upgrade oder Downgrade jederzeit möglich. Kontingent wird täglich zurückgesetzt."
     },
 
     "badge": {
       "web3": "WEB3",
-      "metamask": "MetaMask-Bezahlung",
+      "metamask": "MetaMask Checkout",
       "beta": "BETA",
       "demo": "Sicherer Demo-Modus"
     },
 
     "stepLabel": "Schritt",
 
+    "checkout": {
+      "kicker": "Checkout",
+      "title": "Mit MetaMask bezahlen",
+      "subtitle": "Heute: UI + Flow. Nächster Schritt: echter Smart Contract / Backend-Verifizierung."
+    },
+
+    "steps": {
+      "s1": {
+        "title": "Wallet verbinden",
+        "text": "Der Nutzer verbindet MetaMask. Wir zeigen Netzwerk und Adresse."
+      },
+      "s2": {
+        "title": "Zahlung senden",
+        "text": "Der Nutzer bezahlt für PRO/VIP. Wir zeigen den Status ausstehend oder bestätigt."
+      },
+      "s3": {
+        "title": "API-Schlüssel erhalten",
+        "text": "Nach Bestätigung erscheint dein API-Key im Dashboard."
+      }
+    },
+
+    "demo": {
+      "kicker": "Demo",
+      "title": "MetaMask Verbindung (UI)",
+      "text": "Später können wir eine echte MetaMask-Integration über wagmi + viem hinzufügen. Aktuell ist es ein sauberes Layout mit Buttons.",
+      "btnConnect": "MetaMask verbinden",
+      "btnPro": "PRO wählen",
+      "btnVip": "VIP wählen",
+      "statusLabel": "Status:",
+      "statusValue": "Nicht verbunden",
+      "networkLabel": "Netzwerk:",
+      "addressLabel": "Adresse:"
+    },
+
+    "faq": {
+      "kicker": "FAQ",
+      "title": "Fragen",
+
+      "q1": {
+        "q": "Brauche ich die Website, wenn ich die Erweiterung habe?",
+        "a": "Ja — die Erweiterung ist die Produkt-UI. Die Website verwaltet Preise, Zahlungen und Schlüssel."
+      },
+
+      "q2": {
+        "q": "Warum MetaMask?",
+        "a": "Schnelle Krypto-Zahlung ohne Kreditkartenabwicklung. Kartenzahlungen können später hinzugefügt werden."
+      },
+
+      "q3": {
+        "q": "Wie bekomme ich den API-Key?",
+        "a": "Nach der Zahlung erscheint dein Schlüssel im Dashboard. Dann füge ihn in die Erweiterungs-Settings ein."
+      },
+
+      "q4": {
+        "q": "Kann ich meinen Plan ändern oder kündigen?",
+        "a": "Ja. Wir implementieren Upgrade/Downgrade sowie Anzeige des aktuellen Plans und Kontingents im Dashboard."
+      }
+    },
+
     "plans": {
       "free": {
-        "name": "Kostenlos",
+        "name": "Free",
         "price": "$0",
         "sub": "Starter",
         "p1": "10 Paare / Tag",
@@ -112,29 +172,79 @@
     }
   },
 
+  "docs": {
+    "hero": {
+      "kicker": "Dokumentation",
+      "title": "So verwendest du",
+      "titleAccent": "die Fear & Greed Erweiterung",
+      "subtitle": "Alles was du brauchst: Erweiterung installieren, API-Key erhalten und typische Probleme lösen.",
+      "install": "Erweiterung installieren",
+      "pricing": "Preise",
+      "dashboard": "Dashboard"
+    },
+
+    "quick": {
+      "kicker": "Schnellstart",
+      "title": "Starte in 2–3 Minuten",
+      "subtitle": "Empfohlen: installieren → Schlüssel holen → in Settings einfügen."
+    },
+
+    "badge": {
+      "tip": "TIPP",
+      "tipText": "Nutze Binance / TradingView"
+    },
+
+    "stepLabel": "Schritt",
+
+    "links": {
+      "pricing": "Preise",
+      "dashboard": "Dashboard"
+    },
+
+    "steps": {
+      "s1": {
+        "title": "Erweiterung installieren",
+        "text": "Installiere sie aus dem Chrome Web Store. Öffne Binance oder TradingView und nutze das Sidepanel."
+      },
+      "s2": {
+        "title": "API-Key erhalten",
+        "text": "Wähle einen Plan auf",
+        "text2": "Dein Schlüssel erscheint im"
+      },
+      "s3": {
+        "title": "Key in Settings einfügen",
+        "text": "Öffne Erweiterungs-Settings → Schlüssel einfügen → Check key klicken. Plan und Kontingent werden automatisch aktualisiert."
+      }
+    }
+  },
+
   "support": {
     "title": "Support",
     "subtitle": "Wenn du Hilfe mit der SentiPulse-Erweiterung brauchst, kontaktiere uns oder lies die Dokumentation.",
     "contactTitle": "Kontakt",
     "faqTitle": "Häufige Probleme",
-    "faq1": "Die Erweiterung zeigt keine Daten — stelle sicher, dass du auf einer unterstützten Börsenseite bist.",
-    "faq2": "API-Key ungültig — füge den Schlüssel erneut ein und klicke auf Check key.",
-    "faq3": "Limit erreicht — warte auf das tägliche Reset oder upgrade deinen Plan.",
-    "faq4": "Panel öffnet sich nicht — lade die Seite neu und klicke auf das Erweiterungssymbol."
+    "faq1": "Die Erweiterung zeigt keine Daten — stelle sicher, dass du auf einer unterstützten Exchange-Seite bist.",
+    "faq2": "API-Key ungültig — füge den Schlüssel erneut ein und klicke Check key.",
+    "faq3": "Kontingent überschritten — warte auf den täglichen Reset oder upgrade deinen Plan.",
+    "faq4": "Erweiterungs-Panel öffnet sich nicht — lade die Seite neu und klicke auf das Erweiterungs-Icon."
   },
 
   "about": {
     "title": "Über SentiPulse",
-    "intro": "SentiPulse ist ein Krypto-Sentiment-Indikator für Trader, die die Marktstimmung schnell direkt im Chart verstehen möchten.",
+    "intro": "SentiPulse ist ein Krypto-Sentiment-Indikator für Trader, die die Marktstimmung direkt im Chart verstehen möchten.",
+
     "whatTitle": "Was SentiPulse macht",
-    "whatText": "Die SentiPulse-Erweiterung erkennt automatisch das aktive Handelspaar und zeigt einen Fear-&-Greed-Indikator sowie einen vereinfachten Risiko-Score.",
+    "whatText": "Die SentiPulse-Erweiterung erkennt automatisch das aktive Handelspaar und zeigt einen Fear & Greed Indikator sowie einen vereinfachten Risiko-Score.",
+
     "featuresTitle": "Hauptfunktionen",
     "feature1": "Automatische Paarerkennung",
-    "feature2": "Fear-&-Greed-Indikator",
-    "feature3": "Einfache Risikoanzeige",
+    "feature2": "Fear & Greed Sentiment-Indikator",
+    "feature3": "Einfache Risiko-Visualisierung",
     "feature4": "Leichtes Chrome-Sidepanel",
+
     "platformsTitle": "Unterstützte Plattformen",
+
     "disclaimerTitle": "Finanzieller Hinweis",
-    "disclaimerText": "SentiPulse liefert Marktstimmungsindikatoren nur zu Informationszwecken. Der Dienst stellt keine Finanzberatung oder Handels­empfehlungen dar."
+    "disclaimerText": "SentiPulse stellt Marktstimmungs-Indikatoren nur zu Informationszwecken bereit. Es handelt sich nicht um Finanz- oder Anlageberatung."
   }
 }

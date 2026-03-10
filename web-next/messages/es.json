@@ -1,11 +1,9 @@
 {
-  "brand": { "title": "Fear&Greed", "sub": "Panel Cripto" },
-
+  "brand": { "title": "Fear&Greed", "sub": "Panel Crypto" },
   "meta": {
-    "title": "Fear & Greed • Panel Cripto",
-    "description": "Una extensión de Chrome estilo Binance que detecta el par actual, muestra Fear & Greed en distintos marcos de tiempo y calcula un Risk score claro — directamente donde operas. Funciona en Binance, OKX, Bybit y TradingView."
+    "title": "Fear & Greed • Panel Crypto",
+    "description": "Una extensión de Chrome estilo Binance que detecta el par actual, muestra Fear & Greed en distintos marcos temporales y calcula un Risk score claro — justo donde operas. Funciona en Binance, OKX y Bybit."
   },
-
   "nav": {
     "home": "Inicio",
     "pricing": "Precios",
@@ -15,79 +13,91 @@
     "install": "Instalar extensión",
     "language": "Idioma"
   },
-
   "footer": {
     "copyright": "Fear & Greed — Web + Extensión",
-    "privacy": "Privacidad y Términos",
+    "privacy": "Privacidad y términos",
     "support": "Soporte",
     "about": "Acerca de"
   },
-
   "home": {
     "kicker": "Índice Fear & Greed",
     "title": "Sentimiento cripto cinematográfico,",
     "titleAccent": "dentro de tu gráfico",
-    "subtitle": "Una extensión profesional de Chrome para traders de criptomonedas. Detecta instantáneamente el par activo, visualiza Fear & Greed en diferentes marcos de tiempo y obtén un Risk score claro directamente en tu gráfico.",
+    "subtitle": "Una extensión profesional de Chrome para traders de criptomonedas. Detecta al instante el par activo, visualiza Fear & Greed en distintos marcos temporales y calcula un Risk score claro directamente en tu gráfico.",
 
     "ctaPricing": "Ver precios",
     "ctaDocs": "Leer documentación",
 
     "trustLineStrong": "Creado para traders.",
-    "trustLine": "Rápido, minimalista y diseñado para Binance, OKX y Bybit.",
+    "trustLine": "Rápido, minimalista y optimizado para Binance, OKX y Bybit.",
     "videoCaption": "Vista previa en vivo del panel lateral de la extensión",
 
     "howItWorksKicker": "Cómo funciona",
     "howItWorksTitle": "Empieza en 2 minutos",
-    "howItWorksSub": "Instala la extensión, obtén tu API key y pégala en Configuración. El plan y la cuota se actualizan automáticamente.",
+    "howItWorksSub": "Instala la extensión, obtén tu API key y pégala en Settings. La cuota y el estado del plan se actualizan automáticamente.",
 
     "step1Kicker": "Paso 1",
-    "step1Title": "Instalar la extensión",
+    "step1Title": "Instala la extensión",
     "step1Text": "Abre Binance, OKX o Bybit y ejecuta la extensión. El par se detecta automáticamente desde la URL.",
 
     "step2Kicker": "Paso 2",
-    "step2Title": "Obtener una API key",
-    "step2Text": "Elige un plan en la página de Precios. Después del pago tu clave aparecerá en el Panel y podrás usarla inmediatamente.",
+    "step2Title": "Obtén una API key",
+    "step2Text": "Elige un plan en Pricing. Después del pago, tu clave aparecerá en el Dashboard y podrá utilizarse al instante.",
 
     "step3Kicker": "Paso 3",
-    "step3Title": "Pegar y validar",
-    "step3Text": "Ve a Configuración en la extensión, pega la clave y presiona Check key. Tu plan y cuota diaria aparecerán."
+    "step3Title": "Pega y valida",
+    "step3Text": "Ve a Settings en la extensión, pega la key y pulsa Check key. Aparecerán tu plan y tu cuota diaria."
   },
-
   "pricing": {
     "hero": {
       "kicker": "Precios",
       "title": "Planes simples,",
-      "titleAccent": "cuotas claras",
-      "subtitle": "La extensión es la interfaz del producto. El sitio web gestiona precios, pagos y API keys. Paga con MetaMask y obtén tu clave al instante.",
+      "titleAccent": "cuota clara",
+      "subtitle": "La extensión es la interfaz del producto. El sitio web se encarga de precios, facturación y gestión de API keys. Paga con MetaMask y obtén tu clave al instante.",
       "viewPlans": "Ver planes",
       "faq": "FAQ",
       "backHome": "Volver al inicio"
     },
-
     "plansSection": {
       "kicker": "Planes",
-      "title": "Elige lo que se adapte a tu trading",
-      "subtitle": "Puedes cambiar de plan en cualquier momento. La cuota se reinicia cada día."
+      "title": "Elige lo que mejor se adapte a tu trading",
+      "subtitle": "Puedes subir o bajar de plan en cualquier momento. La cuota se reinicia cada día."
     },
-
-    "badge": {
-      "web3": "WEB3",
-      "metamask": "Pago con MetaMask",
-      "beta": "BETA",
-      "demo": "Modo demo seguro"
-    },
-
+    "badge": { "web3": "WEB3", "metamask": "Pago con MetaMask", "beta": "BETA", "demo": "Modo demo seguro" },
     "stepLabel": "Paso",
-
     "checkout": {
       "kicker": "Pago",
       "title": "Paga con MetaMask",
-      "subtitle": "Hoy: interfaz y flujo. Próximo paso: contrato inteligente real o verificación backend."
+      "subtitle": "Hoy: interfaz y flujo. Próximo paso: smart contract real / verificación backend."
     },
-
+    "steps": {
+      "s1": { "title": "Conecta la wallet", "text": "El usuario conecta MetaMask. Mostramos red y dirección." },
+      "s2": { "title": "Envía el pago", "text": "El usuario paga por PRO/VIP. Mostramos el estado pendiente o confirmado." },
+      "s3": { "title": "Recibe la API key", "text": "Después de la confirmación, el Dashboard muestra la API key." }
+    },
+    "demo": {
+      "kicker": "Demo",
+      "title": "Conexión MetaMask (UI)",
+      "text": "Podemos añadir una integración real con MetaMask más adelante mediante wagmi + viem. Por ahora es un diseño limpio y botones.",
+      "btnConnect": "Conectar MetaMask",
+      "btnPro": "Elegir PRO",
+      "btnVip": "Elegir VIP",
+      "statusLabel": "Estado:",
+      "statusValue": "No conectado",
+      "networkLabel": "Red:",
+      "addressLabel": "Dirección:"
+    },
+    "faq": {
+      "kicker": "FAQ",
+      "title": "Preguntas",
+      "q1": { "q": "¿Necesito el sitio web si tengo la extensión?", "a": "Sí — la extensión es la interfaz del producto. El sitio web gestiona precios, pagos y gestión de claves." },
+      "q2": { "q": "¿Por qué MetaMask?", "a": "Pago rápido en criptomonedas sin procesamiento de tarjetas. Más adelante podemos añadir pagos con tarjeta." },
+      "q3": { "q": "¿Cómo obtengo la API key?", "a": "Después del pago, el dashboard muestra tu clave. Luego pégala en Settings de la extensión." },
+      "q4": { "q": "¿Puedo cancelar o cambiar de plan?", "a": "Sí. Implementaremos upgrade/downgrade y mostraremos el estado actual del plan y la cuota en el dashboard." }
+    },
     "plans": {
       "free": {
-        "name": "Gratis",
+        "name": "Free",
         "price": "$0",
         "sub": "Inicial",
         "p1": "10 pares / día",
@@ -110,35 +120,126 @@
         "sub": "Ilimitado",
         "p1": "Pares ilimitados / día",
         "p2": "API prioritaria",
-        "p3": "Uso intensivo",
+        "p3": "Apto para uso intensivo",
         "cta": "Pagar con MetaMask"
       }
     }
   },
+  "docs": {
+    "hero": {
+      "kicker": "Documentación",
+      "title": "Cómo usar",
+      "titleAccent": "la extensión Fear & Greed",
+      "subtitle": "Todo lo que necesitas: instalar la extensión, obtener una API key y resolver problemas comunes.",
+      "install": "Instalar extensión",
+      "pricing": "Precios",
+      "dashboard": "Dashboard"
+    },
+    "quick": {
+      "kicker": "Inicio rápido",
+      "title": "Empieza en 2–3 minutos",
+      "subtitle": "Recomendado: instalar → obtener clave → pegar en Settings."
+    },
+    "badge": { "tip": "TIP", "tipText": "Usa Binance / TradingView" },
+    "stepLabel": "Paso",
+    "links": { "pricing": "Precios", "dashboard": "Dashboard" },
+    "steps": {
+      "s1": { "title": "Instalar extensión", "text": "Instálala desde Chrome Web Store. Abre Binance/TradingView y usa el panel lateral." },
+      "s2": { "title": "Obtener API key", "text": "Elige un plan en", "text2": "Tu clave estará disponible en" },
+      "s3": { "title": "Pegar la key en Settings", "text": "Abre Settings de la extensión → pega la key → haz clic en Check key. El plan y la cuota se actualizarán automáticamente." }
+    },
+    "cards": {
+      "extension": { "kicker": "Extensión", "title": "¿Dónde introduzco la key?", "text": "Abre el panel lateral → Settings → API key → Check key. Si es válida, verás el plan y la cuota (por ejemplo, PRO • 3/50)." },
+      "website": { "kicker": "Sitio web", "title": "¿Dónde obtengo la key?", "text": "En el sitio, tu clave aparece en", "text2": "página de Pricing:" }
+    },
+    "trouble": {
+      "kicker": "Solución de problemas",
+      "title": "Si algo no funciona",
+      "p1": { "kicker": "Problema", "title": "Veo “—” en lugar de datos", "text": "Asegúrate de estar en páginas compatibles (Binance/Bybit/OKX). Cambia el símbolo y pulsa Refresh. Comprueba internet/VPN." },
+      "p2": { "kicker": "Problema", "title": "Check key muestra invalid / unauthorized", "text": "Pega la key sin espacios extra. Pulsa Clear → pega de nuevo → Check key. Si fue revocada, genera una nueva en Dashboard." },
+      "p3": { "kicker": "Problema", "title": "Límite alcanzado / cuota excedida", "text": "La cuota diaria se ha agotado. Espera al reinicio o mejora tu plan en" },
+      "p4": { "kicker": "Problema", "title": "La insignia del plan muestra el plan incorrecto", "text": "Pulsa Check key para forzar la validación. Actualiza y cambia el símbolo para actualizar la cuota." }
+    },
+    "example": { "kicker": "Ejemplo", "title": "Cómo se ve una respuesta válida", "subtitle": "Solo es un ejemplo — el formato real depende del backend." },
+    "security": {
+      "s1": { "kicker": "Seguridad", "title": "¿Es seguro pegar la key?", "text": "Sí. La key es solo para acceso a la API y cuota. No la compartas con sitios de terceros. Revócala y genera una nueva si es necesario." },
+      "s2": { "kicker": "Privacidad", "title": "¿Qué datos almacenamos?", "text": "Mínimo: Install ID para antifraude + tu API key almacenada en browser sync storage. No almacenamos datos del exchange." }
+    },
+    "cta": {
+      "kicker": "Siguiente",
+      "title": "¿Listo para pasar a PRO?",
+      "subtitle": "Pasa a PRO/VIP, paga con MetaMask y obtén tu clave para la extensión.",
+      "goCheckout": "Ir al checkout",
+      "install": "Instalar extensión"
+    }
 
+  },
+  "privacy": {
+    "title": "Política de privacidad y términos de uso",
+    "updated": "Última actualización: 2026",
+    "overviewTitle": "Resumen",
+    "overviewText1": "Esta página describe la Política de privacidad y los Términos de uso del servicio SentiPulse.",
+    "overviewText2": "SentiPulse proporciona un indicador de sentimiento cripto, una extensión de Chrome y una API para mostrar analítica de Fear & Greed dentro de plataformas de trading compatibles.",
+    "collectTitle": "Qué información recopilamos",
+    "apiKeyTitle": "API key",
+    "apiKeyText": "Tras suscribirse, el usuario recibe una API key. Se utiliza para autenticar solicitudes, determinar cuotas e identificar el plan. La API key se almacena localmente en el navegador del usuario.",
+    "installIdTitle": "Identificador de instalación",
+    "installIdText": "La extensión puede generar un identificador de instalación aleatorio para protección antiabuso, gestión de cuotas y estabilidad del sistema. Este identificador no contiene información personal.",
+    "websiteDataTitle": "Datos técnicos del sitio web",
+    "websiteDataText": "Al visitar el sitio web, puede recopilarse información técnica básica, como el tipo de navegador, el tipo de dispositivo y las páginas visitadas. Estos datos se usan solo para mejorar el servicio.",
+    "notCollectTitle": "Qué datos no recopilamos",
+    "notCollect1": "Credenciales de acceso a exchanges",
+    "notCollect2": "Saldos de trading",
+    "notCollect3": "Historial de órdenes",
+    "notCollect4": "Claves privadas de wallets",
+    "notCollect5": "Información financiera personal",
+    "useTitle": "Cómo usamos los datos",
+    "use1": "Para proporcionar indicadores de sentimiento",
+    "use2": "Para validar API keys",
+    "use3": "Para gestionar planes de suscripción",
+    "use4": "Para controlar cuotas y límites",
+    "use5": "Para proteger el servicio frente a abusos",
+    "thirdPartyTitle": "Sitios de terceros",
+    "thirdPartyText": "La extensión puede funcionar en plataformas de terceros, incluidas Binance, Bybit, OKX y TradingView. SentiPulse no está afiliado a estos servicios. Cada plataforma tiene sus propios términos y políticas de privacidad.",
+    "disclaimerTitle": "Aviso financiero",
+    "disclaimerText1": "SentiPulse proporciona indicadores de sentimiento solo con fines informativos.",
+    "disclaimerText2": "Nada de lo incluido en este sitio web o en la extensión constituye asesoramiento financiero, de inversión o recomendaciones de trading. El usuario es el único responsable de sus decisiones de trading.",
+    "termsTitle": "Términos de uso",
+    "terms1": "Algunas funciones requieren un plan de pago.",
+    "terms2": "Los planes pueden incluir límites de uso o cuotas.",
+    "terms3": "Los usuarios no deben compartir públicamente sus API keys ni intentar eludir los límites de cuota.",
+    "terms4": "El incumplimiento de estas reglas puede provocar la suspensión de la API key.",
+    "securityTitle": "Seguridad",
+    "securityText": "Aplicamos medidas razonables para proteger nuestros sistemas. Sin embargo, ningún servicio en internet puede garantizar seguridad absoluta. El usuario es responsable de mantener su API key en privado.",
+    "liabilityTitle": "Limitación de responsabilidad",
+    "liabilityText": "SentiPulse no será responsable de pérdidas de trading, daños financieros, interrupciones del servicio o inexactitudes de datos. El servicio se proporciona “tal cual”, sin garantías.",
+    "changesTitle": "Cambios en este documento",
+    "changesText": "Podemos actualizar este documento cuando sea necesario. Las versiones actualizadas se publicarán en esta página. El uso continuado del servicio constituye la aceptación de los términos actualizados.",
+    "contactTitle": "Contacto",
+    "contactText": "Si tienes preguntas sobre esta política, contáctanos:"
+  },
   "support": {
     "title": "Soporte",
-    "subtitle": "Si necesitas ayuda con la extensión SentiPulse, contáctanos o consulta la documentación.",
+    "subtitle": "Si necesitas ayuda con la extensión SentiPulse, contacta con nosotros o consulta la documentación.",
     "contactTitle": "Contacto",
     "faqTitle": "Problemas comunes",
     "faq1": "La extensión no muestra datos — asegúrate de estar en una página de exchange compatible.",
-    "faq2": "API key inválida — vuelve a pegar la clave y presiona Check key.",
+    "faq2": "API key inválida — vuelve a pegar la key y pulsa Check key.",
     "faq3": "Cuota excedida — espera al reinicio diario o actualiza tu plan.",
-    "faq4": "El panel no se abre — recarga la página y haz clic en el icono de la extensión."
+    "faq4": "El panel de la extensión no se abre — recarga la página y haz clic en el icono de la extensión."
   },
-
   "about": {
     "title": "Acerca de SentiPulse",
-    "intro": "SentiPulse es un indicador de sentimiento cripto diseñado para traders que desean comprender rápidamente el estado del mercado directamente en sus gráficos.",
+    "intro": "SentiPulse es un indicador de sentimiento del mercado cripto diseñado para traders que quieren comprender rápidamente el estado del mercado directamente en sus gráficos.",
     "whatTitle": "Qué hace SentiPulse",
-    "whatText": "La extensión SentiPulse detecta el par de trading activo y muestra un indicador Fear & Greed junto con un puntaje de riesgo simplificado.",
-    "featuresTitle": "Características principales",
-    "feature1": "Detección automática del par",
+    "whatText": "La extensión SentiPulse detecta el par activo y muestra un indicador Fear & Greed junto con una puntuación de riesgo simplificada. El objetivo es ofrecer una señal visual clara del sentimiento del mercado sin interrumpir el flujo de trading.",
+    "featuresTitle": "Funciones principales",
+    "feature1": "Detección automática de pares de trading",
     "feature2": "Indicador de sentimiento Fear & Greed",
-    "feature3": "Visualización simple del riesgo",
-    "feature4": "Panel lateral ligero en Chrome",
+    "feature3": "Visualización simple del Risk score",
+    "feature4": "Interfaz ligera de panel lateral de Chrome",
     "platformsTitle": "Plataformas compatibles",
     "disclaimerTitle": "Aviso financiero",
-    "disclaimerText": "SentiPulse proporciona indicadores de sentimiento solo con fines informativos. El servicio no ofrece asesoramiento financiero ni recomendaciones de inversión."
+    "disclaimerText": "SentiPulse proporciona indicadores de sentimiento del mercado únicamente con fines informativos. El servicio no ofrece asesoramiento financiero, recomendaciones de trading ni orientación de inversión. Los usuarios son responsables de sus propias decisiones de trading."
   }
 }
