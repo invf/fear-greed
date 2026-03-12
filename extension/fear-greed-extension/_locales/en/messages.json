@@ -1,6 +1,6 @@
 {
-  "extName": { "message": "Crypto Sentiment OS" },
-  "extDesc": { "message": "Fear & Greed radar with multi-timeframe risk analysis." },
+  "extName": { "message": "SentiPulse — Crypto Fear & Greed Indicator" },
+  "extDesc": { "message": "Crypto Fear & Greed sentiment indicator for Binance, OKX and Bybit charts." },
 
   "tabOverviewTitle": { "message": "Overview" },
   "tabDetailsTitle": { "message": "Details" },
@@ -112,5 +112,23 @@
 
   "err_limit_exceeded": { "message": "Daily limit exceeded. Please upgrade or try again tomorrow." },
   "err_no_data": { "message": "No data available or an unknown server error occurred." },
-  "toast_view_plans": { "message": "View plans" }
+  "toast_view_plans": { "message": "View plans" },
+
+  "planStatusTitle": { "message": "Plan status" },
+
+  "getApiKeyBtn": { "message": "Get API key" },
+  "checkKeyBtn": { "message": "Check key" },
+  "clearKeyBtn": { "message": "Clear" },
+  "checkKeyHint": { "message": "Validate key and show your plan status." },
+
+  "apiKeyInvalid": { "message": "Invalid API key." },
+  "apiKeyRevoked": { "message": "This API key has been revoked." },
+  "apiKeyLimitExceeded": { "message": "Daily limit reached for this key." },
+
+  "apiKeyFree": { "message": "Free plan active." },
+  "apiKeyPro": { "message": "Pro plan active." },
+  "apiKeyVip": { "message": "VIP plan active." },
+
+  "toast_ok": { "message": "OK" }
+
 }

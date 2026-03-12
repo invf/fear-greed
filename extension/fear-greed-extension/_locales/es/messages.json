@@ -1,6 +1,6 @@
 {
-  "extName": { "message": "Crypto Sentiment OS" },
-  "extDesc": { "message": "Radar de Fear & Greed con análisis de riesgo en múltiples marcos temporales." },
+  "extName": { "message": "SentiPulse — Crypto Fear & Greed Indicator" },
+"extDesc": { "message": "Crypto Fear & Greed sentiment indicator for Binance, OKX and Bybit charts." },
 
   "tabOverviewTitle": { "message": "Resumen" },
   "tabDetailsTitle": { "message": "Detalles" },

@@ -780,7 +780,6 @@ function detectVenue(host) {
   if (host.includes("binance.com")) return "BINANCE";
   if (host.includes("bybit.com")) return "BYBIT";
   if (host.includes("okx.com")) return "OKX";
-  if (host.includes("tradingview.com")) return "TRADINGVIEW";
   return "UNKNOWN";
 }
 
@@ -830,11 +829,6 @@ function extractSymbolFromUrl(urlStr) {
       if (m) return normalizeSymbol(m[1] + "USDT");
     }
 
-    if (host.includes("tradingview.com")) {
-      const s = u.searchParams.get("symbol");
-      if (s && s.includes(":")) return normalizeSymbol(s.split(":")[1] || "");
-      if (s && !s.includes(":")) return normalizeSymbol(s);
-    }
 
     return null;
   } catch {
@@ -1610,13 +1604,12 @@ function initDomReady() {
 
     // API key input
     const keyInp = $("s_apiKey");
-    if (keyInp) {
-      keyInp.value = await getApiKey();
-      const btnGet = $("btnGetKey");
-    if (btnGet) btnGet.style.display = keyInp.value ? "none" : "inline-flex";
+        if (keyInp) {
+          keyInp.value = await getApiKey();
+          syncGetKeyVisibility();
 
     keyInp.addEventListener("input", () => {
-      if (btnGet) btnGet.style.display = keyInp.value.trim() ? "none" : "inline-flex";
+      syncGetKeyVisibility();
     });
 
       keyInp.addEventListener("change", async () => {
@@ -1702,6 +1695,8 @@ function initDomReady() {
       const keyInp2 = $("s_apiKey");
       if (keyInp2) keyInp2.value = "";
 
+      syncGetKeyVisibility({ forceShow: true });
+
       await setPlanState({ plan: "FREE", valid: false, status: "missing", save: false });
 
       if (auto.lastSymbol) await maybeUpdateQuota(auto.lastSymbol, { force: true });
@@ -1717,4 +1712,16 @@ if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", initDomReady);
 } else {
   initDomReady();
+}
+function syncGetKeyVisibility(opts = {}) {
+  const btnGet = $("btnGetKey");
+  const keyInp = $("s_apiKey");
+  if (!btnGet || !keyInp) return;
+
+  if (opts.forceShow) {
+    btnGet.style.display = "inline-flex";
+    return;
+  }
+
+  btnGet.style.display = keyInp.value.trim() ? "none" : "inline-flex";
 }

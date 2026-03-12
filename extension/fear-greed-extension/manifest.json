@@ -5,7 +5,11 @@
   "version": "0.2.0",
   "homepage_url": "https://sentipulse.app",
   "default_locale": "en",
-  "icons": { "16":"icon16.png", "48":"icon48.png", "128":"icon128.png" },
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
   "permissions": ["sidePanel", "storage"],
   "host_permissions": [
     "https://fear-greed-24pr.onrender.com/*",
@@ -15,5 +19,12 @@
   ],
   "background": { "service_worker": "service_worker.js" },
   "side_panel": { "default_path": "sidepanel.html" },
-  "action": { "default_title": "SentiPulse — Crypto Fear & Greed Indicator" }
+  "action": {
+    "default_title": "SentiPulse — Crypto Fear & Greed Indicator",
+    "default_icon": {
+      "16": "icon16.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
+    }
+  }
 }
