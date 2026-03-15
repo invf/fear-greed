@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useLocale, useTranslations } from "next-intl";
 
 const CHROME_STORE_URL =
-  process.env.NEXT_PUBLIC_CHROME_STORE_URL || "https://chromewebstore.google.com/";
+  process.env.NEXT_PUBLIC_CHROME_STORE_URL || "https://chromewebstore.google.com/detail/hojdloiangngafadoiihffnknnjbebmm";
 
 type LocaleKey = "uk" | "en" | "es" | "de" | "ru" | "zh-CN" | "zh-TW";
 
