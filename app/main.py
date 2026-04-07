@@ -601,7 +601,87 @@ def compute_fng(symbol="SOLUSDT", tf="1d") -> tuple[float, str, dict]:
         "weights": w,
     }
     return fng, label, components
+#++++++++++++++++++++++++++++++++++++++++++++++
+#GPT STORE
+#++++++++++++++++++++++++++++++++++++++++++++++
 
+# ============================================================
+# GPT HELPERS
+# ============================================================
+GPT_ALLOWED_TF = ["15m", "1h", "4h", "1d"]
+GPT_MAX_PAIRS = 4
+
+
+def risk_label(score: float) -> str:
+    if score <= 25:
+        return "Low"
+    elif score <= 50:
+        return "Moderate"
+    elif score <= 75:
+        return "Elevated"
+    return "High"
+
+
+def derive_risk_score(tf_values: list[float]) -> int:
+    if not tf_values:
+        return 50
+
+    arr = np.array(tf_values, dtype=float)
+    avg = float(arr.mean())
+    spread = float(arr.max() - arr.min())
+    std = float(arr.std())
+
+    # distance from neutral
+    directional_stretch = abs(avg - 50.0) * 2.8
+
+    # disagreement between timeframes
+    tf_instability = spread * 1.4 + std * 1.8
+
+    # penalty for extreme zones
+    extreme_penalty = 0.0
+    if avg < 30 or avg > 70:
+        extreme_penalty = 16.0
+    elif avg < 40 or avg > 60:
+        extreme_penalty = 8.0
+
+    risk = directional_stretch * 0.35 + tf_instability * 0.50 + extreme_penalty
+    return int(np.clip(round(risk), 0, 100))
+
+
+def summarize_sentiment(avg: float) -> str:
+    if avg < 25:
+        return "Extreme Fear"
+    elif avg < 45:
+        return "Fear"
+    elif avg <= 55:
+        return "Neutral"
+    elif avg < 76:
+        return "Greed"
+    return "Extreme Greed"
+
+
+def build_pair_summary(symbol: str, avg: float, risk: int) -> str:
+    if avg < 25:
+        mood = "Panic-like conditions, possible oversold pressure."
+    elif avg < 45:
+        mood = "Weak sentiment with cautious market behavior."
+    elif avg <= 55:
+        mood = "Mixed market tone without strong directional conviction."
+    elif avg < 76:
+        mood = "Bullish sentiment with constructive momentum."
+    else:
+        mood = "Overheated sentiment with elevated reversal risk."
+
+    if risk <= 25:
+        suffix = "Structure remains relatively controlled."
+    elif risk <= 50:
+        suffix = "Some volatility risk is present."
+    elif risk <= 75:
+        suffix = "Conditions are more unstable than usual."
+    else:
+        suffix = "This setup is emotionally stretched and higher risk."
+
+    return f"{mood} {suffix}"
 
 # ============================================================
 # ROUTES
@@ -841,6 +921,107 @@ def fng_components(
             payload,
             headers={"Cache-Control": f"public, max-age={FNG_CACHE_TTL_SEC}"},
         )
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+
+#++++++++++++++++++++++++++++++++++++++++++++++++++
+#GPT Store add
+#++++++++++++++++++++++++++++++++++++++++++++++++++
+@app.get("/api/gpt-fng")
+def gpt_fng(
+    pairs: str = Query("BTCUSDT,ETHUSDT,SOLUSDT,XRPUSDT", description="Comma-separated Binance pairs"),
+):
+    """
+    GPT-friendly endpoint:
+    - no X-Install-Id
+    - no quota usage
+    - max 4 pairs
+    - returns clean JSON for GPT Store
+    """
+
+    try:
+        raw_pairs = [p.strip().upper() for p in pairs.split(",") if p.strip()]
+        raw_pairs = raw_pairs[:GPT_MAX_PAIRS]
+
+        if not raw_pairs:
+            return JSONResponse({"error": "No valid pairs provided"}, status_code=400)
+
+        results = []
+
+        for symbol in raw_pairs:
+            tf_map = {}
+            tf_values = []
+
+            for tf in GPT_ALLOWED_TF:
+                cache_key = (symbol, tf)
+                cached = _cache_get(cache_key)
+
+                if cached:
+                    value = float(cached["value"])
+                    label = cached["label"]
+                else:
+                    value, label, comps = compute_fng(symbol=symbol, tf=tf)
+
+                    computed_payload = {
+                        "coin": symbol,
+                        "tf": tf,
+                        "value": round(value, 1),
+                        "label": label,
+                        "components": {
+                            "rsi": round(comps["scores"]["rsi"], 2),
+                            "mom": round(comps["scores"]["mom"], 2),
+                            "vol": round(comps["scores"]["vol"], 2),
+                            "volm": round(comps["scores"]["volm"], 2),
+                            "funding": round(comps["scores"]["funding"], 2),
+                            "oi": round(comps["scores"]["oi"], 2),
+                        },
+                        "updatedAt": ts_iso_now(),
+                    }
+                    _cache_set(cache_key, computed_payload)
+                    value = float(computed_payload["value"])
+
+                tf_map[tf] = round(value, 1)
+                tf_values.append(value)
+
+            avg = float(np.mean(tf_values))
+            sentiment = summarize_sentiment(avg)
+            risk = derive_risk_score(tf_values)
+
+            results.append({
+                "symbol": symbol,
+                "sentiment": sentiment,
+                "risk": risk,
+                "risk_label": risk_label(risk),
+                "tf_15m": tf_map["15m"],
+                "tf_1h": tf_map["1h"],
+                "tf_4h": tf_map["4h"],
+                "tf_1d": tf_map["1d"],
+                "summary": build_pair_summary(symbol, avg, risk),
+                "average_score": round(avg, 1),
+            })
+
+        # market summary
+        if results:
+            market_avg = float(np.mean([x["average_score"] for x in results]))
+            market_risk = int(np.mean([x["risk"] for x in results]))
+            market_summary = build_pair_summary("MARKET", market_avg, market_risk)
+
+            best_setup = max(
+                results,
+                key=lambda x: (x["average_score"] - x["risk"] * 0.35)
+            )["symbol"]
+        else:
+            market_summary = "No market summary available."
+            best_setup = None
+
+        return JSONResponse({
+            "ok": True,
+            "pairs": results,
+            "market_summary": market_summary,
+            "best_setup": best_setup,
+            "updatedAt": ts_iso_now(),
+        })
+
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
 
