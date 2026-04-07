@@ -6,6 +6,7 @@
 },
   "nav": {
     "home": "Home",
+    "extension": "Extension",
     "pricing": "Pricing",
     "dashboard": "Dashboard",
     "docs": "Docs",
@@ -241,5 +242,136 @@
       "platformsTitle": "Supported platforms",
       "disclaimerTitle": "Financial disclaimer",
       "disclaimerText": "SentiPulse provides market sentiment indicators for informational purposes only. The service does not provide financial advice, trading recommendations or investment guidance. Users are responsible for their own trading decisions."
+    },
+
+  "landingExtension": {
+    "meta": {
+      "title": "SentiPulse Extension — Multi-Timeframe Crypto Fear & Greed",
+      "description": "Track crypto fear and greed across multiple timeframes with a clean Chrome extension built for fast market sentiment checks."
+    },
+    "hero": {
+      "kicker": "Chrome Extension • Multi-Timeframe Signals",
+      "title": "Track Crypto Fear & Greed Across Multiple Timeframes",
+      "subtitle": "Spot sentiment shifts faster with clean multi-timeframe signals for BTC, ETH, SOL, XRP and more.",
+      "ctaPrimary": "Add to Chrome",
+      "ctaSecondary": "See Pricing",
+      "trustLine": "No noise. No chart overload. Just fast sentiment clarity."
+    },
+    "pain": {
+      "kicker": "Why it matters",
+      "title": "Stop Guessing the Market Mood",
+      "subtitle": "Crypto moves fast, but reading sentiment clearly usually does not.",
+      "items": [
+        {
+          "title": "Too much noise",
+          "text": "Charts, news, Twitter and indicators often point in different directions."
+        },
+        {
+          "title": "No quick read",
+          "text": "It takes too long to understand whether sentiment looks strong, weak or stretched."
+        },
+        {
+          "title": "Missing timeframe context",
+          "text": "A pair can look constructive on one timeframe and fragile on another."
+        }
+      ],
+      "bottomLine": "SentiPulse helps you read crypto market mood in seconds, not after 20 tabs and 10 charts."
+    },
+    "features": {
+      "kicker": "What you get",
+      "title": "Cleaner sentiment signals, faster decisions",
+      "items": [
+        {
+          "title": "Multi-Timeframe Signals",
+          "text": "See sentiment structure across short-term and higher timeframes in one view."
+        },
+        {
+          "title": "Fear & Greed Readings",
+          "text": "Quickly understand whether a pair looks fearful, neutral, constructive or overheated."
+        },
+        {
+          "title": "Fast Pair Comparison",
+          "text": "Compare BTC, ETH, SOL, XRP and more without digging through chart clutter."
+        },
+        {
+          "title": "Cleaner Market Context",
+          "text": "Get a faster read on whether conditions look stable, mixed, stretched or risky."
+        }
+      ]
+    },
+    "howItWorks": {
+      "kicker": "How it works",
+      "title": "Start in minutes",
+      "subtitle": "Open the extension, check the signals and scan the market faster.",
+      "steps": [
+        {
+          "kicker": "Step 1",
+          "title": "Open the extension",
+          "text": "Launch SentiPulse directly from your Chrome toolbar."
+        },
+        {
+          "kicker": "Step 2",
+          "title": "Check the sentiment",
+          "text": "See fear and greed style signals across multiple timeframes."
+        },
+        {
+          "kicker": "Step 3",
+          "title": "Scan faster",
+          "text": "Compare pairs and identify where sentiment looks stronger or more stretched."
+        }
+      ]
+    },
+    "comparison": {
+      "kicker": "Why SentiPulse",
+      "title": "More useful than a single market index",
+      "left": {
+        "title": "Typical Fear & Greed tools",
+        "items": [
+          "One market-wide reading",
+          "Limited pair-specific context",
+          "No fast comparison workflow",
+          "Little or no timeframe breakdown"
+        ]
+      },
+      "right": {
+        "title": "SentiPulse",
+        "items": [
+          "Pair-level sentiment visibility",
+          "Multi-timeframe structure",
+          "Faster market scanning",
+          "Built for real trading workflows"
+        ]
+      },
+      "bottomLine": "Instead of one generic market reading, SentiPulse helps you understand where sentiment actually looks stronger and where it does not."
+    },
+    "faq": {
+      "kicker": "FAQ",
+      "title": "Questions",
+      "items": [
+        {
+          "q": "What is SentiPulse?",
+          "a": "SentiPulse is a Chrome extension for quick crypto market sentiment checks across multiple timeframes."
+        },
+        {
+          "q": "Which pairs does it support?",
+          "a": "It is built for BTC, ETH, SOL, XRP and broader crypto market workflows."
+        },
+        {
+          "q": "Is this a trading bot?",
+          "a": "No. It is a sentiment and market context tool, not an automated trading system."
+        },
+        {
+          "q": "Why use multi-timeframe sentiment?",
+          "a": "Because market structure can look different across timeframes, and alignment matters."
+        }
+      ]
+    },
+    "cta": {
+      "title": "See crypto sentiment in seconds",
+      "subtitle": "Install SentiPulse and get a cleaner multi-timeframe view of crypto market mood.",
+      "button": "Add to Chrome",
+      "note": "Built for fast BTC, ETH, SOL, XRP and broader market sentiment checks."
     }
+  }
 }
+

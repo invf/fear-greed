@@ -6,6 +6,7 @@
   },
   "nav": {
     "home": "Inicio",
+    "extension": "Extensión",
     "pricing": "Precios",
     "dashboard": "Panel",
     "docs": "Documentación",
@@ -241,5 +242,134 @@
     "platformsTitle": "Plataformas compatibles",
     "disclaimerTitle": "Aviso financiero",
     "disclaimerText": "SentiPulse proporciona indicadores de sentimiento del mercado únicamente con fines informativos. El servicio no ofrece asesoramiento financiero, recomendaciones de trading ni orientación de inversión. Los usuarios son responsables de sus propias decisiones de trading."
+  },
+  "landingExtension": {
+  "meta": {
+    "title": "SentiPulse Extension — Multi-Timeframe Crypto Fear & Greed",
+    "description": "Sigue el Crypto Fear & Greed en múltiples marcos temporales con una extensión de Chrome limpia para revisar el sentimiento del mercado más rápido."
+  },
+  "hero": {
+    "kicker": "Chrome Extension • Multi-Timeframe Signals",
+    "title": "Sigue el Crypto Fear & Greed en múltiples marcos temporales",
+    "subtitle": "Detecta cambios de sentimiento más rápido con señales multi-timeframe limpias para BTC, ETH, SOL, XRP y más.",
+    "ctaPrimary": "Añadir a Chrome",
+    "ctaSecondary": "Ver precios",
+    "trustLine": "Sin ruido. Sin gráficos sobrecargados. Solo claridad rápida sobre el sentimiento del mercado."
+  },
+  "pain": {
+    "kicker": "Por qué importa",
+    "title": "Deja de adivinar el sentimiento del mercado",
+    "subtitle": "El mercado cripto se mueve rápido, pero leer el sentimiento con claridad normalmente no es tan fácil.",
+    "items": [
+      {
+        "title": "Demasiado ruido",
+        "text": "Los gráficos, noticias, Twitter e indicadores suelen apuntar en direcciones distintas."
+      },
+      {
+        "title": "Sin lectura rápida",
+        "text": "Toma demasiado tiempo entender si el sentimiento se ve fuerte, débil o ya sobrecalentado."
+      },
+      {
+        "title": "Falta contexto de temporalidad",
+        "text": "Un par puede verse constructivo en un marco temporal y frágil en otro."
+      }
+    ],
+    "bottomLine": "SentiPulse te ayuda a leer el sentimiento del mercado cripto en segundos, no después de 20 pestañas y 10 gráficos."
+  },
+  "features": {
+    "kicker": "Lo que obtienes",
+    "title": "Señales de sentimiento más limpias, decisiones más rápidas",
+    "items": [
+      {
+        "title": "Señales Multi-Timeframe",
+        "text": "Ve la estructura del sentimiento en marcos temporales cortos y altos en una sola vista."
+      },
+      {
+        "title": "Lecturas Fear & Greed",
+        "text": "Entiende rápidamente si un par se ve temeroso, neutral, constructivo o sobrecalentado."
+      },
+      {
+        "title": "Comparación rápida de pares",
+        "text": "Compara BTC, ETH, SOL, XRP y más sin perderte en el desorden de gráficos."
+      },
+      {
+        "title": "Contexto de mercado más claro",
+        "text": "Evalúa más rápido si las condiciones se ven estables, mixtas, extendidas o arriesgadas."
+      }
+    ]
+  },
+  "howItWorks": {
+    "kicker": "Cómo funciona",
+    "title": "Empieza en minutos",
+    "subtitle": "Abre la extensión, revisa las señales y escanea el mercado más rápido.",
+    "steps": [
+      {
+        "kicker": "Paso 1",
+        "title": "Abre la extensión",
+        "text": "Lanza SentiPulse directamente desde tu barra de herramientas de Chrome."
+      },
+      {
+        "kicker": "Paso 2",
+        "title": "Revisa el sentimiento",
+        "text": "Ve señales tipo Fear & Greed en múltiples marcos temporales."
+      },
+      {
+        "kicker": "Paso 3",
+        "title": "Escanea más rápido",
+        "text": "Compara pares e identifica dónde el sentimiento se ve más fuerte o más sobrecalentado."
+      }
+    ]
+  },
+  "comparison": {
+    "kicker": "Por qué SentiPulse",
+    "title": "Más útil que un único índice de mercado",
+    "left": {
+      "title": "Herramientas típicas de Fear & Greed",
+      "items": [
+        "Una sola lectura general del mercado",
+        "Contexto limitado por par",
+        "Sin flujo rápido de comparación",
+        "Poco o ningún desglose por marco temporal"
+      ]
+    },
+    "right": {
+      "title": "SentiPulse",
+      "items": [
+        "Visibilidad del sentimiento por par",
+        "Estructura multi-timeframe",
+        "Escaneo de mercado más rápido",
+        "Diseñado para flujos reales de trading"
+      ]
+    },
+    "bottomLine": "En lugar de una lectura genérica del mercado, SentiPulse te ayuda a entender dónde el sentimiento realmente se ve más fuerte — y dónde no."
+  },
+  "faq": {
+    "kicker": "FAQ",
+    "title": "Preguntas",
+    "items": [
+      {
+        "q": "¿Qué es SentiPulse?",
+        "a": "SentiPulse es una extensión de Chrome para revisar rápidamente el sentimiento del mercado cripto en múltiples marcos temporales."
+      },
+      {
+        "q": "¿Qué pares soporta?",
+        "a": "Está diseñado para BTC, ETH, SOL, XRP y flujos más amplios del mercado cripto."
+      },
+      {
+        "q": "¿Es un bot de trading?",
+        "a": "No. Es una herramienta de sentimiento y contexto de mercado, no un sistema de trading automatizado."
+      },
+      {
+        "q": "¿Por qué usar análisis multi-timeframe?",
+        "a": "Porque la estructura del mercado puede verse diferente según el marco temporal, y la alineación importa."
+      }
+    ]
+  },
+  "cta": {
+    "title": "Ve el crypto sentiment en segundos",
+    "subtitle": "Instala SentiPulse y obtén una vista multi-timeframe más clara del sentimiento del mercado cripto.",
+    "button": "Añadir a Chrome",
+    "note": "Diseñado para revisiones rápidas de BTC, ETH, SOL, XRP y del sentimiento general del mercado."
   }
+}
 }

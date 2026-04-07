@@ -100,7 +100,7 @@ export default function HeroPreview() {
       </div>
 
       <div className="shotInner" style={{ marginTop: 10 }}>
-        Відео: webm + mp4 fallback. Рекомендована ширина 900–1100px, без звуку, loop-friendly.
+        Live preview of the extension sidepanel
       </div>
     </div>
   );

@@ -8,6 +8,7 @@
 
   "nav": {
     "home": "首頁",
+    "extension": "擴充功能",
     "pricing": "價格",
     "dashboard": "控制台",
     "docs": "文件",
@@ -374,5 +375,134 @@
 
     "contactTitle": "聯絡",
     "contactText": "如果您對此政策有任何疑問，請聯絡我們："
+  },
+  "landingExtension": {
+  "meta": {
+    "title": "SentiPulse Extension — 多時間框架 Crypto Fear & Greed",
+    "description": "透過簡潔的 Chrome 擴充功能，在多個時間框架上快速查看 Crypto Fear & Greed 與市場情緒。"
+  },
+  "hero": {
+    "kicker": "Chrome Extension • Multi-Timeframe Signals",
+    "title": "在多個時間框架中追蹤 Crypto Fear & Greed",
+    "subtitle": "透過清楚的多時間框架訊號，更快掌握 BTC、ETH、SOL、XRP 等交易對的市場情緒變化。",
+    "ctaPrimary": "加入 Chrome",
+    "ctaSecondary": "查看價格",
+    "trustLine": "沒有雜訊。沒有圖表過載。只有更快、更清晰的市場情緒判讀。"
+  },
+  "pain": {
+    "kicker": "為什麼重要",
+    "title": "別再靠猜測判斷市場情緒",
+    "subtitle": "加密市場變化很快，但清楚讀懂市場情緒通常並不容易。",
+    "items": [
+      {
+        "title": "雜訊太多",
+        "text": "圖表、新聞、Twitter 和各種指標常常給出彼此矛盾的訊號。"
+      },
+      {
+        "title": "缺少快速判讀",
+        "text": "要判斷情緒是強、弱還是已經過熱，通常要花太多時間。"
+      },
+      {
+        "title": "缺少時間框架脈絡",
+        "text": "同一個交易對可能在一個時間框架上看起來不錯，在另一個時間框架上卻顯得脆弱。"
+      }
+    ],
+    "bottomLine": "SentiPulse 幫助你在幾秒內讀懂加密市場情緒，而不是開 20 個分頁和 10 張圖表之後。"
+  },
+  "features": {
+    "kicker": "你將獲得",
+    "title": "更清晰的情緒訊號，更快的決策",
+    "items": [
+      {
+        "title": "多時間框架訊號",
+        "text": "在單一視圖中查看短週期與高週期的情緒結構。"
+      },
+      {
+        "title": "Fear & Greed 讀數",
+        "text": "快速理解某個交易對目前更偏恐懼、中性、建設性或過熱。"
+      },
+      {
+        "title": "快速交易對比較",
+        "text": "無需在雜亂圖表中來回切換，即可比較 BTC、ETH、SOL、XRP 等交易對。"
+      },
+      {
+        "title": "更清晰的市場脈絡",
+        "text": "更快判斷目前市場條件是穩定、混合、延伸還是高風險。"
+      }
+    ]
+  },
+  "howItWorks": {
+    "kicker": "運作方式",
+    "title": "幾分鐘即可開始",
+    "subtitle": "打開擴充功能、查看訊號，並更快掃描市場。",
+    "steps": [
+      {
+        "kicker": "步驟 1",
+        "title": "打開擴充功能",
+        "text": "直接從 Chrome 工具列啟動 SentiPulse。"
+      },
+      {
+        "kicker": "步驟 2",
+        "title": "查看市場情緒",
+        "text": "在多個時間框架中查看 Fear & Greed 風格訊號。"
+      },
+      {
+        "kicker": "步驟 3",
+        "title": "更快掃描市場",
+        "text": "比較交易對，找出哪些情緒更強，哪些更接近過熱。"
+      }
+    ]
+  },
+  "comparison": {
+    "kicker": "為什麼選擇 SentiPulse",
+    "title": "比單一市場指數更有用",
+    "left": {
+      "title": "典型 Fear & Greed 工具",
+      "items": [
+        "只有一個整體市場讀數",
+        "缺少交易對層級脈絡",
+        "沒有快速比較流程",
+        "幾乎沒有時間框架拆分"
+      ]
+    },
+    "right": {
+      "title": "SentiPulse",
+      "items": [
+        "交易對層級情緒可視性",
+        "多時間框架結構",
+        "更快的市場掃描",
+        "為真實交易流程設計"
+      ]
+    },
+    "bottomLine": "SentiPulse 不只是給你一個籠統的市場讀數，而是幫助你看清哪些地方情緒更強，哪些地方並不是。"
+  },
+  "faq": {
+    "kicker": "FAQ",
+    "title": "常見問題",
+    "items": [
+      {
+        "q": "什麼是 SentiPulse？",
+        "a": "SentiPulse 是一個 Chrome 擴充功能，用於在多個時間框架中快速查看加密市場情緒。"
+      },
+      {
+        "q": "支援哪些交易對？",
+        "a": "它面向 BTC、ETH、SOL、XRP 以及更廣泛的加密市場工作流程。"
+      },
+      {
+        "q": "這是交易機器人嗎？",
+        "a": "不是。它是市場情緒與脈絡工具，不是自動化交易系統。"
+      },
+      {
+        "q": "為什麼要看多時間框架情緒？",
+        "a": "因為市場結構在不同時間框架下可能完全不同，而時間框架之間的一致性非常重要。"
+      }
+    ]
+  },
+  "cta": {
+    "title": "幾秒內查看 Crypto Sentiment",
+    "subtitle": "安裝 SentiPulse，更清楚地查看加密市場的多時間框架情緒。",
+    "button": "加入 Chrome",
+    "note": "適用於快速查看 BTC、ETH、SOL、XRP 及更廣泛市場情緒。"
   }
+}
 }
