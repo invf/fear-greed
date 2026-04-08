@@ -19,7 +19,7 @@ export default async function SupportPage() {
 
         <p>
           <a
-            href="mailto:support@sentipulse.app"
+            href="mailto:sentipulseapp@gmail.com"
             className="underline"
           >
             support@sentipulse.app

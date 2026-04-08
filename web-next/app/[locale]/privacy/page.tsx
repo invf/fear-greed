@@ -95,10 +95,10 @@ export default async function PrivacyPage() {
             <p>{t("contactText")}</p>
             <p className="mt-2">
               <a
-                href="mailto:support@sentipulse.app"
+                href="mailto:sentipulseapp@gmail.com"
                 className="underline hover:no-underline"
               >
-                support@sentipulse.app
+                sentipulseapp@gmail.com
               </a>
             </p>
           </section>
