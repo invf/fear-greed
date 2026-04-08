@@ -1,5 +1,6 @@
 import "../globals.css";
 import type { Metadata } from "next";
+import Script from "next/script";
 
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, isLocale, defaultLocale } from "../../i18n";
@@ -30,13 +31,11 @@ export async function generateMetadata({
   const { locale } = await params;
   const lc = safeLocale(locale);
 
-  // We keep meta strings in messages under "meta" namespace
   const t = await getTranslations({ locale: lc, namespace: "meta" });
 
   const title = t("title");
   const description = t("description");
 
-  // Alternate language URLs (home)
   const languages: Record<string, string> = {};
   for (const l of ALL_LOCALES) {
     languages[l] = `${SITE_URL}/${l}`;
@@ -80,6 +79,20 @@ export default async function LocaleLayout({
   return (
     <html lang={lc}>
       <body>
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-NVRRX7PF9V"
+          strategy="afterInteractive"
+        />
+        <Script id="ga4" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            window.gtag = gtag;
+            gtag('js', new Date());
+            gtag('config', 'G-NVRRX7PF9V');
+          `}
+        </Script>
+
         <NextIntlClientProvider locale={lc} messages={messages}>
           <Header />
           <main className="containerMax px-4 py-6">{children}</main>
