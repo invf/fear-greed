@@ -1475,90 +1475,91 @@ def ai_analysis(request: Request, payload: AiAnalysisIn):
         print("AI PRELOGIC ERROR", repr(e))
         raise HTTPException(status_code=500, detail=f"Prelogic error: {str(e)}")
 
-        prompt = f"""
-    You are a professional crypto trading analyst.
+    prompt = f"""
+        You are a professional crypto trading analyst.
 
-    Pair: {payload.symbol}
+        Pair: {payload.symbol}
 
-    Use this precomputed market structure:
-    - short_bias: {pre["short_bias"]}
-    - higher_bias: {pre["higher_bias"]}
-    - alignment: {pre["alignment"]}
-    - momentum_state: {pre["momentum_state"]}
-    - extreme_state: {pre["extreme_state"]}
-    - market_regime: {pre["market_regime"]}
-    - suggested_setup: {pre["setup"]}
-    - confidence_hint: {pre["confidence"]}
-    - short_vs_higher: {pre["short_vs_higher"]}
-    - spread: {pre["spread"]}
-    - risk: {payload.risk}/100
+        Use this precomputed market structure:
+        - short_bias: {pre["short_bias"]}
+        - higher_bias: {pre["higher_bias"]}
+        - alignment: {pre["alignment"]}
+        - momentum_state: {pre["momentum_state"]}
+        - extreme_state: {pre["extreme_state"]}
+        - market_regime: {pre["market_regime"]}
+        - suggested_setup: {pre["setup"]}
+        - confidence_hint: {pre["confidence"]}
+        - short_vs_higher: {pre["short_vs_higher"]}
+        - spread: {pre["spread"]}
+        - risk: {payload.risk}/100
 
-    Your job:
-    - explain the structure like a trader
-    - keep it concise, specific, and practical
-    - use the precomputed structure, not generic market commentary
+        Your job:
+        - explain the structure like a trader
+        - keep it concise, specific, and practical
+        - use the precomputed structure, not generic market commentary
 
-    Hard rules:
-    - Do NOT repeat raw numeric values
-    - Do NOT mention news, macro, sentiment shifts, or external events
-    - Do NOT use generic phrases like:
-      - "market sentiment may change"
-      - "be wary of volatility"
-      - "transitional phase"
-      - "watch news"
-      - "conditions may shift unexpectedly"
-    - Every field must be tied to actual structure:
-      - alignment
-      - momentum
-      - higher timeframe bias
-      - market regime
-    - If the structure is weak, say WHY it is weak
-    - If the setup is low-quality, say WHY it is low-quality
-    - Use trader language like:
-      - pullback
-      - continuation
-      - rejection
-      - expansion
-      - chop
-      - fade
-      - confirmation
-      - follow-through
-    - Keep each field short and sharp
+        Hard rules:
+        - Do NOT repeat raw numeric values
+        - Do NOT mention news, macro, sentiment shifts, or external events
+        - Do NOT use generic phrases like:
+          - "market sentiment may change"
+          - "be wary of volatility"
+          - "transitional phase"
+          - "watch news"
+          - "conditions may shift unexpectedly"
+        - Every field must be tied to actual structure:
+          - alignment
+          - momentum
+          - higher timeframe bias
+          - market regime
+        - If the structure is weak, say WHY it is weak
+        - If the setup is low-quality, say WHY it is low-quality
+        - Use trader language like:
+          - pullback
+          - continuation
+          - rejection
+          - expansion
+          - chop
+          - fade
+          - confirmation
+          - follow-through
+        - Keep each field short and sharp
 
-    Setup must be exactly one of:
-    - "Buy pullback"
-    - "Trend continuation"
-    - "Breakout watch"
-    - "Mean reversion"
-    - "Reversal risk"
-    - "No-trade / chop"
+        Setup must be exactly one of:
+        - "Buy pullback"
+        - "Trend continuation"
+        - "Breakout watch"
+        - "Mean reversion"
+        - "Reversal risk"
+        - "No-trade / chop"
 
-    Bias must be exactly one of:
-    - "Bullish"
-    - "Bearish"
-    - "Neutral"
-    - "Mixed"
+        Bias must be exactly one of:
+        - "Bullish"
+        - "Bearish"
+        - "Neutral"
+        - "Mixed"
 
-    Confidence must be an integer from 0 to 100.
+        Confidence must be an integer from 0 to 100.
 
-    Field instructions:
-    - summary: max 2 short trader-style sentences, must describe structure
-    - what_matters: 1 short concrete structural driver
-    - action: 1 short practical trading action
-    - caution: 1 short specific failure condition
+        Field instructions:
+        - summary: max 2 short trader-style sentences, must describe structure
+        - what_matters: 1 short concrete structural driver
+        - action: 1 short practical trading action
+        - caution: 1 short specific failure condition
 
-    Return STRICT JSON only in this exact format:
+        Return STRICT JSON only in this exact format:
 
-    {{
-      "bias": "Bullish | Bearish | Neutral | Mixed",
-      "setup": "Buy pullback | Trend continuation | Breakout watch | Mean reversion | Reversal risk | No-trade / chop",
-      "confidence": 0,
-      "summary": "max 2 short trader-style sentences",
-      "what_matters": "1 short concrete structural driver",
-      "action": "1 short practical trading action",
-      "caution": "1 short specific failure condition"
-    }}
-    """
+        {{
+          "bias": "Bullish | Bearish | Neutral | Mixed",
+          "setup": "Buy pullback | Trend continuation | Breakout watch | Mean reversion | Reversal risk | No-trade / chop",
+          "confidence": 0,
+          "summary": "max 2 short trader-style sentences",
+          "what_matters": "1 short concrete structural driver",
+          "action": "1 short practical trading action",
+          "caution": "1 short specific failure condition"
+        }}
+        """
+
 
     try:
         response = client.chat.completions.create(
