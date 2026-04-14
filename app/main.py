@@ -1414,22 +1414,33 @@ def ai_analysis(request: Request, payload: AiAnalysisIn):
     install_id = (request.headers.get("X-Install-Id") or "").strip()
     api_key = (request.headers.get("X-Api-Key") or "").strip()
 
+    print("AI REQUEST START", {
+        "install_id": install_id,
+        "has_api_key": bool(api_key),
+        "symbol": payload.symbol,
+        "tf_15m": payload.tf_15m,
+        "tf_1h": payload.tf_1h,
+        "tf_4h": payload.tf_4h,
+        "tf_1d": payload.tf_1d,
+        "risk": payload.risk,
+    })
+
     if not install_id:
         raise HTTPException(status_code=400, detail="Missing X-Install-Id")
 
-    # --- PLAN ---
     user_id = resolve_user_id_from_api_key(api_key) if api_key else None
+    print("AI USER", {"user_id": user_id})
+
     meta = get_subscription_meta(user_id)
     plan_effective = effective_plan_from_meta(meta)
+    print("AI PLAN", {"plan_effective": plan_effective, "meta": meta})
 
-    # FREE → блок
     if plan_effective == "FREE":
         raise HTTPException(
             status_code=402,
             detail={"ok": False, "error": "upgrade_required"}
         )
 
-    # --- AI QUOTA ---
     def _do():
         return supabase.rpc(
             "consume_ai_analysis",
@@ -1440,13 +1451,18 @@ def ai_analysis(request: Request, payload: AiAnalysisIn):
             },
         ).execute()
 
-    res = _supabase_call(_do)
-    quota = _sb_data(res.data) or {}
+    try:
+        res = _supabase_call(_do)
+        quota = _sb_data(res.data) or {}
+        print("AI QUOTA", quota)
+    except Exception as e:
+        print("AI QUOTA ERROR", repr(e))
+        raise
 
     if not quota.get("ok", False):
         raise HTTPException(status_code=402, detail=quota)
 
-    # --- OPENAI PROMPT ---
+    try:
         pre = derive_prelogic(
             tf_15m=payload.tf_15m,
             tf_1h=payload.tf_1h,
@@ -1454,65 +1470,84 @@ def ai_analysis(request: Request, payload: AiAnalysisIn):
             tf_1d=payload.tf_1d,
             risk=payload.risk,
         )
+        print("AI PRELOGIC", pre)
+    except Exception as e:
+        print("AI PRELOGIC ERROR", repr(e))
+        raise HTTPException(status_code=500, detail=f"Prelogic error: {str(e)}")
 
-        prompt = f"""
-    You are a professional crypto trading analyst.
+    prompt = f"""
+You are a professional crypto trading analyst.
 
-    Pair: {payload.symbol}
+Pair: {payload.symbol}
 
-    Use this precomputed market structure:
-    - short_bias: {pre["short_bias"]}
-    - higher_bias: {pre["higher_bias"]}
-    - alignment: {pre["alignment"]}
-    - momentum_state: {pre["momentum_state"]}
-    - extreme_state: {pre["extreme_state"]}
-    - market_regime: {pre["market_regime"]}
-    - suggested_setup: {pre["setup"]}
-    - confidence_hint: {pre["confidence"]}
-    - short_vs_higher: {pre["short_vs_higher"]}
-    - spread: {pre["spread"]}
-    - risk: {payload.risk}/100
+Use this precomputed market structure:
+- short_bias: {pre["short_bias"]}
+- higher_bias: {pre["higher_bias"]}
+- alignment: {pre["alignment"]}
+- momentum_state: {pre["momentum_state"]}
+- extreme_state: {pre["extreme_state"]}
+- market_regime: {pre["market_regime"]}
+- suggested_setup: {pre["setup"]}
+- confidence_hint: {pre["confidence"]}
+- short_vs_higher: {pre["short_vs_higher"]}
+- spread: {pre["spread"]}
+- risk: {payload.risk}/100
 
-    Rules:
-    - Do NOT repeat raw numeric values
-    - Be specific and trader-like
-    - Do NOT mention news, macro, or external events
-    - Do NOT use generic phrases like "market sentiment may change"
-    - If structure is messy, clearly say it is chop / low-quality
-    - Keep each field concise
+Rules:
+- Do NOT repeat raw numeric values
+- Be specific and trader-like
+- Do NOT mention news, macro, or external events
+- Do NOT use generic phrases like "market sentiment may change"
+- If structure is messy, clearly say it is chop / low-quality
+- Keep each field concise
 
-    Return STRICT JSON only:
+Return STRICT JSON only:
 
-    {{
-      "bias": "Bullish | Bearish | Neutral | Mixed",
-      "setup": "Buy pullback | Trend continuation | Breakout watch | Mean reversion | Reversal risk | No-trade / chop",
-      "confidence": 0,
-      "summary": "max 2 short sentences",
-      "what_matters": "1 short structural insight",
-      "action": "1 short practical action",
-      "caution": "1 short specific risk"
-    }}
-    """
+{{
+  "bias": "Bullish | Bearish | Neutral | Mixed",
+  "setup": "Buy pullback | Trend continuation | Breakout watch | Mean reversion | Reversal risk | No-trade / chop",
+  "confidence": 0,
+  "summary": "max 2 short sentences",
+  "what_matters": "1 short structural insight",
+  "action": "1 short practical action",
+  "caution": "1 short specific risk"
+}}
+"""
 
     try:
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[
-                {"role": "system", "content": "You are a professional crypto analyst."},
+                {"role": "system", "content": "You are a concise professional crypto trading analyst."},
                 {"role": "user", "content": prompt}
             ],
-            temperature=0.7
+            temperature=0.35
         )
 
-        text = response.choices[0].message.content
-
-        text = text.strip()
+        text = (response.choices[0].message.content or "").strip()
+        print("AI RAW RESPONSE", text)
 
         if text.startswith("```"):
             parts = text.split("```")
             if len(parts) >= 2:
                 text = parts[1]
             text = text.replace("json", "", 1).strip()
+
+        print("AI CLEAN RESPONSE", text)
+
+        try:
+            parsed = json.loads(text)
+        except Exception as e:
+            print("AI JSON PARSE ERROR", repr(e))
+            parsed = {
+                "bias": pre["bias"],
+                "setup": pre["setup"],
+                "confidence": pre["confidence"],
+                "summary": "Structure is available, but AI returned a non-JSON response.",
+                "what_matters": "Short and higher timeframe alignment is the key driver.",
+                "action": "Wait for clearer confirmation before increasing exposure.",
+                "caution": "Unstable structure can quickly turn into chop."
+            }
 
         parsed = {
             "bias": str(parsed.get("bias", pre["bias"])),
@@ -1524,7 +1559,10 @@ def ai_analysis(request: Request, payload: AiAnalysisIn):
             "caution": str(parsed.get("caution", "")),
         }
 
+        print("AI FINAL PARSED", parsed)
+
     except Exception as e:
+        print("AI OPENAI ERROR", repr(e))
         raise HTTPException(status_code=500, detail=f"AI error: {str(e)}")
 
     return {
@@ -1532,5 +1570,5 @@ def ai_analysis(request: Request, payload: AiAnalysisIn):
         "used": quota.get("used"),
         "limit": quota.get("limit"),
         "remaining": quota.get("remaining"),
-        "analysis": parsed
+        "analysis": parsed,
     }
