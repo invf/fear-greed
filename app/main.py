@@ -689,6 +689,148 @@ def build_pair_summary(symbol: str, avg: float, risk: int) -> str:
 
     return f"{mood} {suffix}"
 
+def zone_from_score(v: float) -> str:
+    if v < 25:
+        return "extreme_fear"
+    if v < 45:
+        return "fear"
+    if v <= 55:
+        return "neutral"
+    if v < 76:
+        return "greed"
+    return "extreme_greed"
+
+
+def bias_from_score(v: float) -> str:
+    if v < 45:
+        return "bearish"
+    if v <= 55:
+        return "neutral"
+    return "bullish"
+
+
+def avg2(a: float, b: float) -> float:
+    return (float(a) + float(b)) / 2.0
+
+
+def derive_prelogic(tf_15m: float, tf_1h: float, tf_4h: float, tf_1d: float, risk: int) -> dict:
+    short_avg = avg2(tf_15m, tf_1h)
+    higher_avg = avg2(tf_4h, tf_1d)
+    full_avg = float(np.mean([tf_15m, tf_1h, tf_4h, tf_1d]))
+
+    short_bias = bias_from_score(short_avg)
+    higher_bias = bias_from_score(higher_avg)
+
+    spread = max(tf_15m, tf_1h, tf_4h, tf_1d) - min(tf_15m, tf_1h, tf_4h, tf_1d)
+
+    short_vs_higher = short_avg - higher_avg
+    intraday_push = tf_15m - tf_1h
+    trend_slope = tf_1h - tf_4h
+
+    if spread <= 8:
+        alignment = "high"
+    elif spread <= 18:
+        alignment = "medium"
+    else:
+        alignment = "low"
+
+    if intraday_push > 6 and trend_slope > 0:
+        momentum_state = "accelerating"
+    elif intraday_push < -6 and trend_slope < 0:
+        momentum_state = "fading"
+    else:
+        momentum_state = "stable"
+
+    extreme_state = "balanced"
+    if full_avg >= 76:
+        extreme_state = "overheated"
+    elif full_avg <= 24:
+        extreme_state = "oversold"
+
+    if alignment == "low" and risk >= 60:
+        market_regime = "chop"
+        setup = "No-trade / chop"
+    elif short_bias == "bullish" and higher_bias == "bullish":
+        if risk >= 70:
+            market_regime = "stretched_trend"
+            setup = "Reversal risk"
+        elif short_vs_higher > 6:
+            market_regime = "trend_continuation"
+            setup = "Trend continuation"
+        else:
+            market_regime = "pullback_trend"
+            setup = "Buy pullback"
+    elif short_bias == "bearish" and higher_bias == "bearish":
+        if risk >= 70:
+            market_regime = "stretched_downside"
+            setup = "Reversal risk"
+        elif short_vs_higher < -6:
+            market_regime = "trend_continuation"
+            setup = "Trend continuation"
+        else:
+            market_regime = "pullback_downtrend"
+            setup = "Mean reversion"
+    elif short_bias != higher_bias:
+        if risk >= 65:
+            market_regime = "reversal_risk"
+            setup = "Reversal risk"
+        else:
+            market_regime = "transition"
+            setup = "Breakout watch"
+    else:
+        market_regime = "mixed"
+        setup = "No-trade / chop"
+
+    confidence = 50
+
+    if alignment == "high":
+        confidence += 18
+    elif alignment == "medium":
+        confidence += 8
+    else:
+        confidence -= 12
+
+    if short_bias == higher_bias and short_bias != "neutral":
+        confidence += 10
+
+    if risk >= 75:
+        confidence -= 14
+    elif risk >= 60:
+        confidence -= 8
+
+    if extreme_state in ("overheated", "oversold"):
+        confidence -= 6
+
+    confidence = int(np.clip(confidence, 25, 92))
+
+    if short_bias == "bullish" and higher_bias == "bullish":
+        bias = "Bullish"
+    elif short_bias == "bearish" and higher_bias == "bearish":
+        bias = "Bearish"
+    elif alignment == "low":
+        bias = "Mixed"
+    else:
+        bias = "Neutral"
+
+    return {
+        "short_avg": round(short_avg, 1),
+        "higher_avg": round(higher_avg, 1),
+        "full_avg": round(full_avg, 1),
+        "spread": round(spread, 1),
+        "short_bias": short_bias,
+        "higher_bias": higher_bias,
+        "alignment": alignment,
+        "momentum_state": momentum_state,
+        "extreme_state": extreme_state,
+        "market_regime": market_regime,
+        "setup": setup,
+        "confidence": confidence,
+        "bias": bias,
+        "short_vs_higher": round(short_vs_higher, 1),
+        "intraday_push": round(intraday_push, 1),
+        "trend_slope": round(trend_slope, 1),
+    }
+
 # ============================================================
 # ROUTES
 # ============================================================
@@ -1305,31 +1447,52 @@ def ai_analysis(request: Request, payload: AiAnalysisIn):
         raise HTTPException(status_code=402, detail=quota)
 
     # --- OPENAI PROMPT ---
-    prompt = f"""
-You are a crypto trader.
+        pre = derive_prelogic(
+            tf_15m=payload.tf_15m,
+            tf_1h=payload.tf_1h,
+            tf_4h=payload.tf_4h,
+            tf_1d=payload.tf_1d,
+            risk=payload.risk,
+        )
 
-Symbol: {payload.symbol}
+        prompt = f"""
+    You are a professional crypto trading analyst.
 
-Timeframes:
-15m: {payload.tf_15m}
-1h: {payload.tf_1h}
-4h: {payload.tf_4h}
-1d: {payload.tf_1d}
+    Pair: {payload.symbol}
 
-Risk score: {payload.risk}/100
+    Use this precomputed market structure:
+    - short_bias: {pre["short_bias"]}
+    - higher_bias: {pre["higher_bias"]}
+    - alignment: {pre["alignment"]}
+    - momentum_state: {pre["momentum_state"]}
+    - extreme_state: {pre["extreme_state"]}
+    - market_regime: {pre["market_regime"]}
+    - suggested_setup: {pre["setup"]}
+    - confidence_hint: {pre["confidence"]}
+    - short_vs_higher: {pre["short_vs_higher"]}
+    - spread: {pre["spread"]}
+    - risk: {payload.risk}/100
 
-Do NOT repeat numbers.
+    Rules:
+    - Do NOT repeat raw numeric values
+    - Be specific and trader-like
+    - Do NOT mention news, macro, or external events
+    - Do NOT use generic phrases like "market sentiment may change"
+    - If structure is messy, clearly say it is chop / low-quality
+    - Keep each field concise
 
-Return JSON:
+    Return STRICT JSON only:
 
-{{
-  "bias": "Bullish / Bearish / Neutral",
-  "setup": "short idea",
-  "summary": "2 short sentences",
-  "what_matters": "key factor",
-  "caution": "risk warning"
-}}
-"""
+    {{
+      "bias": "Bullish | Bearish | Neutral | Mixed",
+      "setup": "Buy pullback | Trend continuation | Breakout watch | Mean reversion | Reversal risk | No-trade / chop",
+      "confidence": 0,
+      "summary": "max 2 short sentences",
+      "what_matters": "1 short structural insight",
+      "action": "1 short practical action",
+      "caution": "1 short specific risk"
+    }}
+    """
 
     try:
         response = client.chat.completions.create(
@@ -1351,7 +1514,15 @@ Return JSON:
                 text = parts[1]
             text = text.replace("json", "", 1).strip()
 
-        parsed = json.loads(text)
+        parsed = {
+            "bias": str(parsed.get("bias", pre["bias"])),
+            "setup": str(parsed.get("setup", pre["setup"])),
+            "confidence": int(parsed.get("confidence", pre["confidence"])),
+            "summary": str(parsed.get("summary", "")),
+            "what_matters": str(parsed.get("what_matters", "")),
+            "action": str(parsed.get("action", "")),
+            "caution": str(parsed.get("caution", "")),
+        }
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"AI error: {str(e)}")
