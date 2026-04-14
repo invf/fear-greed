@@ -1475,44 +1475,90 @@ def ai_analysis(request: Request, payload: AiAnalysisIn):
         print("AI PRELOGIC ERROR", repr(e))
         raise HTTPException(status_code=500, detail=f"Prelogic error: {str(e)}")
 
-    prompt = f"""
-You are a professional crypto trading analyst.
+        prompt = f"""
+    You are a professional crypto trading analyst.
 
-Pair: {payload.symbol}
+    Pair: {payload.symbol}
 
-Use this precomputed market structure:
-- short_bias: {pre["short_bias"]}
-- higher_bias: {pre["higher_bias"]}
-- alignment: {pre["alignment"]}
-- momentum_state: {pre["momentum_state"]}
-- extreme_state: {pre["extreme_state"]}
-- market_regime: {pre["market_regime"]}
-- suggested_setup: {pre["setup"]}
-- confidence_hint: {pre["confidence"]}
-- short_vs_higher: {pre["short_vs_higher"]}
-- spread: {pre["spread"]}
-- risk: {payload.risk}/100
+    Use this precomputed market structure:
+    - short_bias: {pre["short_bias"]}
+    - higher_bias: {pre["higher_bias"]}
+    - alignment: {pre["alignment"]}
+    - momentum_state: {pre["momentum_state"]}
+    - extreme_state: {pre["extreme_state"]}
+    - market_regime: {pre["market_regime"]}
+    - suggested_setup: {pre["setup"]}
+    - confidence_hint: {pre["confidence"]}
+    - short_vs_higher: {pre["short_vs_higher"]}
+    - spread: {pre["spread"]}
+    - risk: {payload.risk}/100
 
-Rules:
-- Do NOT repeat raw numeric values
-- Be specific and trader-like
-- Do NOT mention news, macro, or external events
-- Do NOT use generic phrases like "market sentiment may change"
-- If structure is messy, clearly say it is chop / low-quality
-- Keep each field concise
+    Your job:
+    - explain the structure like a trader
+    - keep it concise, specific, and practical
+    - use the precomputed structure, not generic market commentary
 
-Return STRICT JSON only:
+    Hard rules:
+    - Do NOT repeat raw numeric values
+    - Do NOT mention news, macro, sentiment shifts, or external events
+    - Do NOT use generic phrases like:
+      - "market sentiment may change"
+      - "be wary of volatility"
+      - "transitional phase"
+      - "watch news"
+      - "conditions may shift unexpectedly"
+    - Every field must be tied to actual structure:
+      - alignment
+      - momentum
+      - higher timeframe bias
+      - market regime
+    - If the structure is weak, say WHY it is weak
+    - If the setup is low-quality, say WHY it is low-quality
+    - Use trader language like:
+      - pullback
+      - continuation
+      - rejection
+      - expansion
+      - chop
+      - fade
+      - confirmation
+      - follow-through
+    - Keep each field short and sharp
 
-{{
-  "bias": "Bullish | Bearish | Neutral | Mixed",
-  "setup": "Buy pullback | Trend continuation | Breakout watch | Mean reversion | Reversal risk | No-trade / chop",
-  "confidence": 0,
-  "summary": "max 2 short sentences",
-  "what_matters": "1 short structural insight",
-  "action": "1 short practical action",
-  "caution": "1 short specific risk"
-}}
-"""
+    Setup must be exactly one of:
+    - "Buy pullback"
+    - "Trend continuation"
+    - "Breakout watch"
+    - "Mean reversion"
+    - "Reversal risk"
+    - "No-trade / chop"
+
+    Bias must be exactly one of:
+    - "Bullish"
+    - "Bearish"
+    - "Neutral"
+    - "Mixed"
+
+    Confidence must be an integer from 0 to 100.
+
+    Field instructions:
+    - summary: max 2 short trader-style sentences, must describe structure
+    - what_matters: 1 short concrete structural driver
+    - action: 1 short practical trading action
+    - caution: 1 short specific failure condition
+
+    Return STRICT JSON only in this exact format:
+
+    {{
+      "bias": "Bullish | Bearish | Neutral | Mixed",
+      "setup": "Buy pullback | Trend continuation | Breakout watch | Mean reversion | Reversal risk | No-trade / chop",
+      "confidence": 0,
+      "summary": "max 2 short trader-style sentences",
+      "what_matters": "1 short concrete structural driver",
+      "action": "1 short practical trading action",
+      "caution": "1 short specific failure condition"
+    }}
+    """
 
     try:
         response = client.chat.completions.create(
@@ -1540,13 +1586,13 @@ Return STRICT JSON only:
         except Exception as e:
             print("AI JSON PARSE ERROR", repr(e))
             parsed = {
-                "bias": pre["bias"],
-                "setup": pre["setup"],
-                "confidence": pre["confidence"],
-                "summary": "Structure is available, but AI returned a non-JSON response.",
-                "what_matters": "Short and higher timeframe alignment is the key driver.",
-                "action": "Wait for clearer confirmation before increasing exposure.",
-                "caution": "Unstable structure can quickly turn into chop."
+                "bias": str(parsed.get("bias", pre["bias"])),
+                "setup": str(parsed.get("setup", pre["setup"])),
+                "confidence": int(parsed.get("confidence", pre["confidence"])),
+                "summary": str(parsed.get("summary", "")),
+                "what_matters": str(parsed.get("what_matters", "")),
+                "action": str(parsed.get("action", "")),
+                "caution": str(parsed.get("caution", "")),
             }
 
         parsed = {
