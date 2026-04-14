@@ -1,6 +1,4 @@
-# app/main.py
-# pip install -U pandas numpy ta fastapi uvicorn httpx supabase web3 ta
-
+import json
 import math
 import os
 import secrets
@@ -11,20 +9,28 @@ from decimal import Decimal
 from datetime import datetime, timezone, timedelta
 from typing import Optional, Dict, Any, Tuple
 
+from dotenv import load_dotenv
+load_dotenv()
+
 import httpx
 import numpy as np
 import pandas as pd
 from ta.momentum import RSIIndicator
-
 from fastapi import FastAPI, Query, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
-
 from supabase import create_client, Client
-
 from web3 import Web3
 from web3._utils.events import get_event_data
 from pydantic import BaseModel, Field
+from openai import OpenAI
+
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+if not OPENAI_API_KEY:
+    raise RuntimeError("OPENAI_API_KEY is not set")
+
+client = OpenAI(api_key=OPENAI_API_KEY)
 
 
 # ============================================================
@@ -1055,6 +1061,13 @@ class CheckoutConfirmOut(BaseModel):
     expires_at: str
     api_key: str
 
+class AiAnalysisIn(BaseModel):
+    symbol: str
+    tf_15m: float
+    tf_1h: float
+    tf_4h: float
+    tf_1d: float
+    risk: int
 
 def _pending_tx_placeholder() -> str:
     return "pending_" + secrets.token_hex(24)
@@ -1251,3 +1264,102 @@ def checkout_confirm(payload: CheckoutConfirmIn):
         expires_at=new_expires.isoformat(),
         api_key=api_key
     )
+@app.post("/api/ai-analysis")
+def ai_analysis(request: Request, payload: AiAnalysisIn):
+    if not supabase:
+        raise HTTPException(status_code=500, detail="Supabase not configured")
+
+    install_id = (request.headers.get("X-Install-Id") or "").strip()
+    api_key = (request.headers.get("X-Api-Key") or "").strip()
+
+    if not install_id:
+        raise HTTPException(status_code=400, detail="Missing X-Install-Id")
+
+    # --- PLAN ---
+    user_id = resolve_user_id_from_api_key(api_key) if api_key else None
+    meta = get_subscription_meta(user_id)
+    plan_effective = effective_plan_from_meta(meta)
+
+    # FREE → блок
+    if plan_effective == "FREE":
+        raise HTTPException(
+            status_code=402,
+            detail={"ok": False, "error": "upgrade_required"}
+        )
+
+    # --- AI QUOTA ---
+    def _do():
+        return supabase.rpc(
+            "consume_ai_analysis",
+            {
+                "p_install_id": install_id,
+                "p_api_key": api_key,
+                "p_symbol": payload.symbol,
+            },
+        ).execute()
+
+    res = _supabase_call(_do)
+    quota = _sb_data(res.data) or {}
+
+    if not quota.get("ok", False):
+        raise HTTPException(status_code=402, detail=quota)
+
+    # --- OPENAI PROMPT ---
+    prompt = f"""
+You are a crypto trader.
+
+Symbol: {payload.symbol}
+
+Timeframes:
+15m: {payload.tf_15m}
+1h: {payload.tf_1h}
+4h: {payload.tf_4h}
+1d: {payload.tf_1d}
+
+Risk score: {payload.risk}/100
+
+Do NOT repeat numbers.
+
+Return JSON:
+
+{{
+  "bias": "Bullish / Bearish / Neutral",
+  "setup": "short idea",
+  "summary": "2 short sentences",
+  "what_matters": "key factor",
+  "caution": "risk warning"
+}}
+"""
+
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are a professional crypto analyst."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7
+        )
+
+        text = response.choices[0].message.content
+
+        text = text.strip()
+
+        if text.startswith("```"):
+            parts = text.split("```")
+            if len(parts) >= 2:
+                text = parts[1]
+            text = text.replace("json", "", 1).strip()
+
+        parsed = json.loads(text)
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"AI error: {str(e)}")
+
+    return {
+        "ok": True,
+        "used": quota.get("used"),
+        "limit": quota.get("limit"),
+        "remaining": quota.get("remaining"),
+        "analysis": parsed
+    }
