@@ -68,14 +68,24 @@
   "help_risk_title": { "message": "Risk (0–100) — це індекс нестабільності, а НЕ сигнал купівлі чи продажу. Він показує, наскільки небезпечний поточний стан (крайнощі, розбіжність ТФ, короткі імпульси)." },
   "help_risk_levels": { "message": "Рівні: LOW спокій · MEDIUM нестабільність · HIGH турбулентність · EXTREME екстремальні умови" },
 
-  "help_details_title": { "message": "Details → Структура ринку:" },
-  "help_market_tilt": { "message": "• Market Tilt — середній настрій по 15m/1h/4h/1d (загальний ухил ринку)." },
-  "help_tf_spread": { "message": "• TF Spread — наскільки таймфрейми розходяться між собою. Більше = конфлікт / фаза переходу." },
-  "help_extremes": { "message": "• Extremes (E) — відхилення від нейтральної зони 50. Більше = сильні емоції (страх або жадібність)." },
+  "tip_vol24": { "message": "Загальний обсяг ф'ючерсних торгів за останні 24 години" },
+  "tip_oi": { "message": "Сумарна вартість усіх відкритих ф'ючерсних позицій у USD" },
+  "tip_funding": { "message": "Регулярна виплата між лонгами та шортами. Позитивний = лонги платять; негативний = шорти платять" },
+  "tip_ls": { "message": "Співвідношення лонгів до шортів. Вище 1.5 = натовп на одному боці" },
+  "tip_taker": { "message": "Співвідношення агресивних покупок до продажів. Вище 1 = покупці домінують" },
+  "tip_rsi1d": { "message": "Денний RSI. Вище 70 = перекупленість; нижче 30 = перепроданість" },
+
+  "help_details_title": { "message": "Details → Ринкові дані:" },
+  "help_vol24": { "message": "• Volume 24h — загальний обсяг ф'ючерсних торгів за останні 24 години." },
+  "help_oi": { "message": "• Open Interest — сумарна вартість відкритих ф'ючерсних позицій у USD." },
+  "help_funding": { "message": "• Funding Rate — регулярна виплата між лонгами та шортами. Позитивний = лонги платять; негативний = шорти платять." },
+  "help_ls": { "message": "• Long / Short — співвідношення лонгів до шортів. Вище 1.5 = забагато лонгів (⚠️ натовп на одному боці)." },
+  "help_taker": { "message": "• Taker Buy/Sell — співвідношення агресивних покупок до продажів. Вище 1 = покупці агресивніші." },
+  "help_rsi1d": { "message": "• RSI (1D) — денний індекс відносної сили. Вище 70 = перекупленість; нижче 30 = перепроданість." },
 
   "help_tip": { "message": "Порада: якщо пара не визначилась, відкрий сторінку торгів або графіка з парою в URL і натисни Refresh." },
 
-  "apiKeyLabel": { "message": "API ключ" },
+  "apiKeyLabel": { "message": "API ключ (ключ SentiPulse, не Binance, OKX, Bybit)" },
   "apiKeyPlaceholder": { "message": "Вставте ключ…" },
   "apiKeyHint": { "message": "Вставте ключ із вашого кабінету." },
   "checking": { "message": "Перевірка..." },
@@ -122,5 +132,52 @@
   "err_no_data": {
     "message": "Дані відсутні або сталася помилка сервера."
   },
-  "toast_view_plans": { "message": "Переглянути тарифи" }
+  "toast_view_plans": { "message": "Переглянути тарифи" },
+
+  "riskLow": { "message": "НИЗЬКИЙ" },
+  "riskMedium": { "message": "СЕРЕДНІЙ" },
+  "riskHigh": { "message": "ВИСОКИЙ" },
+  "riskExtreme": { "message": "ЕКСТРЕМАЛЬНИЙ" },
+
+  "planStatusTitle": { "message": "Статус плану" },
+  "getApiKeyBtn": { "message": "Отримати ключ" },
+  "checkKeyBtn": { "message": "Перевірити ключ" },
+  "clearKeyBtn": { "message": "Очистити" },
+  "checkKeyHint": { "message": "Перевірити ключ і показати статус плану." },
+
+  "apiKeyInvalid": { "message": "Невірний API-ключ." },
+  "apiKeyRevoked": { "message": "Цей API-ключ відкликано." },
+  "apiKeyLimitExceeded": { "message": "Денний ліміт для цього ключа вичерпано." },
+  "apiKeyFree": { "message": "Безкоштовний план активний." },
+  "apiKeyPro": { "message": "Pro план активний." },
+  "apiKeyVip": { "message": "VIP план активний." },
+
+  "toast_ok": { "message": "OK" },
+  "toast_upgrade_title": { "message": "Потрібне оновлення" },
+
+  "aiTitle": { "message": "AI Аналіз" },
+  "aiAnalyzeBtn": { "message": "Аналізувати" },
+  "aiUpgradeHint": { "message": "FREE · Перейдіть на PRO або VIP" },
+  "aiUpgradeToast": { "message": "AI аналіз доступний на планах PRO та VIP." },
+  "aiTodaySuffix": { "message": "сьогодні" },
+  "aiSummaryLabel": { "message": "Підсумок" },
+  "aiWhatMattersLabel": { "message": "Що важливо зараз" },
+  "aiCautionLabel": { "message": "Увага" },
+  "aiActionLabel": { "message": "Дія" },
+  "aiLimitTitle": { "message": "Денний ліміт AI вичерпано" },
+  "aiLimitText": { "message": "Ви досягли денного ліміту AI аналізу ({0}/{1}). Оновіть план або спробуйте завтра." },
+
+  "help_ai_title": { "message": "AI Аналіз:" },
+  "help_ai_desc": { "message": "AI аналіз не повторює значення сітки. Він дає коротку інтерпретацію, ідею сетапу, що важливо зараз, і застереження для поточної пари." },
+
+  "scannerTitle": { "message": "Топ Пари" },
+  "scannerFearBtn": { "message": "Страх ≤ 30" },
+  "scannerGreedBtn": { "message": "Жадібність ≥ 70" },
+  "scannerResultFear": { "message": "Пари в зоні Страху" },
+  "scannerResultGreed": { "message": "Пари в зоні Жадібності" },
+  "scannerScanned": { "message": "Проскановано {0} пар" },
+  "scannerEmpty": { "message": "Пар у цій зоні не знайдено" },
+  "scannerUpgradeToast": { "message": "Сканер доступний на планах PRO та VIP." },
+  "scannerLimitTitle": { "message": "Денний ліміт сканера вичерпано" },
+  "scannerLimitText": { "message": "Ви досягли денного ліміту сканера ({0}/{1}). Спробуйте завтра або оновіть план." }
 }

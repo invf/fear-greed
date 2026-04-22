@@ -69,14 +69,24 @@
   "help_risk_title": { "message": "Risk (0–100) 是市场不稳定指数，不是买卖信号。" },
   "help_risk_levels": { "message": "等级：LOW 平稳 · MEDIUM 不稳定 · HIGH 波动 · EXTREME 极端状态" },
 
-  "help_details_title": { "message": "Details → 市场结构：" },
-  "help_market_tilt": { "message": "• Market Tilt — 所有周期的平均情绪。" },
-  "help_tf_spread": { "message": "• TF Spread — 各周期分歧程度。" },
-  "help_extremes": { "message": "• Extremes (E) — 偏离中性值 50 的程度。" },
+  "tip_vol24": { "message": "过去24小时的期货总交易量" },
+  "tip_oi": { "message": "所有未平仓期货头寸的总价值（USD）" },
+  "tip_funding": { "message": "多空双方之间的定期结算费率。正值=多头支付；负值=空头支付" },
+  "tip_ls": { "message": "多空持仓比例。高于1.5=群体集中在一侧" },
+  "tip_taker": { "message": "主动买入与卖出的比率。大于1=买方主导" },
+  "tip_rsi1d": { "message": "日线RSI。高于70=超买；低于30=超卖" },
+
+  "help_details_title": { "message": "Details → 市场数据：" },
+  "help_vol24": { "message": "• Volume 24h — 过去24小时的期货总交易量。" },
+  "help_oi": { "message": "• Open Interest — 未平仓期货头寸的总价值（USD）。" },
+  "help_funding": { "message": "• Funding Rate — 多空双方之间的定期结算费率。正值=多头支付；负值=空头支付。" },
+  "help_ls": { "message": "• Long / Short — 多空持仓比例。高于1.5=多头过多（⚠️ 群体集中在一侧）。" },
+  "help_taker": { "message": "• Taker Buy/Sell — 主动买入与卖出的比率。大于1=买方更激进。" },
+  "help_rsi1d": { "message": "• RSI (1D) — 日线相对强弱指数。高于70=超买；低于30=超卖。" },
 
   "help_tip": { "message": "提示：如果未识别交易对，请打开包含交易对的交易或图表页面，然后点击刷新。" },
 
-  "apiKeyLabel": { "message": "API 密钥" },
+  "apiKeyLabel": { "message": "API 密钥（SentiPulse 密钥，非 Binance、OKX、Bybit）" },
   "apiKeyPlaceholder": { "message": "粘贴您的密钥…" },
   "apiKeyHint": { "message": "从您的控制面板复制并粘贴密钥。" },
   "checking": { "message": "正在检查..." },
@@ -103,6 +113,52 @@
 
   "err_limit_exceeded": { "message": "已超过今日限额。请明天再试或升级套餐。" },
   "err_no_data": { "message": "暂无数据或服务器发生错误。" },
-  "toast_view_plans": { "message": "查看套餐" }
+  "toast_view_plans": { "message": "查看套餐" },
 
+  "riskLow": { "message": "低" },
+  "riskMedium": { "message": "中" },
+  "riskHigh": { "message": "高" },
+  "riskExtreme": { "message": "极端" },
+
+  "planStatusTitle": { "message": "套餐状态" },
+  "getApiKeyBtn": { "message": "获取 API 密钥" },
+  "checkKeyBtn": { "message": "验证密钥" },
+  "clearKeyBtn": { "message": "清除" },
+  "checkKeyHint": { "message": "验证密钥并显示套餐状态。" },
+
+  "apiKeyInvalid": { "message": "无效的 API 密钥。" },
+  "apiKeyRevoked": { "message": "此 API 密钥已被吊销。" },
+  "apiKeyLimitExceeded": { "message": "此密钥已达今日限额。" },
+  "apiKeyFree": { "message": "免费套餐已激活。" },
+  "apiKeyPro": { "message": "Pro 套餐已激活。" },
+  "apiKeyVip": { "message": "VIP 套餐已激活。" },
+
+  "toast_ok": { "message": "确定" },
+  "toast_upgrade_title": { "message": "需要升级" },
+
+  "aiTitle": { "message": "AI 分析" },
+  "aiAnalyzeBtn": { "message": "分析" },
+  "aiUpgradeHint": { "message": "FREE · 升级至 PRO 或 VIP" },
+  "aiUpgradeToast": { "message": "AI 分析功能仅限 PRO 和 VIP 套餐。" },
+  "aiTodaySuffix": { "message": "今日" },
+  "aiSummaryLabel": { "message": "摘要" },
+  "aiWhatMattersLabel": { "message": "当前关注点" },
+  "aiCautionLabel": { "message": "注意" },
+  "aiActionLabel": { "message": "操作建议" },
+  "aiLimitTitle": { "message": "今日 AI 分析额度已用完" },
+  "aiLimitText": { "message": "您今日的 AI 分析次数已达上限（{0}/{1}）。请升级套餐或明天再试。" },
+
+  "help_ai_title": { "message": "AI 分析：" },
+  "help_ai_desc": { "message": "AI 分析不会重复表格数值。它提供简短解读、交易设置思路、当前关注点以及当前交易对的风险提示。" },
+
+  "scannerTitle": { "message": "热门交易对" },
+  "scannerFearBtn": { "message": "恐惧 ≤ 30" },
+  "scannerGreedBtn": { "message": "贪婪 ≥ 70" },
+  "scannerResultFear": { "message": "恐惧区间交易对" },
+  "scannerResultGreed": { "message": "贪婪区间交易对" },
+  "scannerScanned": { "message": "已扫描 {0} 个交易对" },
+  "scannerEmpty": { "message": "该区间未找到交易对" },
+  "scannerUpgradeToast": { "message": "扫描器仅限 PRO 和 VIP 套餐使用。" },
+  "scannerLimitTitle": { "message": "今日扫描次数已用完" },
+  "scannerLimitText": { "message": "您今日的扫描次数已达上限（{0}/{1}）。请升级套餐或明天再试。" }
 }

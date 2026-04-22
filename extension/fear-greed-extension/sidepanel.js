@@ -2,6 +2,7 @@
 // Config
 // =========================
 const API_BASE = "https://fear-greed-24pr.onrender.com";
+
 const FNG_PATH = "/api/fng";
 const VALIDATE_PATH = "/api/validate-key";
 
@@ -46,6 +47,15 @@ const QUOTA_TTL_MS = 3500; // do not refetch quota more often than this for same
 const PRICING_URL = "https://www.sentipulse.app/en/pricing";
 const GET_API_KEY_URL = "https://www.sentipulse.app/en/pricing#checkout";
 const TOAST_COOLDOWN_MS = 60 * 1000; // 1 min
+
+// AI
+const AI_ANALYSIS_PATH = "/api/ai-analysis";
+
+// Scanner
+const SCANNER_PATH = "/api/scanner";
+
+// Market stats
+const MARKET_STATS_PATH = "/api/market-stats";
 
 // =========================
 // HTTP proxy (MV3 CSP-safe)
@@ -207,6 +217,7 @@ const state = {
   risk: null,
   plan: "FREE",
   planValid: false,
+  marketStats: null,
 };
 
 // quota fetch state to ensure it updates and doesn't spam
@@ -229,6 +240,16 @@ const auto = {
 
   lastSymbol: "",
   lastVenue: "",
+};
+
+const aiState = {
+  used: null,
+  limit: null,
+};
+
+const scannerState = {
+  used: null,
+  limit: null,
 };
 
 let refreshInFlight = false;
@@ -311,7 +332,7 @@ function initToastBindings() {
 function planText(plan) {
   const p = String(plan || "FREE").toUpperCase();
   if (p === "PRO") return "PRO";
-  if (p === "VIP" || p === "PREMIUM") return "VIP";
+  if (p === "VIP") return "VIP";
   return "FREE";
 }
 
@@ -378,6 +399,8 @@ async function setPlanState({ plan, valid, status, save = true } = {}) {
 
   renderPlan(p, v);
   renderPlanStatus({ plan: p, valid: v, status });
+  renderAiQuotaText();
+  renderScannerQuotaText();
 
   if (save) {
     await storageSet({
@@ -425,6 +448,571 @@ function renderQuota(metaLike) {
 
   el.style.display = "block";
   el.textContent = t("quota_used", [planLabel, used, limit]) || `${planLabel} • ${used}/${limit}`;
+}
+
+//AI function
+function renderAiQuotaText() {
+  const el = $("aiQuota");
+  if (!el) return;
+
+  const plan = planText(state.plan);
+
+  if (!state.planValid || plan === "FREE") {
+    el.textContent = "—";
+    return;
+  }
+
+  const limit =
+    typeof aiState.limit === "number"
+      ? aiState.limit
+      : plan === "PRO"
+      ? 10
+      : 20;
+
+  const used = Math.max(
+    0,
+    Math.min(
+      limit,
+      typeof aiState.used === "number" ? aiState.used : 0
+    )
+  );
+
+  el.textContent = `${used}/${limit}`;
+}
+
+function closeAiPopup(animated = true) {
+  const popup = $("aiPopup");
+  if (!popup || popup.classList.contains("is-hidden")) return;
+
+  if (animated) {
+    popup.classList.add("is-closing");
+    setTimeout(() => {
+      popup.classList.add("is-hidden");
+      popup.classList.remove("is-closing");
+    }, 230);
+  } else {
+    popup.classList.add("is-hidden");
+    popup.classList.remove("is-closing");
+  }
+}
+
+function clearAiResult() {
+  closeAiPopup(false);
+  setText("aiBias", "—");
+  setText("aiSetup", "—");
+  setText("aiSummary", "—");
+  setText("aiWhatMatters", "—");
+  setText("aiCaution", "—");
+}
+
+function renderAiResult(payload) {
+  const analysis = payload?.analysis || {};
+
+  setText("aiBias", analysis.bias || "—");
+  setText("aiSetup", analysis.setup || "—");
+  setText("aiConfidence", analysis.confidence != null ? `${analysis.confidence}%` : "—");
+  setText("aiSummary", analysis.summary || "—");
+  setText("aiWhatMatters", analysis.what_matters || "—");
+  setText("aiAction", analysis.action || "—");
+  setText("aiCaution", analysis.caution || "—");
+
+  const pairEl = $("aiPopupPair");
+  if (pairEl) pairEl.textContent = state.symbol !== "—" ? state.symbol : "—";
+
+  if (typeof payload?.used === "number" && typeof payload?.limit === "number") {
+    animateAiQuotaTo(payload.used, payload.limit);
+  } else {
+    renderAiQuotaText();
+  }
+
+  const popup = $("aiPopup");
+  if (popup) {
+    popup.classList.remove("is-hidden", "is-closing");
+  }
+}
+
+async function fetchAiAnalysis(symbol) {
+  const installId = await getOrCreateInstallId();
+  const apiKey = await getApiKey();
+
+  const v15 = Number(state.values["15m"]);
+  const v1h = Number(state.values["1h"]);
+  const v4h = Number(state.values["4h"]);
+  const v1d = Number(state.values["1d"]);
+
+  // state.risk у тебе = object from computeRisk(...)
+  const riskValue =
+    typeof state.risk?.risk === "number"
+      ? state.risk.risk
+      : null;
+
+  if (![v15, v1h, v4h, v1d, riskValue].every((v) => Number.isFinite(v))) {
+    throw Object.assign(new Error("missing_market_data"), {
+      status: 400,
+      debug: { v15, v1h, v4h, v1d, riskValue },
+    });
+  }
+
+  const headers = {
+    Accept: "application/json",
+    "Content-Type": "application/json",
+    "X-Install-Id": installId,
+    "X-Api-Key": apiKey,
+  };
+
+  const lang = (chrome.i18n?.getUILanguage?.() || navigator.language || "en")
+    .split("-")[0]
+    .toLowerCase();
+
+  const body = JSON.stringify({
+    symbol,
+    tf_15m: v15,
+    tf_1h: v1h,
+    tf_4h: v4h,
+    tf_1d: v1d,
+    risk: Math.round(riskValue),
+    lang,
+  });
+
+  const res = await httpFetch(API_BASE + AI_ANALYSIS_PATH, {
+    method: "POST",
+    headers,
+    body,
+  });
+
+  const data = unwrapPayload(res?.data ?? null) || {};
+  if (res?.ok) return data;
+
+  const err = String(data?.error || data?.status || "").toLowerCase();
+
+  if (err === "upgrade_required" || err === "plan_required") {
+    throw Object.assign(new Error("upgrade_required"), {
+      status: 402,
+      payload: data,
+    });
+  }
+
+  if (err === "limit_reached" || err === "limit_exceeded") {
+    throw Object.assign(new Error("limit_reached"), {
+      status: 429,
+      payload: data,
+    });
+  }
+
+  throw Object.assign(
+    new Error(friendlyErrorText(new Error("ai"), { status: res?.status ?? 0 })),
+    {
+      status: res?.status ?? 0,
+      payload: data,
+    }
+  );
+}
+
+async function ensureAiDataReady() {
+  const riskValue =
+    typeof state.risk?.risk === "number"
+      ? state.risk.risk
+      : null;
+
+  const ready =
+    Number.isFinite(Number(state.values["15m"])) &&
+    Number.isFinite(Number(state.values["1h"])) &&
+    Number.isFinite(Number(state.values["4h"])) &&
+    Number.isFinite(Number(state.values["1d"])) &&
+    Number.isFinite(Number(riskValue));
+
+  if (ready) return true;
+
+  await refresh(lastSeenUrl, "ai-preload");
+
+  const nextRiskValue =
+    typeof state.risk?.risk === "number"
+      ? state.risk.risk
+      : null;
+
+  return (
+    Number.isFinite(Number(state.values["15m"])) &&
+    Number.isFinite(Number(state.values["1h"])) &&
+    Number.isFinite(Number(state.values["4h"])) &&
+    Number.isFinite(Number(state.values["1d"])) &&
+    Number.isFinite(Number(nextRiskValue))
+  );
+}
+
+async function onAiAnalyzeClick() {
+  const btn = $("aiAnalyzeBtn");
+  const symbol = state.symbol;
+
+  if (!symbol || symbol === "—") {
+    showToast({
+      title: t("aiTitle") || "AI Analysis",
+      text: t("errNoSymbol") || "Cannot detect symbol from URL on this page.",
+    });
+    return;
+  }
+
+  if (!state.planValid || planText(state.plan) === "FREE") {
+    showToast({
+      title: t("toast_upgrade_title") || "Upgrade required",
+      text: t("aiUpgradeToast") || "AI Analysis is available on PRO and VIP plans.",
+      linkUrl: PRICING_URL,
+    });
+    return;
+  }
+
+  try {
+    btn?.classList.add("is-loading");
+    if (btn) btn.disabled = true;
+
+    const ready = await ensureAiDataReady();
+    if (!ready) {
+      showToast({
+        title: t("aiTitle") || "AI Analysis",
+        text: "Market data is still unavailable. Please wait a moment and try again.",
+      });
+      return;
+    }
+
+    const data = await fetchAiAnalysis(symbol);
+
+    const nextUsed = Number(data?.used);
+    if (Number.isFinite(nextUsed)) {
+      aiState.used = nextUsed;
+    }
+
+    const nextLimit = Number(data?.limit);
+    if (Number.isFinite(nextLimit)) {
+      aiState.limit = nextLimit;
+    }
+
+    renderAiQuotaText();
+    renderAiResult(data);
+    setErr("");
+  } catch (e) {
+    const code = String(e?.message || "").toLowerCase();
+
+    if (code === "upgrade_required") {
+      showToast({
+        title: t("toast_upgrade_title") || "Upgrade required",
+        text: t("aiUpgradeToast") || "AI Analysis is available on PRO and VIP plans.",
+        linkUrl: PRICING_URL,
+      });
+      return;
+    }
+
+    if (code === "limit_reached") {
+      const p = e?.payload || {};
+
+      const limitPayload = Number(p.limit);
+      if (Number.isFinite(limitPayload)) aiState.limit = limitPayload;
+
+      const usedPayload = Number(p.used);
+      if (Number.isFinite(usedPayload)) aiState.used = usedPayload;
+
+      renderAiQuotaText();
+
+      showToast({
+        title: t("aiLimitTitle") || "Daily AI limit reached",
+        text:
+          t("aiLimitText", [p.used ?? 0, p.limit ?? 0]) ||
+          "You've reached today's AI analysis limit. Please upgrade your plan or try again tomorrow.",
+        linkUrl: PRICING_URL,
+      });
+      return;
+    }
+
+    if (code === "missing_market_data") {
+      showToast({
+        title: t("aiTitle") || "AI Analysis",
+        text: "Market data is not ready yet. Refresh the panel and try again.",
+      });
+      return;
+    }
+
+    showToast({
+      title: t("aiTitle") || "AI Analysis",
+      text: friendlyErrorText(e, { status: e?.status ?? 0 }),
+    });
+  } finally {
+    btn?.classList.remove("is-loading");
+    if (btn) btn.disabled = false;
+  }
+}
+
+// =========================
+// Scanner
+// =========================
+function renderScannerQuotaText() {
+  const el = $("scannerQuota");
+  if (!el) return;
+
+  const plan = planText(state.plan);
+
+  if (!state.planValid || plan === "FREE") {
+    el.textContent = "—";
+    return;
+  }
+
+  const limit =
+    typeof scannerState.limit === "number"
+      ? scannerState.limit
+      : plan === "PRO"
+      ? 10
+      : 40;
+
+  const used = Math.max(
+    0,
+    Math.min(limit, typeof scannerState.used === "number" ? scannerState.used : 0)
+  );
+
+  el.textContent = `${used}/${limit}`;
+}
+
+function toggleScannerCollapse() {
+  const popup = $("scannerPopup");
+  if (!popup || popup.classList.contains("is-hidden")) return;
+  const collapsed = popup.classList.toggle("is-collapsed");
+  document.body.classList.toggle("scanner-collapsed", collapsed);
+}
+
+function openScannerPopup() {
+  const popup = $("scannerPopup");
+  if (!popup) return;
+  renderScannerQuotaText();
+  popup.classList.remove("is-hidden", "is-closing", "is-collapsed");
+  const listEl = $("scannerList");
+  if (listEl) listEl.innerHTML = "";
+  const subEl = $("scannerPopupSub");
+  if (subEl) subEl.textContent = "";
+  $("tabScanner")?.classList.add("is-active");
+  document.body.classList.add("scanner-open");
+  document.body.classList.remove("scanner-collapsed");
+}
+
+function closeScannerPopup(animated = true) {
+  const popup = $("scannerPopup");
+  if (!popup || popup.classList.contains("is-hidden")) return;
+
+  $("tabScanner")?.classList.remove("is-active");
+  document.body.classList.remove("scanner-open", "scanner-collapsed");
+
+  if (animated) {
+    popup.classList.add("is-closing");
+    setTimeout(() => {
+      popup.classList.add("is-hidden");
+      popup.classList.remove("is-closing");
+    }, 260);
+  } else {
+    popup.classList.add("is-hidden");
+    popup.classList.remove("is-closing");
+  }
+}
+
+function scannerExchangeUrls(symbol) {
+  const base = symbol.replace(/USDT$/i, "");
+  const baseLow = base.toLowerCase();
+  return {
+    binance: `https://www.binance.com/en/trade/${base}_USDT?type=spot`,
+    okx: `https://www.okx.com/en/trade-spot/${baseLow}-usdt`,
+    bybit: `https://www.bybit.com/en/trade/spot/${base}/USDT`,
+  };
+}
+
+function scannerZoneClass(label) {
+  const l = (label || "").toLowerCase();
+  if (l.includes("extreme fear")) return "zone-extfear";
+  if (l.includes("fear")) return "zone-fear";
+  if (l.includes("extreme greed")) return "zone-extgreed";
+  if (l.includes("greed")) return "zone-greed";
+  return "";
+}
+
+function renderScannerResult(data) {
+  const mode = data?.mode || "fear";
+  const pairs = data?.pairs || [];
+  const scanned = data?.scanned || 0;
+
+  const titleEl = $("scannerPopupTitle");
+  const subEl = $("scannerPopupSub");
+  const listEl = $("scannerList");
+
+  if (titleEl) {
+    titleEl.textContent =
+      mode === "fear"
+        ? t("scannerResultFear") || "Fear ≤ 30"
+        : t("scannerResultGreed") || "Greed ≥ 70";
+  }
+
+  if (subEl) {
+    subEl.textContent = t("scannerScanned", [String(scanned)]) || `Scanned ${scanned} pairs`;
+  }
+
+  if (listEl) {
+    if (!pairs.length) {
+      listEl.innerHTML = `<div class="scannerEmpty">${escapeHtml(t("scannerEmpty") || "No pairs found in this zone")}</div>`;
+    } else {
+      listEl.innerHTML = pairs
+        .map((p, i) => {
+          const zone = scannerZoneClass(p.label);
+          const urls = scannerExchangeUrls(p.symbol);
+          const avail = Array.isArray(p.exchanges) ? p.exchanges : ["binance", "okx", "bybit"];
+          const links = [
+            { key: "binance", label: "Binance", url: urls.binance, cls: "scannerLinkBinance" },
+            { key: "okx",     label: "OKX",     url: urls.okx,     cls: "scannerLinkOkx" },
+            { key: "bybit",   label: "Bybit",   url: urls.bybit,   cls: "scannerLinkBybit" },
+          ].map(({ key, label, url, cls }) => {
+            const on = avail.includes(key);
+            return `<a href="${on ? url : "#"}" data-ex="${key}" data-available="${on}"
+              class="scannerLink ${cls}${on ? "" : " scannerLinkOff"}">${label}</a>`;
+          }).join("");
+          return `
+          <div class="scannerItem ${zone}">
+            <div class="scannerItemRow">
+              <div class="scannerItemLeft">
+                <div class="scannerItemRank">${i + 1}</div>
+                <div class="scannerItemSymbol">${escapeHtml(p.symbol)}</div>
+              </div>
+              <div class="scannerItemRight">
+                <div class="scannerItemScore">${p.score}</div>
+                <div class="scannerItemLabel">${escapeHtml(p.label)}</div>
+              </div>
+            </div>
+            <div class="scannerItemLinks">${links}</div>
+          </div>`;
+        })
+        .join("");
+    }
+  }
+
+}
+
+async function fetchMarketStats(symbol) {
+  const url = new URL(API_BASE + MARKET_STATS_PATH);
+  url.searchParams.set("symbol", symbol);
+  try {
+    const res = await httpFetch(url.toString());
+    return unwrapPayload(res?.data) || res?.data || null;
+  } catch {
+    return null;
+  }
+}
+
+function fmtLargeUsd(v) {
+  if (v == null || isNaN(v)) return "—";
+  if (v >= 1e9) return "$" + (v / 1e9).toFixed(2) + "B";
+  if (v >= 1e6) return "$" + (v / 1e6).toFixed(1) + "M";
+  if (v >= 1e3) return "$" + (v / 1e3).toFixed(0) + "K";
+  return "$" + v.toFixed(0);
+}
+
+function fmtFunding(v) {
+  if (v == null || isNaN(v)) return "—";
+  const pct = (v * 100).toFixed(4);
+  return (v >= 0 ? "+" : "") + pct + "%";
+}
+
+async function fetchScanner(mode) {
+  const installId = await getOrCreateInstallId();
+  const apiKey = await getApiKey();
+
+  const headers = {
+    Accept: "application/json",
+    "Content-Type": "application/json",
+    "X-Install-Id": installId,
+    "X-Api-Key": apiKey,
+  };
+
+  const body = JSON.stringify({ mode });
+
+  const res = await httpFetch(API_BASE + SCANNER_PATH, {
+    method: "POST",
+    headers,
+    body,
+  });
+
+  const data = unwrapPayload(res?.data ?? null) || {};
+  if (res?.ok) return data;
+
+  const err = String(data?.error || data?.status || "").toLowerCase();
+
+  if (err === "upgrade_required" || err === "plan_required") {
+    throw Object.assign(new Error("upgrade_required"), { status: 402, payload: data });
+  }
+
+  if (err === "limit_reached" || err === "limit_exceeded") {
+    throw Object.assign(new Error("limit_reached"), { status: 429, payload: data });
+  }
+
+  throw Object.assign(
+    new Error(friendlyErrorText(new Error("scanner"), { status: res?.status ?? 0 })),
+    { status: res?.status ?? 0, payload: data }
+  );
+}
+
+async function onScannerClick(mode) {
+  const btnId = mode === "fear" ? "scannerFearBtn" : "scannerGreedBtn";
+  const btn = $(btnId);
+
+  if (!state.planValid || planText(state.plan) === "FREE") {
+    showToast({
+      title: t("toast_upgrade_title") || "Upgrade required",
+      text: t("scannerUpgradeToast") || "Scanner is available on PRO and VIP plans.",
+      linkUrl: PRICING_URL,
+    });
+    return;
+  }
+
+  try {
+    btn?.classList.add("is-loading");
+    if (btn) btn.disabled = true;
+    $("scannerFearBtn" === btnId ? "scannerGreedBtn" : "scannerFearBtn")?.setAttribute("disabled", "");
+
+    const data = await fetchScanner(mode);
+
+    if (typeof data?.used === "number") scannerState.used = data.used;
+    if (typeof data?.limit === "number") scannerState.limit = data.limit;
+    renderScannerQuotaText();
+
+    renderScannerResult(data);
+    setErr("");
+  } catch (e) {
+    const code = String(e?.message || "").toLowerCase();
+
+    if (code === "upgrade_required") {
+      showToast({
+        title: t("toast_upgrade_title") || "Upgrade required",
+        text: t("scannerUpgradeToast") || "Scanner is available on PRO and VIP plans.",
+        linkUrl: PRICING_URL,
+      });
+      return;
+    }
+
+    if (code === "limit_reached") {
+      const p = e?.payload || {};
+      if (typeof p.limit === "number") scannerState.limit = p.limit;
+      if (typeof p.used === "number") scannerState.used = p.used;
+      renderScannerQuotaText();
+
+      showToast({
+        title: t("scannerLimitTitle") || "Daily scanner limit reached",
+        text:
+          t("scannerLimitText", [p.used ?? 0, p.limit ?? 0]) ||
+          `Scanner limit reached (${p.used ?? 0}/${p.limit ?? 0}). Try again tomorrow.`,
+        linkUrl: PRICING_URL,
+      });
+      return;
+    }
+
+    showToast({
+      title: t("scannerTitle") || "Top Pairs",
+      text: friendlyErrorText(e, { status: e?.status ?? 0 }),
+    });
+  } finally {
+    btn?.classList.remove("is-loading");
+    if (btn) btn.disabled = false;
+    const otherId = btnId === "scannerFearBtn" ? "scannerGreedBtn" : "scannerFearBtn";
+    $(otherId)?.removeAttribute("disabled");
+  }
 }
 
 // =========================
@@ -485,6 +1073,8 @@ function listenStorageChanges() {
 
       renderPlan(state.plan, state.planValid);
       renderPlanStatus();
+      renderAiQuotaText();
+      renderScannerQuotaText();
 
       if (needRestart) restartPeriodic();
     });
@@ -1201,6 +1791,24 @@ function ensureDetailsStyles() {
   .z-neutral{color:rgb(234,179,8)}
   .z-greed{color:rgb(34,197,94)}
   .z-extgreed{color:rgb(22,163,74)}
+  .mstat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px;padding-bottom:70px}
+  .mstat-item{display:flex;flex-direction:column;gap:8px;padding:16px 14px;border-radius:16px;background:linear-gradient(135deg,rgba(255,255,255,0.07),rgba(255,255,255,0.02));border:1px solid rgba(255,255,255,0.10);box-shadow:0 4px 16px rgba(0,0,0,0.35);position:relative;cursor:default}
+  .mstat-label{font-size:9px;font-weight:800;letter-spacing:.7px;color:rgba(255,255,255,0.45);text-transform:uppercase}
+  .mstat-value{font-size:22px;font-weight:900;letter-spacing:-.5px;line-height:1}
+  .mstat-sub{font-size:10px;font-weight:600;color:rgba(255,255,255,0.35);margin-top:2px}
+  .mstat-item[data-tooltip]::after{content:attr(data-tooltip);position:absolute;top:calc(100% + 7px);left:50%;transform:translateX(-50%);background:rgba(10,14,26,0.97);border:1px solid rgba(255,255,255,0.14);color:rgba(255,255,255,0.88);font-size:10px;font-weight:500;line-height:1.45;padding:7px 10px;border-radius:9px;width:155px;text-align:center;pointer-events:none;opacity:0;transition:opacity .15s ease;z-index:200;white-space:normal;box-shadow:0 4px 14px rgba(0,0,0,0.55)}
+  .mstat-item[data-tooltip]:hover::after{opacity:1}
+  .mstat-item-vol  {border-color:rgba(99,102,241,0.40); background:linear-gradient(135deg,rgba(99,102,241,0.18),rgba(99,102,241,0.06))}
+  .mstat-item-oi   {border-color:rgba(245,158,11,0.40);  background:linear-gradient(135deg,rgba(245,158,11,0.18),rgba(245,158,11,0.06))}
+  .mstat-item-fund {border-color:rgba(16,185,129,0.40);  background:linear-gradient(135deg,rgba(16,185,129,0.18),rgba(16,185,129,0.06))}
+  .mstat-item-fund-neg{border-color:rgba(239,68,68,0.40)!important;background:linear-gradient(135deg,rgba(239,68,68,0.18),rgba(239,68,68,0.06))!important}
+  .mstat-item-ls   {border-color:rgba(168,85,247,0.40);  background:linear-gradient(135deg,rgba(168,85,247,0.18),rgba(168,85,247,0.06))}
+  .mstat-item-ls-bear{border-color:rgba(239,68,68,0.40)!important;background:linear-gradient(135deg,rgba(239,68,68,0.18),rgba(239,68,68,0.06))!important}
+  .mstat-item-taker{border-color:rgba(6,182,212,0.40);   background:linear-gradient(135deg,rgba(6,182,212,0.18),rgba(6,182,212,0.06))}
+  .mstat-item-taker-sell{border-color:rgba(239,68,68,0.40)!important;background:linear-gradient(135deg,rgba(239,68,68,0.18),rgba(239,68,68,0.06))!important}
+  .mstat-item-rsi  {border-color:rgba(52,211,153,0.40);  background:linear-gradient(135deg,rgba(52,211,153,0.18),rgba(52,211,153,0.06))}
+  .mstat-item-rsi-ob{border-color:rgba(239,68,68,0.40)!important;background:linear-gradient(135deg,rgba(239,68,68,0.18),rgba(239,68,68,0.06))!important}
+  .mstat-item-rsi-os{border-color:rgba(99,102,241,0.40)!important;background:linear-gradient(135deg,rgba(99,102,241,0.18),rgba(99,102,241,0.06))!important}
   `;
   const st = document.createElement("style");
   st.textContent = css;
@@ -1254,39 +1862,71 @@ function renderDetails() {
   const arr = [v15, v1, v4, vD].map((v) => (typeof v === "number" && isFinite(v) ? v : NaN));
   const okAll = arr.every((v) => isFinite(v));
 
-  if (!okAll) {
-    host.innerHTML = `
-      <div class="d-wrap">
-        <div class="d-section">
-          <div class="d-title">${escapeHtml(t("detailsMarketStructureTitle") || "Market structure")}</div>
-          <div class="d-sub">${escapeHtml(t("waiting") || "Waiting for market data...")}</div>
-        </div>
-      </div>
-    `;
-    return;
-  }
-
   const minV = Math.min(...arr);
   const maxV = Math.max(...arr);
   const diff = maxV - minV;
   const tilt = arr.reduce((a, b) => a + b, 0) / arr.length;
   const eValue = state.risk ? state.risk.E : 0;
 
-  host.innerHTML = `
-    <div class="d-wrap">
-      <div class="d-section">
-        <div class="d-title">${escapeHtml(t("detailsMarketStructureTitle") || "Market structure")}</div>
-        ${detailsBarRow(t("marketTilt") || "Market tilt", tilt, `${tilt.toFixed(1)} • ${zoneName(tilt)}`)}
-        ${detailsBarRow(t("tfSpread") || "TF spread", diff, `${diff.toFixed(1)} • ${(t("dispersion") || "dispersion")}`)}
-        ${detailsBarRow(t("extremes") || "Extremes (E)", eValue, `${Math.round(eValue)}% • ${(t("distanceFrom50") || "distance from 50")}`)}
-      </div>
+  const ms = state.marketStats;
+  const funding   = ms?.funding_rate     ?? null;
+  const oi        = ms?.open_interest_usd ?? null;
+  const vol24     = ms?.volume_24h        ?? null;
+  const lsRatio   = ms?.ls_ratio          ?? null;
+  const takerR    = ms?.taker_ratio       ?? null;
+  const rsiVal    = ms?.rsi               ?? null;
 
-      <div class="d-section">
-        <div class="d-title">${escapeHtml(t("timeframesTitle") || "Timeframes")}</div>
-        ${detailsBarRow("15m", v15, `${fmt(v15)} • ${zoneName(v15)}`)}
-        ${detailsBarRow("1h",  v1,  `${fmt(v1)} • ${zoneName(v1)}`)}
-        ${detailsBarRow("4h",  v4,  `${fmt(v4)} • ${zoneName(v4)}`)}
-        ${detailsBarRow("1d",  vD,  `${fmt(vD)} • ${zoneName(vD)}`)}
+  const fundNeg   = funding  != null && funding  < 0;
+  const lsBear    = lsRatio  != null && lsRatio  > 1.5;
+  const takerSell = takerR   != null && takerR   < 1;
+  const rsiOB     = rsiVal   != null && rsiVal   > 70;
+  const rsiOS     = rsiVal   != null && rsiVal   < 30;
+
+  const fundColor  = funding  == null ? "#fff" : funding  > 0 ? "#6EE7B7" : "#FCA5A5";
+  const lsColor    = lsRatio  == null ? "#fff" : lsRatio  > 1.5 ? "#FCA5A5" : lsRatio < 0.7 ? "#6EE7B7" : "#C4B5FD";
+  const takerColor = takerR   == null ? "#fff" : takerR   >= 1  ? "#6EE7B7" : "#FCA5A5";
+  const rsiColor   = rsiVal   == null ? "#fff" : rsiVal   > 70  ? "#FCA5A5" : rsiVal < 30 ? "#93C5FD" : "#6EE7B7";
+
+  const lsSub   = lsRatio  != null ? (lsRatio > 1.5 ? "Too many longs ⚠️" : lsRatio < 0.7 ? "Shorts dominate" : "Balanced") : "";
+  const tkSub   = takerR   != null ? (takerR  >= 1  ? "Buyers aggressive" : "Sellers aggressive") : "";
+  const rsiSub  = rsiVal   != null ? (rsiVal  > 70  ? "Overbought" : rsiVal < 30 ? "Oversold" : "Neutral zone") : "";
+
+  if (!ms) {
+    host.innerHTML = `<div class="d-wrap"><div class="d-section"><div class="d-sub">${escapeHtml(t("waiting") || "Waiting for market data...")}</div></div></div>`;
+    return;
+  }
+
+  host.innerHTML = `
+    <div class="mstat-grid">
+      <div class="mstat-item mstat-item-vol" data-tooltip="${escapeHtml(t("tip_vol24"))}">
+        <div class="mstat-label">Volume 24h</div>
+        <div class="mstat-value" style="color:#A5B4FC">${fmtLargeUsd(vol24)}</div>
+        <div class="mstat-sub">Futures quote vol</div>
+      </div>
+      <div class="mstat-item mstat-item-oi" data-tooltip="${escapeHtml(t("tip_oi"))}">
+        <div class="mstat-label">Open Interest</div>
+        <div class="mstat-value" style="color:#FCD34D">${fmtLargeUsd(oi)}</div>
+        <div class="mstat-sub">Total OI in USD</div>
+      </div>
+      <div class="mstat-item mstat-item-fund${fundNeg ? " mstat-item-fund-neg" : ""}" data-tooltip="${escapeHtml(t("tip_funding"))}">
+        <div class="mstat-label">Funding Rate</div>
+        <div class="mstat-value" style="color:${fundColor}">${fmtFunding(funding)}</div>
+        <div class="mstat-sub">${funding != null ? (funding > 0 ? "Longs pay shorts" : "Shorts pay longs") : ""}</div>
+      </div>
+      <div class="mstat-item mstat-item-ls${lsBear ? " mstat-item-ls-bear" : ""}" data-tooltip="${escapeHtml(t("tip_ls"))}">
+        <div class="mstat-label">Long / Short</div>
+        <div class="mstat-value" style="color:${lsColor}">${lsRatio != null ? lsRatio.toFixed(2) : "—"}</div>
+        <div class="mstat-sub">${lsSub}</div>
+      </div>
+      <div class="mstat-item mstat-item-taker${takerSell ? " mstat-item-taker-sell" : ""}" data-tooltip="${escapeHtml(t("tip_taker"))}">
+        <div class="mstat-label">Taker Buy/Sell</div>
+        <div class="mstat-value" style="color:${takerColor}">${takerR != null ? takerR.toFixed(2) : "—"}</div>
+        <div class="mstat-sub">${tkSub}</div>
+      </div>
+      <div class="mstat-item mstat-item-rsi${rsiOB ? " mstat-item-rsi-ob" : rsiOS ? " mstat-item-rsi-os" : ""}" data-tooltip="${escapeHtml(t("tip_rsi1d"))}">
+        <div class="mstat-label">RSI (1D)</div>
+        <div class="mstat-value" style="color:${rsiColor}">${rsiVal != null ? rsiVal.toFixed(1) : "—"}</div>
+        <div class="mstat-sub">${rsiSub}</div>
       </div>
     </div>
   `;
@@ -1400,6 +2040,7 @@ async function refresh(urlOverride, reason) {
       TFS.forEach((tf) => applyCard(tf, null));
       state.values = { "15m": null, "1h": null, "4h": null, "1d": null };
       state.risk = null;
+      state.marketStats = null;
       renderDetails();
       return;
     }
@@ -1437,8 +2078,11 @@ async function refresh(urlOverride, reason) {
       return;
     }
 
-    // Update quota ONLY when symbol changes (or on manual/init/apikey-change)
+    // Close AI popup when pair changes
     const symbolChanged = prevSymbol !== symbol && prevSymbol !== "—";
+    if (symbolChanged) closeAiPopup(true);
+
+    // Update quota ONLY when symbol changes (or on manual/init/apikey-change)
     if (symbolChanged || reason === "manual" || reason === "init" || reason === "apikey-change") {
       await maybeUpdateQuota(symbol, { force: symbolChanged });
     }
@@ -1504,6 +2148,14 @@ async function refresh(urlOverride, reason) {
 
     renderDetails();
 
+    // Fetch market stats in background (non-blocking)
+    if (symbol) {
+      fetchMarketStats(symbol).then((ms) => {
+        state.marketStats = ms;
+        renderDetails();
+      });
+    }
+
     const limited = results.find((x) => x.ok && x.limited);
     if (limited) {
       const payload = unwrapPayload(limited.d) || {};
@@ -1561,6 +2213,26 @@ function initDomReady() {
   $("tabHelp")?.addEventListener("click", () => setActiveTab("help"));
 
   $("refresh")?.addEventListener("click", () => refresh(lastSeenUrl, "manual"));
+  $("aiAnalyzeBtn")?.addEventListener("click", onAiAnalyzeClick);
+  $("aiPopupClose")?.addEventListener("click", () => closeAiPopup(true));
+  $("aiPopupBackdrop")?.addEventListener("click", () => closeAiPopup(true));
+  $("tabScanner")?.addEventListener("click", openScannerPopup);
+  $("scannerFearBtn")?.addEventListener("click", () => onScannerClick("fear"));
+  $("scannerGreedBtn")?.addEventListener("click", () => onScannerClick("greed"));
+  $("scannerPopupClose")?.addEventListener("click", () => closeScannerPopup(true));
+  $("scannerDrawerHandle")?.addEventListener("click", toggleScannerCollapse);
+  $("scannerList")?.addEventListener("click", (e) => {
+    const a = e.target.closest(".scannerLink");
+    if (!a) return;
+    e.preventDefault();
+    if (a.dataset.available === "false") {
+      const ex = a.dataset.ex;
+      const sym = a.closest(".scannerItem")?.querySelector(".scannerItemSymbol")?.textContent || "";
+      showToast({ title: ex.charAt(0).toUpperCase() + ex.slice(1), text: `${sym} не торгується на спот-ринку ${ex}.` });
+      return;
+    }
+    chrome.tabs.create({ url: a.href, active: false });
+  });
   setActiveTab("overview");
 
   (async function boot() {
@@ -1570,6 +2242,9 @@ function initDomReady() {
 
     renderPlan(state.plan, state.planValid);
     renderPlanStatus();
+    renderAiQuotaText();
+    renderScannerQuotaText();
+    clearAiResult();
 
     await validateCurrentKey({ force: false, silent: true });
 
@@ -1701,6 +2376,10 @@ function initDomReady() {
 
       if (auto.lastSymbol) await maybeUpdateQuota(auto.lastSymbol, { force: true });
       scheduleRefresh("apikey-clear", lastSeenUrl);
+      aiState.used = null;
+      aiState.limit = null;
+      renderAiQuotaText();
+      clearAiResult();
     });
 
     await refresh("", "init");
@@ -1724,4 +2403,35 @@ function syncGetKeyVisibility(opts = {}) {
   }
 
   btnGet.style.display = keyInp.value.trim() ? "none" : "inline-flex";
+}
+function animateAiQuotaTo(nextUsed, nextLimit) {
+  const startUsed = typeof aiState.used === "number" ? aiState.used : 0;
+  const limit = Number(nextLimit || 0);
+  const endUsed = Math.max(0, Math.min(limit, Number(nextUsed || 0)));
+
+  aiState.limit = limit;
+
+  const steps = 10;
+  let i = 0;
+  const delta = endUsed - startUsed;
+
+  if (startUsed === endUsed) {
+    aiState.used = endUsed;
+    renderAiQuotaText();
+    return;
+  }
+
+  const timer = setInterval(() => {
+    i += 1;
+    const value = Math.round(startUsed + (delta * i) / steps);
+    aiState.used = Math.max(0, Math.min(limit, value));
+    renderAiQuotaText();
+
+    if (i >= steps) {
+      clearInterval(timer);
+      aiState.used = endUsed;
+      aiState.limit = limit;
+      renderAiQuotaText();
+    }
+  }, 35);
 }

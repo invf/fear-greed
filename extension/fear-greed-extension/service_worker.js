@@ -14,7 +14,7 @@ chrome.action.onClicked.addListener(async (tab) => {
 
 // Backend request handler
 const ALLOWED_ORIGINS = new Set([
-  "https://fear-greed-24pr.onrender.com"
+  "https://fear-greed-24pr.onrender.com",
 ]);
 
 const ALLOWED_METHODS = new Set(["GET", "POST"]);

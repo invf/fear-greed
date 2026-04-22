@@ -4,6 +4,7 @@ import os
 import secrets
 import time
 import threading
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Tuple
 from decimal import Decimal
 from datetime import datetime, timezone, timedelta
@@ -61,7 +62,7 @@ HTTP_CLIENT = httpx.Client(
 # SUPABASE
 # ============================================================
 SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_SERVICE_KEY")
 
 supabase: Optional[Client] = None
 if SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY:
@@ -73,6 +74,21 @@ if SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY:
 BINANCE_SPOT = "https://api.binance.com"
 BINANCE_FAPI = "https://fapi.binance.com"  # USDT-M Futures
 VALID_TF = {"15m", "1h", "4h", "1d"}
+
+SCANNER_LIMITS = {"PRO": 10, "VIP": 40}
+SCANNER_TOP_N = 50
+SCANNER_CACHE_TTL_SEC = 300  # 5 min — 1d klines don't change often
+SCANNER_MAX_WORKERS = 15
+SCANNER_TIMEOUT_S = 20.0
+
+SPOT_SYMBOLS_TTL = 3600  # 1 hour cache for spot symbol lists
+
+SCANNER_FALLBACK_PAIRS = [
+    "BTCUSDT","ETHUSDT","SOLUSDT","BNBUSDT","XRPUSDT","ADAUSDT","DOGEUSDT",
+    "AVAXUSDT","LINKUSDT","DOTUSDT","LTCUSDT","ATOMUSDT","UNIUSDT",
+    "NEARUSDT","APTUSDT","ARBUSDT","OPUSDT","INJUSDT","SUIUSDT","SHIBUSDT",
+    "MATICUSDT","FILUSDT","AAVEUSDT","MKRUSDT","RNDRUSDT",
+]
 
 # ============================================================
 # SIMPLE IN-MEMORY TTL CACHE (per worker)
@@ -103,6 +119,41 @@ def _cache_set(key: Tuple[str, str], value: dict, ttl: int = FNG_CACHE_TTL_SEC) 
     with _fng_cache_lock:
         _fng_cache[key] = value
         _fng_cache_exp[key] = now_ts + max(1, int(ttl))
+
+# ============================================================
+# SPOT SYMBOLS CACHE (per exchange, 1h TTL)
+# ============================================================
+_spot_lock = threading.Lock()
+_spot_symbols: dict[str, set] = {}
+_spot_symbols_exp: dict[str, float] = {}
+
+
+def _get_spot_symbols(exchange: str) -> set:
+    now = time.time()
+    with _spot_lock:
+        if exchange in _spot_symbols and _spot_symbols_exp.get(exchange, 0) > now:
+            return _spot_symbols[exchange]
+    try:
+        if exchange == "binance":
+            r = HTTP_CLIENT.get("https://api.binance.com/api/v3/exchangeInfo", timeout=10)
+            syms = {s["symbol"] for s in r.json().get("symbols", [])
+                    if s.get("status") == "TRADING" and s.get("quoteAsset") == "USDT"}
+        elif exchange == "okx":
+            r = HTTP_CLIENT.get("https://www.okx.com/api/v5/public/instruments?instType=SPOT", timeout=10)
+            syms = {item["instId"].replace("-", "") for item in r.json().get("data", [])
+                    if item.get("quoteCcy") == "USDT" and item.get("state") == "live"}
+        elif exchange == "bybit":
+            r = HTTP_CLIENT.get("https://api.bybit.com/v5/market/instruments-info?category=spot&limit=1000", timeout=10)
+            syms = {item["symbol"] for item in r.json().get("result", {}).get("list", [])
+                    if item.get("quoteCoin") == "USDT" and item.get("status") == "Trading"}
+        else:
+            return set()
+    except Exception:
+        return set()
+    with _spot_lock:
+        _spot_symbols[exchange] = syms
+        _spot_symbols_exp[exchange] = now + SPOT_SYMBOLS_TTL
+    return syms
 
 # ============================================================
 # PAYMENTS (BSC USDT)
@@ -832,6 +883,165 @@ def derive_prelogic(tf_15m: float, tf_1h: float, tf_4h: float, tf_1d: float, ris
     }
 
 # ============================================================
+# SCANNER HELPERS
+# ============================================================
+
+def consume_scanner_quota(user_id: str, plan: str) -> dict:
+    limit = SCANNER_LIMITS.get(plan.upper(), 0)
+    if limit == 0:
+        return {"ok": False, "error": "upgrade_required", "used": 0, "limit": 0, "remaining": 0}
+
+    today = datetime.now(timezone.utc).date().isoformat()
+
+    def _sel():
+        return (
+            supabase.table("scanner_quota")
+            .select("used")
+            .eq("user_id", user_id)
+            .eq("day", today)
+            .limit(1)
+            .execute()
+        )
+
+    res = _supabase_call(_sel)
+    row = _sb_data(res.data)
+    used = int(row["used"]) if row else 0
+
+    if used >= limit:
+        return {"ok": False, "error": "limit_reached", "used": used, "limit": limit, "remaining": 0}
+
+    new_used = used + 1
+
+    if row:
+        def _upd():
+            return (
+                supabase.table("scanner_quota")
+                .update({"used": new_used})
+                .eq("user_id", user_id)
+                .eq("day", today)
+                .execute()
+            )
+        _supabase_call(_upd)
+    else:
+        def _ins():
+            return supabase.table("scanner_quota").insert({
+                "user_id": user_id, "day": today, "used": new_used
+            }).execute()
+        _supabase_call(_ins)
+
+    return {"ok": True, "used": new_used, "limit": limit, "remaining": limit - new_used}
+
+
+def get_top_binance_futures_symbols(top_n: int = SCANNER_TOP_N) -> list[str]:
+    # Use exchangeInfo to get only active PERPETUAL USDT contracts
+    info = HTTP_CLIENT.get(f"{BINANCE_FAPI}/fapi/v1/exchangeInfo")
+    info.raise_for_status()
+    symbols = [
+        s["symbol"] for s in info.json().get("symbols", [])
+        if s.get("status") == "TRADING"
+        and s.get("quoteAsset") == "USDT"
+        and s.get("contractType") == "PERPETUAL"
+    ]
+    # Sort by 24h quote volume, filter low-liquidity pairs
+    r = HTTP_CLIENT.get(f"{BINANCE_FAPI}/fapi/v1/ticker/24hr")
+    r.raise_for_status()
+    vol_map = {t["symbol"]: float(t.get("quoteVolume", 0)) for t in r.json()}
+    symbols = [s for s in symbols if vol_map.get(s, 0) >= 5_000_000]
+    symbols.sort(key=lambda s: vol_map.get(s, 0), reverse=True)
+    return symbols[:top_n]
+
+
+def klines_futures(symbol: str, interval: str = "1d", limit: int = 500) -> pd.DataFrame:
+    params = {"symbol": symbol, "interval": interval, "limit": min(limit, 1000)}
+    r = HTTP_CLIENT.get(f"{BINANCE_FAPI}/fapi/v1/klines", params=params)
+    r.raise_for_status()
+    df = pd.DataFrame(r.json(), columns=["t","o","h","l","c","v","ct","qv","n","tbb","tbq","i"])
+    df["t"] = pd.to_datetime(df["t"], unit="ms", utc=True)
+    df["ct"] = pd.to_datetime(df["ct"], unit="ms", utc=True)
+    for col in ["o","h","l","c","v","qv","tbb","tbq"]:
+        df[col] = df[col].astype(float)
+    df["ret"] = np.log(df["c"]).diff()
+    return df
+
+
+def compute_fng_fast(symbol: str, tf: str = "1d") -> float:
+    """Fast FNG using futures klines only (RSI+mom+vol+volm). Uses full cache if available."""
+    cache_key = (symbol.upper().strip(), tf.strip())
+    cached = _cache_get(cache_key)
+    if cached:
+        return float(cached["value"])
+
+    df = klines_futures(symbol=symbol, interval=tf, limit=500)
+    base = compute_base_scores(df)
+
+    fng = float(np.clip(
+        0.35 * base["rsi"] +
+        0.30 * base["mom"] +
+        0.20 * base["vol"] +
+        0.15 * base["volm"],
+        0, 100
+    ))
+    _cache_set(cache_key, {"value": fng}, ttl=SCANNER_CACHE_TTL_SEC)
+    return fng
+
+
+def run_scanner(mode: str) -> tuple[list[dict], int]:
+    try:
+        symbols = get_top_binance_futures_symbols(SCANNER_TOP_N)
+    except Exception:
+        symbols = SCANNER_FALLBACK_PAIRS
+
+    scanned = 0
+    results = []
+
+    def _score(sym: str) -> tuple[str, float]:
+        return sym, compute_fng_fast(sym, "1d")
+
+    with ThreadPoolExecutor(max_workers=SCANNER_MAX_WORKERS) as ex:
+        futs = {ex.submit(_score, sym): sym for sym in symbols}
+        for fut in as_completed(futs, timeout=SCANNER_TIMEOUT_S):
+            sym = futs[fut]
+            try:
+                _, score = fut.result(timeout=3)
+                scanned += 1
+                if mode == "fear" and score <= 30:
+                    lbl = "Extreme Fear" if score < 25 else "Fear"
+                    results.append({"symbol": sym, "score": round(score, 1), "label": lbl})
+                elif mode == "greed" and score >= 70:
+                    lbl = "Extreme Greed" if score >= 76 else "Greed"
+                    results.append({"symbol": sym, "score": round(score, 1), "label": lbl})
+            except Exception:
+                pass
+
+    results.sort(key=lambda x: x["score"], reverse=(mode == "greed"))
+    top = results[:10]
+
+    # Check spot availability on each exchange (parallel, cached 1h)
+    spot_by_ex: dict[str, set] = {}
+    with ThreadPoolExecutor(max_workers=3) as ex:
+        futures_ex = {ex.submit(_get_spot_symbols, e): e for e in ("binance", "okx", "bybit")}
+        for f in as_completed(futures_ex, timeout=8):
+            exname = futures_ex[f]
+            try:
+                spot_by_ex[exname] = f.result()
+            except Exception:
+                spot_by_ex[exname] = set()
+
+    binance_s = spot_by_ex.get("binance", set())
+    okx_s     = spot_by_ex.get("okx", set())
+    bybit_s   = spot_by_ex.get("bybit", set())
+
+    for r in top:
+        sym = r["symbol"]
+        r["exchanges"] = [
+            ex for ex, s in [("binance", binance_s), ("okx", okx_s), ("bybit", bybit_s)]
+            if sym in s
+        ]
+
+    return top, scanned
+
+
+# ============================================================
 # ROUTES
 # ============================================================
 @app.get("/", response_class=HTMLResponse)
@@ -986,6 +1196,72 @@ def fng(
         )
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
+
+
+@app.get("/api/market-stats")
+def market_stats(symbol: str = Query("SOLUSDT")):
+    sym = symbol.upper().strip()
+
+    def _fetch(url, params=None):
+        r = HTTP_CLIENT.get(url, params=params, timeout=8)
+        r.raise_for_status()
+        return r.json()
+
+    results = {}
+    def _run(key, fn):
+        try:
+            results[key] = fn()
+        except Exception:
+            results[key] = None
+
+    with ThreadPoolExecutor(max_workers=6) as ex:
+        futs = [
+            ex.submit(_run, "ticker",  lambda: _fetch(f"{BINANCE_FAPI}/fapi/v1/ticker/24hr",           {"symbol": sym})),
+            ex.submit(_run, "prem",    lambda: _fetch(f"{BINANCE_FAPI}/fapi/v1/premiumIndex",           {"symbol": sym})),
+            ex.submit(_run, "oi",      lambda: _fetch(f"{BINANCE_FAPI}/fapi/v1/openInterest",           {"symbol": sym})),
+            ex.submit(_run, "ls",      lambda: _fetch(f"{BINANCE_FAPI}/futures/data/globalLongShortAccountRatio", {"symbol": sym, "period": "5m", "limit": 1})),
+            ex.submit(_run, "taker",   lambda: _fetch(f"{BINANCE_FAPI}/futures/data/takerlongshortRatio",    {"symbol": sym, "period": "5m", "limit": 1})),
+            ex.submit(_run, "klines",  lambda: _fetch(f"{BINANCE_FAPI}/fapi/v1/klines",                 {"symbol": sym, "interval": "1d", "limit": 100})),
+        ]
+        for f in as_completed(futs): pass
+
+    td   = results.get("ticker") or {}
+    pd_  = results.get("prem")   or {}
+    oid  = results.get("oi")     or {}
+    ls   = results.get("ls")
+    tkr  = results.get("taker")
+    kl   = results.get("klines")
+
+    volume_24h = float(td.get("quoteVolume", 0)) if td else None
+    funding_rate = float(pd_.get("lastFundingRate", 0)) if pd_ else None
+    mark_price   = float(pd_.get("markPrice", 0))       if pd_ else None
+    oi_contracts = float(oid.get("openInterest", 0))    if oid else None
+    open_interest_usd = round(oi_contracts * mark_price, 0) if (oi_contracts and mark_price) else None
+
+    ls_ratio = float(ls[0]["longShortRatio"]) if isinstance(ls, list) and ls else None
+    taker_ratio = float(tkr[0]["buySellRatio"]) if isinstance(tkr, list) and tkr else None
+
+    rsi_raw = None
+    if kl and len(kl) >= 15:
+        closes = [float(c[4]) for c in kl]
+        gains, losses = [], []
+        for i in range(1, len(closes)):
+            d = closes[i] - closes[i-1]
+            gains.append(max(d, 0)); losses.append(max(-d, 0))
+        avg_g = sum(gains[-14:]) / 14
+        avg_l = sum(losses[-14:]) / 14
+        rsi_raw = round(100 - 100 / (1 + avg_g / avg_l), 1) if avg_l else 100.0
+
+    return JSONResponse({
+        "symbol":            sym,
+        "volume_24h":        round(volume_24h, 0)  if volume_24h        is not None else None,
+        "open_interest_usd": open_interest_usd,
+        "funding_rate":      funding_rate,
+        "mark_price":        mark_price,
+        "ls_ratio":          round(ls_ratio, 3)    if ls_ratio          is not None else None,
+        "taker_ratio":       round(taker_ratio, 3) if taker_ratio       is not None else None,
+        "rsi":               rsi_raw,
+    }, headers={"Cache-Control": "public, max-age=30"})
 
 
 @app.get("/api/fng-components")
@@ -1203,6 +1479,25 @@ class CheckoutConfirmOut(BaseModel):
     expires_at: str
     api_key: str
 
+LANG_NAMES: dict[str, str] = {
+    "en": "English",
+    "uk": "Ukrainian",
+    "ru": "Russian",
+    "de": "German",
+    "es": "Spanish",
+    "fr": "French",
+    "it": "Italian",
+    "pt": "Portuguese",
+    "pl": "Polish",
+    "tr": "Turkish",
+    "zh": "Chinese (Simplified)",
+    "ja": "Japanese",
+    "ko": "Korean",
+    "ar": "Arabic",
+    "hi": "Hindi",
+}
+
+
 class AiAnalysisIn(BaseModel):
     symbol: str
     tf_15m: float
@@ -1210,6 +1505,11 @@ class AiAnalysisIn(BaseModel):
     tf_4h: float
     tf_1d: float
     risk: int
+    lang: str = "en"
+
+
+class ScannerIn(BaseModel):
+    mode: str  # "fear" | "greed"
 
 def _pending_tx_placeholder() -> str:
     return "pending_" + secrets.token_hex(24)
@@ -1414,6 +1714,9 @@ def ai_analysis(request: Request, payload: AiAnalysisIn):
     install_id = (request.headers.get("X-Install-Id") or "").strip()
     api_key = (request.headers.get("X-Api-Key") or "").strip()
 
+    lang_code = (payload.lang or "en").strip().lower()[:5]
+    lang_name = LANG_NAMES.get(lang_code, LANG_NAMES.get(lang_code.split("-")[0], "English"))
+
     print("AI REQUEST START", {
         "install_id": install_id,
         "has_api_key": bool(api_key),
@@ -1423,6 +1726,7 @@ def ai_analysis(request: Request, payload: AiAnalysisIn):
         "tf_4h": payload.tf_4h,
         "tf_1d": payload.tf_1d,
         "risk": payload.risk,
+        "lang": lang_code,
     })
 
     if not install_id:
@@ -1477,6 +1781,9 @@ def ai_analysis(request: Request, payload: AiAnalysisIn):
 
     prompt = f"""
         You are a professional crypto trading analyst.
+
+        LANGUAGE RULE: Write all text fields (summary, what_matters, action, caution) in {lang_name}.
+        The values for "bias" and "setup" must remain in English exactly as listed below.
 
         Pair: {payload.symbol}
 
@@ -1587,13 +1894,13 @@ def ai_analysis(request: Request, payload: AiAnalysisIn):
         except Exception as e:
             print("AI JSON PARSE ERROR", repr(e))
             parsed = {
-                "bias": str(parsed.get("bias", pre["bias"])),
-                "setup": str(parsed.get("setup", pre["setup"])),
-                "confidence": int(parsed.get("confidence", pre["confidence"])),
-                "summary": str(parsed.get("summary", "")),
-                "what_matters": str(parsed.get("what_matters", "")),
-                "action": str(parsed.get("action", "")),
-                "caution": str(parsed.get("caution", "")),
+                "bias": pre["bias"],
+                "setup": pre["setup"],
+                "confidence": pre["confidence"],
+                "summary": "",
+                "what_matters": "",
+                "action": "",
+                "caution": "",
             }
 
         parsed = {
@@ -1618,4 +1925,48 @@ def ai_analysis(request: Request, payload: AiAnalysisIn):
         "limit": quota.get("limit"),
         "remaining": quota.get("remaining"),
         "analysis": parsed,
+    }
+
+
+@app.post("/api/scanner")
+def scanner(request: Request, payload: ScannerIn):
+    if payload.mode not in ("fear", "greed"):
+        raise HTTPException(status_code=400, detail="mode must be 'fear' or 'greed'")
+
+    install_id = (request.headers.get("X-Install-Id") or "").strip()
+    api_key = (request.headers.get("X-Api-Key") or "").strip()
+
+    if not install_id:
+        raise HTTPException(status_code=400, detail="Missing X-Install-Id")
+
+    user_id = resolve_user_id_from_api_key(api_key) if api_key else None
+    if not user_id:
+        raise HTTPException(status_code=402, detail={"ok": False, "error": "upgrade_required"})
+
+    meta = get_subscription_meta(user_id)
+    plan_effective = effective_plan_from_meta(meta)
+
+    if plan_effective not in SCANNER_LIMITS:
+        raise HTTPException(status_code=402, detail={"ok": False, "error": "upgrade_required"})
+
+    if not supabase:
+        raise HTTPException(status_code=500, detail="Supabase not configured")
+
+    quota = consume_scanner_quota(user_id, plan_effective)
+    if not quota.get("ok"):
+        raise HTTPException(status_code=402, detail=quota)
+
+    try:
+        pairs, scanned = run_scanner(payload.mode)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Scanner error: {str(e)}")
+
+    return {
+        "ok": True,
+        "mode": payload.mode,
+        "pairs": pairs,
+        "used": quota["used"],
+        "limit": quota["limit"],
+        "remaining": quota["remaining"],
+        "scanned": scanned,
     }

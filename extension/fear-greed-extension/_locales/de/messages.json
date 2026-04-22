@@ -68,14 +68,24 @@
   "help_risk_title": { "message": "Risk (0–100) ist ein Instabilitätsindex — KEIN Kauf- oder Verkaufssignal. Er zeigt, wie gefährlich der aktuelle Zustand ist." },
   "help_risk_levels": { "message": "Stufen: LOW ruhig · MEDIUM instabil · HIGH turbulent · EXTREME extrem / chaotisch" },
 
-  "help_details_title": { "message": "Details → Marktstruktur:" },
-  "help_market_tilt": { "message": "• Market Tilt — durchschnittliche Stimmung über alle Zeitrahmen." },
-  "help_tf_spread": { "message": "• TF Spread — wie stark sich Zeitrahmen unterscheiden." },
-  "help_extremes": { "message": "• Extremes (E) — Abstand von der neutralen Zone 50." },
+  "tip_vol24": { "message": "Gesamtes Futures-Handelsvolumen der letzten 24 Stunden" },
+  "tip_oi": { "message": "Gesamtwert aller offenen Futures-Positionen in USD" },
+  "tip_funding": { "message": "Periodische Zahlung zwischen Longs und Shorts. Positiv = Longs zahlen; negativ = Shorts zahlen" },
+  "tip_ls": { "message": "Verhältnis von Longs zu Shorts. Über 1,5 = Masse auf einer Seite" },
+  "tip_taker": { "message": "Verhältnis aggressiver Käufe zu Verkäufen. Über 1 = Käufer dominieren" },
+  "tip_rsi1d": { "message": "Täglicher RSI. Über 70 = überkauft; unter 30 = überverkauft" },
+
+  "help_details_title": { "message": "Details → Marktdaten:" },
+  "help_vol24": { "message": "• Volume 24h — gesamtes Futures-Handelsvolumen der letzten 24 Stunden." },
+  "help_oi": { "message": "• Open Interest — Gesamtwert offener Futures-Positionen in USD." },
+  "help_funding": { "message": "• Funding Rate — periodische Zahlung zwischen Longs und Shorts. Positiv = Longs zahlen; negativ = Shorts zahlen." },
+  "help_ls": { "message": "• Long / Short — Verhältnis von Long- zu Short-Positionen. Über 1,5 = zu viele Longs (⚠️ Masse auf einer Seite)." },
+  "help_taker": { "message": "• Taker Buy/Sell — Verhältnis aggressiver Käufe zu Verkäufen. Über 1 = Käufer sind aggressiver." },
+  "help_rsi1d": { "message": "• RSI (1D) — täglicher Relative-Stärke-Index. Über 70 = überkauft; unter 30 = überverkauft." },
 
   "help_tip": { "message": "Tipp: Wenn das Symbol nicht erkannt wird, öffne eine Chart- oder Handelsseite mit dem Symbol in der URL und klicke auf Refresh." },
 
-  "apiKeyLabel": { "message": "API-Schlüssel" },
+  "apiKeyLabel": { "message": "API-Schlüssel (SentiPulse-Schlüssel, nicht Binance, OKX, Bybit)" },
   "apiKeyPlaceholder": { "message": "Schlüssel einfügen…" },
   "apiKeyHint": { "message": "Füge den Schlüssel aus deinem Dashboard ein." },
   "checking": { "message": "Wird geprüft..." },
@@ -100,5 +110,52 @@
 
   "err_limit_exceeded": { "message": "Tageslimit überschritten. Bitte upgrade deinen Plan oder versuche es morgen." },
   "err_no_data": { "message": "Keine Daten verfügbar oder ein unbekannter Serverfehler ist aufgetreten." },
-  "toast_view_plans": { "message": "Tarife ansehen" }
+  "toast_view_plans": { "message": "Tarife ansehen" },
+
+  "riskLow": { "message": "NIEDRIG" },
+  "riskMedium": { "message": "MITTEL" },
+  "riskHigh": { "message": "HOCH" },
+  "riskExtreme": { "message": "EXTREM" },
+
+  "planStatusTitle": { "message": "Plan-Status" },
+  "getApiKeyBtn": { "message": "API-Schlüssel holen" },
+  "checkKeyBtn": { "message": "Schlüssel prüfen" },
+  "clearKeyBtn": { "message": "Löschen" },
+  "checkKeyHint": { "message": "Schlüssel validieren und Plan-Status anzeigen." },
+
+  "apiKeyInvalid": { "message": "Ungültiger API-Schlüssel." },
+  "apiKeyRevoked": { "message": "Dieser API-Schlüssel wurde widerrufen." },
+  "apiKeyLimitExceeded": { "message": "Tageslimit für diesen Schlüssel erreicht." },
+  "apiKeyFree": { "message": "Free Plan aktiv." },
+  "apiKeyPro": { "message": "Pro Plan aktiv." },
+  "apiKeyVip": { "message": "VIP Plan aktiv." },
+
+  "toast_ok": { "message": "OK" },
+  "toast_upgrade_title": { "message": "Upgrade erforderlich" },
+
+  "aiTitle": { "message": "KI-Analyse" },
+  "aiAnalyzeBtn": { "message": "Analysieren" },
+  "aiUpgradeHint": { "message": "FREE · Upgrade auf PRO oder VIP" },
+  "aiUpgradeToast": { "message": "KI-Analyse ist auf PRO- und VIP-Plänen verfügbar." },
+  "aiTodaySuffix": { "message": "heute" },
+  "aiSummaryLabel": { "message": "Zusammenfassung" },
+  "aiWhatMattersLabel": { "message": "Was jetzt wichtig ist" },
+  "aiCautionLabel": { "message": "Achtung" },
+  "aiActionLabel": { "message": "Aktion" },
+  "aiLimitTitle": { "message": "Tages-KI-Limit erreicht" },
+  "aiLimitText": { "message": "Du hast das tägliche KI-Analyselimit erreicht ({0}/{1}). Bitte upgrade deinen Plan oder versuche es morgen." },
+
+  "help_ai_title": { "message": "KI-Analyse:" },
+  "help_ai_desc": { "message": "Die KI-Analyse wiederholt nicht die Grid-Werte. Sie gibt eine kurze Interpretation, eine Setup-Idee, was jetzt wichtig ist und einen Vorsichtshinweis für das aktuelle Paar." },
+
+  "scannerTitle": { "message": "Top-Paare" },
+  "scannerFearBtn": { "message": "Fear ≤ 30" },
+  "scannerGreedBtn": { "message": "Gier ≥ 70" },
+  "scannerResultFear": { "message": "Paare in der Fear-Zone" },
+  "scannerResultGreed": { "message": "Paare in der Gier-Zone" },
+  "scannerScanned": { "message": "{0} Paare gescannt" },
+  "scannerEmpty": { "message": "Keine Paare in dieser Zone gefunden" },
+  "scannerUpgradeToast": { "message": "Der Scanner ist in PRO- und VIP-Plänen verfügbar." },
+  "scannerLimitTitle": { "message": "Tageslimit des Scanners erreicht" },
+  "scannerLimitText": { "message": "Du hast dein tägliches Scanner-Limit erreicht ({0}/{1}). Versuche es morgen oder upgrade deinen Plan." }
 }

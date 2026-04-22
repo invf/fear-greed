@@ -68,14 +68,24 @@
   "help_risk_title": { "message": "Risk (0–100) 是市場不穩定指數，不是買賣訊號。" },
   "help_risk_levels": { "message": "等級：LOW 平穩 · MEDIUM 不穩定 · HIGH 波動 · EXTREME 極端狀態" },
 
-  "help_details_title": { "message": "Details → 市場結構：" },
-  "help_market_tilt": { "message": "• Market Tilt — 所有週期的平均情緒。" },
-  "help_tf_spread": { "message": "• TF Spread — 各週期分歧程度。" },
-  "help_extremes": { "message": "• Extremes (E) — 偏離中性值 50 的程度。" },
+  "tip_vol24": { "message": "過去24小時的期貨總交易量" },
+  "tip_oi": { "message": "所有未平倉期貨部位的總價值（USD）" },
+  "tip_funding": { "message": "多空雙方之間的定期結算費率。正值=多頭支付；負值=空頭支付" },
+  "tip_ls": { "message": "多空持倉比例。高於1.5=群體集中在一側" },
+  "tip_taker": { "message": "主動買入與賣出的比率。大於1=買方主導" },
+  "tip_rsi1d": { "message": "日線RSI。高於70=超買；低於30=超賣" },
+
+  "help_details_title": { "message": "Details → 市場數據：" },
+  "help_vol24": { "message": "• Volume 24h — 過去24小時的期貨總交易量。" },
+  "help_oi": { "message": "• Open Interest — 未平倉期貨部位的總價值（USD）。" },
+  "help_funding": { "message": "• Funding Rate — 多空雙方之間的定期結算費率。正值=多頭支付；負值=空頭支付。" },
+  "help_ls": { "message": "• Long / Short — 多空持倉比例。高於1.5=多頭過多（⚠️ 群體集中在一側）。" },
+  "help_taker": { "message": "• Taker Buy/Sell — 主動買入與賣出的比率。大於1=買方更積極。" },
+  "help_rsi1d": { "message": "• RSI (1D) — 日線相對強弱指數。高於70=超買；低於30=超賣。" },
 
   "help_tip": { "message": "提示：如果未識別交易對，請打開包含交易對的交易或圖表頁面，然後點擊重新整理。" },
 
-  "apiKeyLabel": { "message": "API 金鑰" },
+  "apiKeyLabel": { "message": "API 金鑰（SentiPulse 金鑰，非 Binance、OKX、Bybit）" },
   "apiKeyPlaceholder": { "message": "貼上您的金鑰…" },
   "apiKeyHint": { "message": "請從您的控制台複製並貼上金鑰。" },
   "checking": { "message": "正在檢查…" },
@@ -102,5 +112,52 @@
 
   "err_limit_exceeded": { "message": "今日額度已用完。請明天再試或升級方案。" },
   "err_no_data": { "message": "沒有資料或伺服器發生錯誤。" },
-  "toast_view_plans": { "message": "查看方案" }
+  "toast_view_plans": { "message": "查看方案" },
+
+  "riskLow": { "message": "低" },
+  "riskMedium": { "message": "中" },
+  "riskHigh": { "message": "高" },
+  "riskExtreme": { "message": "極端" },
+
+  "planStatusTitle": { "message": "方案狀態" },
+  "getApiKeyBtn": { "message": "取得 API 金鑰" },
+  "checkKeyBtn": { "message": "驗證金鑰" },
+  "clearKeyBtn": { "message": "清除" },
+  "checkKeyHint": { "message": "驗證金鑰並顯示方案狀態。" },
+
+  "apiKeyInvalid": { "message": "無效的 API 金鑰。" },
+  "apiKeyRevoked": { "message": "此 API 金鑰已被撤銷。" },
+  "apiKeyLimitExceeded": { "message": "此金鑰已達今日限額。" },
+  "apiKeyFree": { "message": "免費方案已啟用。" },
+  "apiKeyPro": { "message": "Pro 方案已啟用。" },
+  "apiKeyVip": { "message": "VIP 方案已啟用。" },
+
+  "toast_ok": { "message": "確定" },
+  "toast_upgrade_title": { "message": "需要升級" },
+
+  "aiTitle": { "message": "AI 分析" },
+  "aiAnalyzeBtn": { "message": "分析" },
+  "aiUpgradeHint": { "message": "FREE · 升級至 PRO 或 VIP" },
+  "aiUpgradeToast": { "message": "AI 分析功能僅限 PRO 和 VIP 方案。" },
+  "aiTodaySuffix": { "message": "今日" },
+  "aiSummaryLabel": { "message": "摘要" },
+  "aiWhatMattersLabel": { "message": "當前關注點" },
+  "aiCautionLabel": { "message": "注意" },
+  "aiActionLabel": { "message": "操作建議" },
+  "aiLimitTitle": { "message": "今日 AI 分析額度已用完" },
+  "aiLimitText": { "message": "您今日的 AI 分析次數已達上限（{0}/{1}）。請升級方案或明天再試。" },
+
+  "help_ai_title": { "message": "AI 分析：" },
+  "help_ai_desc": { "message": "AI 分析不會重複表格數值。它提供簡短解讀、交易設置思路、當前關注點以及當前交易對的風險提示。" },
+
+  "scannerTitle": { "message": "熱門交易對" },
+  "scannerFearBtn": { "message": "恐懼 ≤ 30" },
+  "scannerGreedBtn": { "message": "貪婪 ≥ 70" },
+  "scannerResultFear": { "message": "恐懼區間交易對" },
+  "scannerResultGreed": { "message": "貪婪區間交易對" },
+  "scannerScanned": { "message": "已掃描 {0} 個交易對" },
+  "scannerEmpty": { "message": "該區間未找到交易對" },
+  "scannerUpgradeToast": { "message": "掃描器僅限 PRO 和 VIP 方案使用。" },
+  "scannerLimitTitle": { "message": "今日掃描次數已用完" },
+  "scannerLimitText": { "message": "您今日的掃描次數已達上限（{0}/{1}）。請升級方案或明天再試。" }
 }

@@ -3,11 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title data-i18n="extName">Crypto Panel</title>
+  <title data-i18n="extName">SentiPulse — Crypto Fear & Greed Indicator</title>
   <link rel="stylesheet" href="sidepanel.css" />
 </head>
 <body>
-  <!-- Header: tabs + refresh -->
   <div class="header">
     <div class="tabbar" role="tablist" aria-label="Pages">
       <button
@@ -35,6 +34,19 @@
       >
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path d="M5 6h14v2H5V6zm0 5h14v2H5v-2zm0 5h14v2H5v-2z" />
+        </svg>
+      </button>
+
+      <button
+        class="tabIcon tabScanner"
+        id="tabScanner"
+        type="button"
+        role="button"
+        data-i18n-title="scannerTitle"
+        data-i18n-aria="scannerTitle"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm0-12a4 4 0 1 0 0 8 4 4 0 0 0 0-8zm0 6a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"/>
         </svg>
       </button>
 
@@ -71,7 +83,6 @@
       </button>
     </div>
 
-    <!-- Refresh -->
     <button
       id="refresh"
       class="iconBtn"
@@ -89,7 +100,6 @@
     </button>
   </div>
 
-  <!-- Pair badge + Plan badge + Quota -->
   <div class="pairCenter">
     <div
       class="pairBadge"
@@ -115,7 +125,6 @@
     </div>
   </div>
 
-  <!-- OVERVIEW -->
   <div class="view is-active" id="viewOverview" role="tabpanel">
     <div class="riskCard compact" id="riskCard">
       <div class="riskTop">
@@ -138,6 +147,18 @@
 
       <div class="riskChips" id="riskChips"></div>
     </div>
+
+    <div class="aiCard" id="aiCard">
+    <div class="aiTop">
+      <div class="aiLeft">
+        <div class="aiTitle" data-i18n="aiTitle">AI Analysis</div>
+      </div>
+      <div class="aiCount" id="aiQuota">—</div>
+    </div>
+    <button id="aiAnalyzeBtn" class="aiBtn aiBtnWide" type="button" data-i18n="aiAnalyzeBtn">
+      Analyze
+    </button>
+  </div>
 
     <div class="grid">
       <div class="card compactCard">
@@ -178,7 +199,6 @@
     </div>
   </div>
 
-  <!-- DETAILS -->
   <div class="view" id="viewDetails" role="tabpanel">
     <div class="detailsCard">
       <div class="detailsTitle" data-i18n="tabDetailsTitle">Details</div>
@@ -186,7 +206,6 @@
     </div>
   </div>
 
-  <!-- SETTINGS -->
   <div class="view" id="viewSettings" role="tabpanel">
     <div class="detailsCard">
       <div class="detailsTitle" data-i18n="settingsTitle">Settings</div>
@@ -210,7 +229,6 @@
       </div>
 
       <div class="formRow">
-        <!-- ВАЖЛИВО: без inline-style; керуємо класами у CSS -->
         <div class="keyActions">
           <button id="btnGetKey" class="btnSmall btnPrimary" type="button" data-i18n="getApiKeyBtn">
             Get API key
@@ -234,13 +252,12 @@
 
       <div class="formRow">
         <label class="lbl" for="s_interval" data-i18n="refreshInterval">Refresh interval (sec)</label>
-        <input class="inp" id="s_interval" type="number" min="5" max="300" step="5" value="30" />
-        <div class="hint" data-i18n="refreshIntervalHint">Updates every N seconds (5–300).</div>
+        <input class="inp" id="s_interval" type="number" min="15" max="300" step="5" value="30" />
+        <div class="hint" data-i18n="refreshIntervalHint">Updates every N seconds (15–300).</div>
       </div>
     </div>
   </div>
 
-  <!-- HELP VIEW -->
   <div class="view" id="viewHelp" role="tabpanel">
     <div class="detailsCard">
       <div class="detailsTitle" data-i18n="tabHelpTitle">Help</div>
@@ -260,9 +277,15 @@
         <div class="helpP" data-i18n="help_risk_levels"></div>
 
         <div class="helpP"><b data-i18n="help_details_title"></b></div>
-        <div class="helpP" data-i18n="help_market_tilt"></div>
-        <div class="helpP" data-i18n="help_tf_spread"></div>
-        <div class="helpP" data-i18n="help_extremes"></div>
+        <div class="helpP" data-i18n="help_vol24"></div>
+        <div class="helpP" data-i18n="help_oi"></div>
+        <div class="helpP" data-i18n="help_funding"></div>
+        <div class="helpP" data-i18n="help_ls"></div>
+        <div class="helpP" data-i18n="help_taker"></div>
+        <div class="helpP" data-i18n="help_rsi1d"></div>
+
+        <div class="helpP"><b data-i18n="help_ai_title"></b></div>
+        <div class="helpP" data-i18n="help_ai_desc"></div>
 
         <div class="helpP" data-i18n="help_tip"></div>
       </div>
@@ -271,21 +294,89 @@
 
   <div class="err" id="err"></div>
 
-  <!-- Toast -->
   <div id="toast" class="toast" aria-live="polite" style="display:none">
     <div class="toastInner">
-      <div class="toastTitle" id="toastTitle">Ліміт вичерпано</div>
+      <div class="toastTitle" id="toastTitle">Message</div>
       <div class="toastText" id="toastText"></div>
 
       <div class="toastActions">
-        <a id="toastLink"
-           class="toastLink"
-           href="#"
-           target="_blank"
-           rel="noreferrer noopener"
-           data-i18n="toast_view_plans">
-        </a>
+        <a
+          id="toastLink"
+          class="toastLink"
+          href="#"
+          target="_blank"
+          rel="noreferrer noopener"
+          data-i18n="toast_view_plans"
+        ></a>
         <button id="toastClose" class="toastClose" type="button" data-i18n="toast_ok">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scanner Drawer -->
+  <div id="scannerPopup" class="scannerDrawer is-hidden" role="dialog" aria-modal="false">
+    <div class="scannerDrawerHandle" id="scannerDrawerHandle"></div>
+    <div class="scannerDrawerInner">
+      <div class="scannerPopupHeader">
+        <div class="scannerPopupMeta">
+          <div class="scannerPopupTitle">
+            <span data-i18n="scannerTitle">Top Pairs</span>
+            <span class="scannerTfBadge">1D</span>
+          </div>
+          <div class="scannerPopupSub" id="scannerPopupSub"></div>
+        </div>
+        <div class="scannerPopupHeaderRight">
+          <div class="scannerQuota" id="scannerQuota">—</div>
+          <button class="scannerPopupClose" id="scannerPopupClose" type="button" aria-label="Close">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="scannerBtns">
+        <button id="scannerFearBtn" class="scannerBtn scannerBtnFear" type="button" data-i18n="scannerFearBtn">Fear ≤ 30</button>
+        <button id="scannerGreedBtn" class="scannerBtn scannerBtnGreed" type="button" data-i18n="scannerGreedBtn">Greed ≥ 70</button>
+      </div>
+      <div class="scannerList" id="scannerList"></div>
+    </div>
+  </div>
+
+  <!-- AI Result Popup -->
+  <div id="aiPopup" class="aiPopup is-hidden" role="dialog" aria-modal="true">
+    <div class="aiPopupBackdrop" id="aiPopupBackdrop"></div>
+    <div class="aiPopupBox">
+      <div class="aiPopupHeader">
+        <div class="aiPopupMeta">
+          <div class="aiPopupTitle" data-i18n="aiTitle">AI Analysis</div>
+          <div class="aiPopupPair" id="aiPopupPair">—</div>
+        </div>
+        <button class="aiPopupClose" id="aiPopupClose" type="button" aria-label="Close">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+
+      <div class="aiPills">
+        <span class="aiPill" id="aiBias">—</span>
+        <span class="aiPill aiPillSecondary" id="aiSetup">—</span>
+        <span class="aiPill aiPillSecondary" id="aiConfidence">—</span>
+      </div>
+
+      <div class="aiResult" id="aiResult">
+        <div class="aiBlock">
+          <div class="aiLabel" data-i18n="aiSummaryLabel">Summary</div>
+          <div class="aiText" id="aiSummary">—</div>
+        </div>
+        <div class="aiBlock">
+          <div class="aiLabel" data-i18n="aiWhatMattersLabel">What matters now</div>
+          <div class="aiText" id="aiWhatMatters">—</div>
+        </div>
+        <div class="aiBlock">
+          <div class="aiLabel" data-i18n="aiActionLabel">Action</div>
+          <div class="aiText" id="aiAction">—</div>
+        </div>
+        <div class="aiBlock">
+          <div class="aiLabel" data-i18n="aiCautionLabel">Caution</div>
+          <div class="aiText aiWarn" id="aiCaution">—</div>
+        </div>
       </div>
     </div>
   </div>

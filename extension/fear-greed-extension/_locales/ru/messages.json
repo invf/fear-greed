@@ -68,14 +68,24 @@
   "help_risk_title": { "message": "Risk (0–100) — это индекс нестабильности, а НЕ сигнал покупки или продажи. Он показывает, насколько опасно текущее состояние (крайности, расхождение ТФ, импульсы)." },
   "help_risk_levels": { "message": "Уровни: LOW спокойно · MEDIUM нестабильно · HIGH турбулентно · EXTREME экстремальные условия" },
 
-  "help_details_title": { "message": "Details → Структура рынка:" },
-  "help_market_tilt": { "message": "• Market Tilt — средний настрой по 15m/1h/4h/1d (общий уклон рынка)." },
-  "help_tf_spread": { "message": "• TF Spread — насколько таймфреймы расходятся. Больше = конфликт / фаза перехода." },
-  "help_extremes": { "message": "• Extremes (E) — отклонение от нейтральной зоны 50. Больше = сильные эмоции (страх или жадность)." },
+  "tip_vol24": { "message": "Общий объём фьючерсной торговли за последние 24 часа" },
+  "tip_oi": { "message": "Суммарная стоимость всех открытых фьючерсных позиций в USD" },
+  "tip_funding": { "message": "Периодическая выплата между лонгами и шортами. Положительный = лонги платят; отрицательный = шорты платят" },
+  "tip_ls": { "message": "Соотношение лонгов к шортам. Выше 1.5 = толпа на одной стороне" },
+  "tip_taker": { "message": "Соотношение агрессивных покупок к продажам. Выше 1 = покупатели доминируют" },
+  "tip_rsi1d": { "message": "Дневной RSI. Выше 70 = перекупленность; ниже 30 = перепроданность" },
+
+  "help_details_title": { "message": "Details → Рыночные данные:" },
+  "help_vol24": { "message": "• Volume 24h — общий объём фьючерсной торговли за последние 24 часа." },
+  "help_oi": { "message": "• Open Interest — суммарная стоимость открытых фьючерсных позиций в USD." },
+  "help_funding": { "message": "• Funding Rate — периодическая выплата между лонгами и шортами. Положительный = лонги платят; отрицательный = шорты платят." },
+  "help_ls": { "message": "• Long / Short — соотношение лонгов к шортам. Выше 1.5 = слишком много лонгов (⚠️ толпа на одной стороне)." },
+  "help_taker": { "message": "• Taker Buy/Sell — соотношение агрессивных покупок к продажам. Выше 1 = покупатели агрессивнее." },
+  "help_rsi1d": { "message": "• RSI (1D) — дневной индекс относительной силы. Выше 70 = перекупленность; ниже 30 = перепроданность." },
 
   "help_tip": { "message": "Совет: если пара не определяется, открой страницу торговли или графика с парой в URL и нажми Refresh." },
 
-  "apiKeyLabel": { "message": "API ключ" },
+  "apiKeyLabel": { "message": "API ключ (ключ SentiPulse, а не Binance, OKX, Bybit)" },
   "apiKeyPlaceholder": { "message": "Вставьте ключ…" },
   "apiKeyHint": { "message": "Вставьте ключ из вашего кабинета." },
   "checking": { "message": "Проверка..." },
@@ -122,5 +132,52 @@
   "err_no_data": {
     "message": "Нет данных или произошла ошибка сервера."
   },
-  "toast_view_plans": { "message": "Посмотреть тарифы" }
+  "toast_view_plans": { "message": "Посмотреть тарифы" },
+
+  "riskLow": { "message": "НИЗКИЙ" },
+  "riskMedium": { "message": "СРЕДНИЙ" },
+  "riskHigh": { "message": "ВЫСОКИЙ" },
+  "riskExtreme": { "message": "ЭКСТРЕМАЛЬНЫЙ" },
+
+  "planStatusTitle": { "message": "Статус плана" },
+  "getApiKeyBtn": { "message": "Получить ключ" },
+  "checkKeyBtn": { "message": "Проверить ключ" },
+  "clearKeyBtn": { "message": "Очистить" },
+  "checkKeyHint": { "message": "Проверить ключ и показать статус плана." },
+
+  "apiKeyInvalid": { "message": "Неверный API-ключ." },
+  "apiKeyRevoked": { "message": "Этот API-ключ отозван." },
+  "apiKeyLimitExceeded": { "message": "Дневной лимит для этого ключа исчерпан." },
+  "apiKeyFree": { "message": "Бесплатный план активен." },
+  "apiKeyPro": { "message": "Pro план активен." },
+  "apiKeyVip": { "message": "VIP план активен." },
+
+  "toast_ok": { "message": "OK" },
+  "toast_upgrade_title": { "message": "Требуется обновление" },
+
+  "aiTitle": { "message": "AI Анализ" },
+  "aiAnalyzeBtn": { "message": "Анализ" },
+  "aiUpgradeHint": { "message": "FREE · Перейдите на PRO или VIP" },
+  "aiUpgradeToast": { "message": "AI анализ доступен на планах PRO и VIP." },
+  "aiTodaySuffix": { "message": "сегодня" },
+  "aiSummaryLabel": { "message": "Итог" },
+  "aiWhatMattersLabel": { "message": "Что важно сейчас" },
+  "aiCautionLabel": { "message": "Внимание" },
+  "aiActionLabel": { "message": "Действие" },
+  "aiLimitTitle": { "message": "Дневной лимит AI исчерпан" },
+  "aiLimitText": { "message": "Вы достигли дневного лимита AI анализа ({0}/{1}). Обновите план или попробуйте завтра." },
+
+  "help_ai_title": { "message": "AI Анализ:" },
+  "help_ai_desc": { "message": "AI анализ не повторяет значения сетки. Он даёт краткую интерпретацию, идею сетапа, что важно сейчас и предупреждение для текущей пары." },
+
+  "scannerTitle": { "message": "Топ Пары" },
+  "scannerFearBtn": { "message": "Страх ≤ 30" },
+  "scannerGreedBtn": { "message": "Жадность ≥ 70" },
+  "scannerResultFear": { "message": "Пары в зоне Страха" },
+  "scannerResultGreed": { "message": "Пары в зоне Жадности" },
+  "scannerScanned": { "message": "Просканировано {0} пар" },
+  "scannerEmpty": { "message": "Пар в этой зоне не найдено" },
+  "scannerUpgradeToast": { "message": "Сканер доступен на планах PRO и VIP." },
+  "scannerLimitTitle": { "message": "Дневной лимит сканера исчерпан" },
+  "scannerLimitText": { "message": "Вы достигли дневного лимита сканера ({0}/{1}). Попробуйте завтра или обновите план." }
 }
