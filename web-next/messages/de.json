@@ -158,6 +158,8 @@
         "p1": "40 Paare / Tag",
         "p2": "Stabiler Zugriff",
         "p3": "Ideal für aktive Trader",
+        "p4": "10 KI-Analysen / Tag",
+        "p5": "10 Fear Greed Scanner / Tag",
         "cta": "Mit MetaMask bezahlen"
       },
 
@@ -168,6 +170,8 @@
         "p1": "Unbegrenzte Paare / Tag",
         "p2": "Prioritäts-API",
         "p3": "Für intensive Nutzung",
+        "p4": "20 KI-Analysen / Tag",
+        "p5": "40 Fear Greed Scanner / Tag",
         "cta": "Mit MetaMask bezahlen"
       }
     }

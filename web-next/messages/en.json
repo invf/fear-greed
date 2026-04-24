@@ -113,6 +113,8 @@
         "p1": "40 pairs / day",
         "p2": "Stable access",
         "p3": "Best for active traders",
+        "p4": "10 AI analyses / day",
+        "p5": "10 Fear Greed scanner / day",
         "cta": "Pay with MetaMask"
       },
       "vip": {
@@ -122,6 +124,8 @@
         "p1": "Unlimited pairs / day",
         "p2": "Priority API",
         "p3": "Heavy usage friendly",
+        "p4": "20 AI analyses / day",
+        "p5": "40 Fear Greed scanner / day",
         "cta": "Pay with MetaMask"
       }
     }

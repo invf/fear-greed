@@ -44,7 +44,7 @@ export default async function PricingPage() {
       name: t("plans.pro.name"),
       price: t("plans.pro.price"),
       sub: t("plans.pro.sub"),
-      perks: [t("plans.pro.p1"), t("plans.pro.p2"), t("plans.pro.p3")],
+      perks: [t("plans.pro.p1"), t("plans.pro.p2"), t("plans.pro.p3"), t("plans.pro.p4"), t("plans.pro.p5")],
       cta: { label: t("plans.pro.cta"), href: "#checkout" },
       highlight: true
     },
@@ -52,7 +52,7 @@ export default async function PricingPage() {
       name: t("plans.vip.name"),
       price: t("plans.vip.price"),
       sub: t("plans.vip.sub"),
-      perks: [t("plans.vip.p1"), t("plans.vip.p2"), t("plans.vip.p3")],
+      perks: [t("plans.vip.p1"), t("plans.vip.p2"), t("plans.vip.p3"), t("plans.vip.p4"), t("plans.vip.p5")],
       cta: { label: t("plans.vip.cta"), href: "#checkout" }
     }
   ];

@@ -10,7 +10,7 @@ type Props = {
 
 export default function PlanCard({ name, price, perks, cta, highlight }: Props) {
   return (
-    <div className={`card p-5 ${highlight ? "glow" : ""}`}>
+    <div className={`card p-5 flex flex-col ${highlight ? "glow" : ""}`}>
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="kicker">{name}</div>
@@ -30,7 +30,7 @@ export default function PlanCard({ name, price, perks, cta, highlight }: Props) 
 
       <div className="hr" />
 
-      <ul className="space-y-2 text-sm">
+      <ul className="flex-1 space-y-2 text-sm">
         {perks.map((p) => (
           <li key={p} className="muted font-semibold">• {p}</li>
         ))}

@@ -113,6 +113,8 @@
         "p1": "40 pares / día",
         "p2": "Acceso estable",
         "p3": "Ideal para traders activos",
+        "p4": "10 análisis de IA / día",
+        "p5": "10 búsquedas Fear Greed extremo / día",
         "cta": "Pagar con MetaMask"
       },
       "vip": {
@@ -122,6 +124,8 @@
         "p1": "Pares ilimitados / día",
         "p2": "API prioritaria",
         "p3": "Apto para uso intensivo",
+        "p4": "20 análisis de IA / día",
+        "p5": "40 búsquedas Fear Greed extremo / día",
         "cta": "Pagar con MetaMask"
       }
     }
